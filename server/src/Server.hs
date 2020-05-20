@@ -1,5 +1,4 @@
 {-# LANGUAGE OverloadedStrings #-}
-
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FlexibleInstances #-}
@@ -59,11 +58,6 @@ runServer = runNoLoggingT $ do
             post "/sign_in" signIn
             fallback $ respond404 Nothing
 
-{-@ ignore httpAuthDb @-}
-httpAuthDb :: AuthMethod (Entity User) Controller
-httpAuthDb = httpBasicAuth $ \username _password -> selectFirst (userUsername' ==. username)
-
-
 {-@ ignore initDB @-}
 initDB :: IO ()
 initDB = runSqlite "db.sqlite" $ do
@@ -73,7 +67,7 @@ initDB = runSqlite "db.sqlite" $ do
 
 initFromPool :: Pool SqlBackend -> Controller () -> ControllerT TIO ()
 initFromPool pool controller = Pool.withResource pool $ \sqlBackend ->
-    configure (Config sqlBackend httpAuthDb) . reading backend . unTag $ controller
+    configure (Config sqlBackend authMethod) . reading backend . unTag $ controller
 
 instance MonadBase IO TIO where
     liftBase = TIO
