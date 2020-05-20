@@ -1,6 +1,10 @@
+{-# LANGUAGE OverloadedStrings #-}
+
 module Main where
 
-import Lib
+import Server
 
 main :: IO ()
-main = someFunc
+main = runServer
+
+

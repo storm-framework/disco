@@ -13,10 +13,18 @@ import           Control.Lens.Operators         ( (?~)
                                                 )
 import           Control.Lens.Combinators       ( re )
 import           Control.Lens.Lens              ( (&) )
-import           JSON
+import           Control.Lens.Internal.ByteString
+                                                ( unpackLazy8 )
+import           Crypto.JWT
+import           Crypto.JOSE.Types              ( Base64Octets(..) )
 import           Data.Text                      ( Text(..) )
 import qualified Data.Text                     as T
+import           Data.Text.Encoding             ( decodeASCII )
 import           Data.ByteString.Lazy           ( ByteString )
+import qualified Data.ByteString.Base64.Lazy   as B64
+import           Database.Persist.Sql           ( toSqlKey
+                                                , fromSqlKey
+                                                )
 import           GHC.Generics
 
 import           Binah.Core
@@ -28,14 +36,11 @@ import           Binah.Helpers
 import           Binah.Infrastructure
 import           Binah.Templates
 import           Binah.Frankie
-import           Model
-import           Crypto.JWT
-import           Crypto.JOSE.Types              ( Base64Octets(..) )
 
-import           Controller
-import           Database.Persist.Sql           ( toSqlKey
-                                                , fromSqlKey
-                                                )
+import           Model
+import           JSON
+
+import           Controllers
 
 data SignInReq = SignInReq
   { reqUsername :: Text
@@ -56,7 +61,7 @@ data UserRes = UserRes
   deriving Generic
 
 data SignInRes = SignInRes
-  { resToken :: SignedJWT
+  { resToken :: String
   , resUser  :: UserRes
   }
   deriving Generic
@@ -86,7 +91,7 @@ signIn = do
     <*> project userEmailAddress' user
     <*> project userLevel'        user
 
-  respond200 $ SignInRes { resToken = token, resUser = userRes }
+  respond200 $ SignInRes { resToken = unpackLazy8 $ encodeCompact token, resUser = userRes }
 
 {-@ ignore genJwt @-}
 genJwt :: UserId -> Controller SignedJWT

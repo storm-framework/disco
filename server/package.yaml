@@ -39,7 +39,11 @@ dependencies:
   - wai-extra
   - warp
   - monad-time
+  - resource-pool
   - lens
+  - transformers-base
+  - monad-control
+  - monad-logger
 
 library:
   source-dirs: src

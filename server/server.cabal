@@ -1,10 +1,10 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.33.0.
+-- This file has been generated from package.yaml by hpack version 0.33.1.
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 8081bcdc0923da37fa4088f1a4d93438061f383b4ed81fc76e4c3f55f0f42054
+-- hash: c9550328aafdb3817f924ba13e5c2bed7acc0c634d52abe802471d754bc060d8
 
 name:           server
 version:        0.1.0.0
@@ -37,10 +37,11 @@ library
       Binah.Insert
       Binah.Templates
       Binah.Updates
-      Controller
+      Controllers
       JSON
       Lib
       Model
+      Server
   other-modules:
       Paths_server
   hs-source-dirs:
@@ -54,14 +55,18 @@ library
     , frankie
     , jose
     , lens
+    , monad-control
+    , monad-logger
     , monad-time
     , mtl
     , mustache
     , persistent
     , persistent-sqlite
     , persistent-template
+    , resource-pool
     , text
     , transformers
+    , transformers-base
     , unordered-containers
     , wai
     , wai-extra
@@ -84,15 +89,19 @@ executable server-exe
     , frankie
     , jose
     , lens
+    , monad-control
+    , monad-logger
     , monad-time
     , mtl
     , mustache
     , persistent
     , persistent-sqlite
     , persistent-template
+    , resource-pool
     , server
     , text
     , transformers
+    , transformers-base
     , unordered-containers
     , wai
     , wai-extra
@@ -116,15 +125,19 @@ test-suite server-test
     , frankie
     , jose
     , lens
+    , monad-control
+    , monad-logger
     , monad-time
     , mtl
     , mustache
     , persistent
     , persistent-sqlite
     , persistent-template
+    , resource-pool
     , server
     , text
     , transformers
+    , transformers-base
     , unordered-containers
     , wai
     , wai-extra
