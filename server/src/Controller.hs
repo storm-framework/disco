@@ -54,3 +54,9 @@ respond401 :: _ -> TaggedT<{\_ -> True}, {\v -> v == currentUser}> _ _
 @-}
 respond401 :: Maybe String -> Controller a
 respond401 error = respondJSON status401 (object ["error" .= error])
+
+{-@
+respond500 :: _ -> TaggedT<{\_ -> True}, {\v -> v == currentUser}> _ _
+@-}
+respond500 :: Maybe String -> Controller a
+respond500 error = respondJSON status500 (object ["error" .= error])

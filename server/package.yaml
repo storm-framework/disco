@@ -38,6 +38,8 @@ dependencies:
   - wai
   - wai-extra
   - warp
+  - monad-time
+  - lens
 
 library:
   source-dirs: src

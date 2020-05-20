@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 651233ceff4f5fdb3d7d87a5c2af9e515e349a74203b8d5c2c6ad857abe3f306
+-- hash: 8081bcdc0923da37fa4088f1a4d93438061f383b4ed81fc76e4c3f55f0f42054
 
 name:           server
 version:        0.1.0.0
@@ -53,6 +53,8 @@ library
     , either
     , frankie
     , jose
+    , lens
+    , monad-time
     , mtl
     , mustache
     , persistent
@@ -81,6 +83,8 @@ executable server-exe
     , either
     , frankie
     , jose
+    , lens
+    , monad-time
     , mtl
     , mustache
     , persistent
@@ -111,6 +115,8 @@ test-suite server-test
     , either
     , frankie
     , jose
+    , lens
+    , monad-time
     , mtl
     , mustache
     , persistent
