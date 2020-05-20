@@ -32,6 +32,7 @@ import           Database.Persist.Sql           ( toSqlKey
                                                 , fromSqlKey
                                                 )
 import           GHC.Generics
+import           Text.Read                      ( readMaybe )
 
 import           Binah.Core
 import           Binah.Actions
@@ -43,11 +44,10 @@ import           Binah.Infrastructure
 import           Binah.Templates
 import           Binah.Frankie
 
+import           Controllers
 import           Model
 import           JSON
 
-import           Controllers
-import           Text.Read                      ( readMaybe )
 
 ---------------------------------------------------------------------------------------------------
 -- SignIn Controller
@@ -56,23 +56,19 @@ import           Text.Read                      ( readMaybe )
 {-@ ignore signIn @-}
 signIn :: Controller ()
 signIn = do
-  req                  <- request
-  body                 <- liftTIO $ reqBody req
-  (username, password) <- case decode body of
-    Nothing                            -> respond400 Nothing
-    Just (SignInReq username password) -> return (username, password)
-
-  user    <- authUser username password
-  userId  <- project userId' user
-  token   <- genJwt userId
-  userRes <-
+  (SignInReq username password) <- decodeBody
+  user                          <- authUser username password
+  userId                        <- project userId' user
+  token                         <- genJwt userId
+  userRes                       <-
     UserRes username
     <$> project userFullName'     user
     <*> project userAffiliation'  user
     <*> project userEmailAddress' user
     <*> project userLevel'        user
 
-  respond200 $ SignInRes { resToken = unpackLazy8 $ encodeCompact token, resUser = userRes }
+  respondJSON status200
+    $ SignInRes { resToken = unpackLazy8 $ encodeCompact token, resUser = userRes }
 
 {-@ ignore genJwt @-}
 genJwt :: UserId -> Controller SignedJWT
@@ -81,17 +77,17 @@ genJwt userId = do
   jwt    <- liftTIO $ doJwtSign claims
   case jwt of
     Right jwt                         -> return jwt
-    Left  (JWSError                e) -> respond500 (Just (show e))
-    Left  (JWTClaimsSetDecodeError s) -> respond400 (Just s)
-    Left  JWTExpired                  -> respond401 (Just "token expired")
-    Left  _                           -> respond401 Nothing
+    Left  (JWSError                e) -> respondError status500 (Just (show e))
+    Left  (JWTClaimsSetDecodeError s) -> respondError status400 (Just s)
+    Left  JWTExpired                  -> respondError status401 (Just "expired token")
+    Left  _                           -> respondError status401 Nothing
 
 {-@ ignore authUser @-}
 authUser :: Text -> Text -> Controller (Entity User)
 authUser username password = do
   maybeUser <- selectFirst (userPassword' ==. password &&: userUsername' ==. username)
   case maybeUser of
-    Nothing   -> respond401 (Just "incorrect login")
+    Nothing   -> respondError status401 (Just "incorrect login")
     Just user -> return user
 
 data SignInReq = SignInReq
@@ -134,7 +130,7 @@ authMethod = AuthMethod
   { authMethodTry     = checkIfAuth
   , authMethodRequire = checkIfAuth >>= \case
                           Just user -> pure user
-                          Nothing   -> respond401 Nothing
+                          Nothing   -> respondError status401 Nothing
   }
 
 {-@ ignore checkIfAuth @-}

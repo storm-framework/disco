@@ -2,6 +2,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE OverloadedStrings #-}
 
+{-@ LIQUID "--no-pattern-inline" @-}
 
 module Controllers where
 
@@ -13,6 +14,7 @@ import           Database.Persist.Sqlite        ( SqlBackend )
 import           Frankie.Auth
 import           Frankie.Config
 
+import           Binah.Actions
 import           Binah.Frankie
 import           Binah.Core
 import           Binah.Infrastructure
@@ -39,22 +41,26 @@ respondJSON status a = do
   let body = encode a
   respondTagged $ Response status [(hContentType, "application/json")] body
 
-{-@ respond200 :: _ -> TaggedT<{\_ -> True}, {\v -> v == currentUser}> _ _ @-}
-respond200 :: ToJSON a => a -> Controller b
-respond200 = respondJSON status200
+{-@ respondError :: _ -> _ -> TaggedT<{\_ -> True}, {\v -> v == currentUser}> _ _ @-}
+respondError :: Status -> Maybe String -> Controller a
+respondError status error = respondJSON status (object ["error" .= error])
 
-{-@ respond400 :: _ -> TaggedT<{\_ -> True}, {\v -> v == currentUser}> _ _ @-}
-respond400 :: Maybe String -> Controller a
-respond400 error = respondJSON status400 (object ["error" .= error])
 
-{-@ respond401 :: _ -> TaggedT<{\_ -> True}, {\v -> v == currentUser}> _ _ @-}
-respond401 :: Maybe String -> Controller a
-respond401 error = respondJSON status401 (object ["error" .= error])
+-- TODO refine liftTIO
+{-@ ignore decodeBody @-}
+{-@ decodeBody :: TaggedT<{\_ -> True}, {\v -> v == currentUser}> _ _ @-}
+decodeBody :: FromJSON a => Controller a
+decodeBody = do
+  req  <- request
+  body <- liftTIO $ reqBody req
+  case decode body of
+    Nothing -> respondError status400 Nothing
+    Just a  -> return a
 
-{-@ respond404 :: _ -> TaggedT<{\_ -> True}, {\v -> v == currentUser}> _ _ @-}
-respond404 :: Maybe String -> Controller a
-respond404 error = respondJSON status404 (object ["error" .= error])
-
-{-@ respond500 :: _ -> TaggedT<{\_ -> True}, {\v -> v == currentUser}> _ _ @-}
-respond500 :: Maybe String -> Controller a
-respond500 error = respondJSON status500 (object ["error" .= error])
+{-@ requireOrganizer ::
+  u: _ -> TaggedT<{\_ -> True}, {\v -> v == currentUser}> _ {v: () | IsOrganizer u}
+@-}
+requireOrganizer :: Entity User -> Controller ()
+requireOrganizer user = do
+  level <- project userLevel' user
+  if level == "organizer" then return () else respondError status403 Nothing
