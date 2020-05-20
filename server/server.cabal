@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: e8d651adf55f401108fdb8bb337c6b15794f81591e940a1921361116e287d927
+-- hash: 651233ceff4f5fdb3d7d87a5c2af9e515e349a74203b8d5c2c6ad857abe3f306
 
 name:           server
 version:        0.1.0.0
@@ -27,6 +27,7 @@ source-repository head
 
 library
   exposed-modules:
+      Auth
       Binah.Actions
       Binah.Core
       Binah.Filters
@@ -36,6 +37,8 @@ library
       Binah.Insert
       Binah.Templates
       Binah.Updates
+      Controller
+      JSON
       Lib
       Model
   other-modules:
@@ -43,11 +46,13 @@ library
   hs-source-dirs:
       src
   build-depends:
-      base >=4.7 && <5
+      aeson
+    , base >=4.7 && <5
     , base64-bytestring
     , bytestring
     , either
     , frankie
+    , jose
     , mtl
     , mustache
     , persistent
@@ -69,11 +74,13 @@ executable server-exe
       app
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
-      base >=4.7 && <5
+      aeson
+    , base >=4.7 && <5
     , base64-bytestring
     , bytestring
     , either
     , frankie
+    , jose
     , mtl
     , mustache
     , persistent
@@ -97,11 +104,13 @@ test-suite server-test
       test
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
-      base >=4.7 && <5
+      aeson
+    , base >=4.7 && <5
     , base64-bytestring
     , bytestring
     , either
     , frankie
+    , jose
     , mtl
     , mustache
     , persistent
