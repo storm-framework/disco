@@ -1,0 +1,24 @@
+Invitation
+  code Text
+  emailAddress Text
+  activated Bool
+
+  insert {\invitation viewer ->
+    not (invitationActivated invitation) && IsOrganizer viewer
+  }
+
+User
+  username Text
+  password Text
+  fullName Text
+  affiliation  Text
+  emailAddress Text
+  level String
+
+  read [ password ] @IsSelf
+
+policy IsSelf = \user viewer ->
+  user == viewer
+
+policy IsOrganizer = \user ->
+  userLevel user == "organizer"

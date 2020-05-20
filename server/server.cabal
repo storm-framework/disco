@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 6f359c4296ac851f04005405b2f6e7cb781ff0abc312475e3fb5b85cc7e01446
+-- hash: e8d651adf55f401108fdb8bb337c6b15794f81591e940a1921361116e287d927
 
 name:           server
 version:        0.1.0.0
@@ -27,7 +27,17 @@ source-repository head
 
 library
   exposed-modules:
+      Binah.Actions
+      Binah.Core
+      Binah.Filters
+      Binah.Frankie
+      Binah.Helpers
+      Binah.Infrastructure
+      Binah.Insert
+      Binah.Templates
+      Binah.Updates
       Lib
+      Model
   other-modules:
       Paths_server
   hs-source-dirs:
