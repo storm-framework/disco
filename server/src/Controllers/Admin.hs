@@ -46,6 +46,6 @@ sendInvitations = do
   viewer                     <- requireAuthUser
   _                          <- requireOrganizer viewer
   (SendInvitationsReq users) <- decodeBody
-  let invitations = map (\(UserData f e) -> mkInvitation f e False) users
+  let invitations = map (\(UserData f e) -> mkInvitation "code" f e False) users
   ids <- insertMany invitations
   respondJSON status201 (object ["keys" .= map fromSqlKey ids])

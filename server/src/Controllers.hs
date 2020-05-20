@@ -37,14 +37,25 @@ instance HasSqlBackend Config where
 
 {-@ respondJSON :: _ -> _ -> TaggedT<{\_ -> True}, {\v -> v == currentUser}> _ _ @-}
 respondJSON :: ToJSON a => Status -> a -> Controller b
-respondJSON status a = do
-  let body = encode a
-  respondTagged $ Response status [(hContentType, "application/json")] body
+respondJSON status a = respondTagged (jsonResponse status a)
+
+jsonResponse :: ToJSON a => Status -> a -> Response
+jsonResponse status a = Response status [(hContentType, "application/json")] (encode a)
 
 {-@ respondError :: _ -> _ -> TaggedT<{\_ -> True}, {\v -> v == currentUser}> _ _ @-}
 respondError :: Status -> Maybe String -> Controller a
-respondError status error = respondJSON status (object ["error" .= error])
+respondError status error = respondTagged (errorResponse status error)
 
+errorResponse :: Status -> Maybe String -> Response
+errorResponse status error = Response status
+                                      [(hContentType, "application/json")]
+                                      (encodeError error)
+ where
+  encodeError Nothing  = encode $ object []
+  encodeError (Just e) = encode $ object ["error" .= e]
+
+notFoundJSON :: Response
+notFoundJSON = errorResponse status404 Nothing
 
 -- TODO refine liftTIO
 {-@ ignore decodeBody @-}

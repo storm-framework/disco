@@ -41,6 +41,7 @@ import           Binah.Filters
 
 import           Controllers
 import           Controllers.Admin
+import           Controllers.Invitation
 import           Model
 import           Auth
 
@@ -56,6 +57,7 @@ runServer = runNoLoggingT $ do
             port 3000
             initWith $ initFromPool pool
         dispatch $ do
+            get "/invitation/:id" invitationGet
             put "/admin/send_invitations" sendInvitations
             post "/sign_in" signIn
             fallback $ respondError status404 (Just "invalid route")
