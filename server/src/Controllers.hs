@@ -35,27 +35,39 @@ instance Frankie.Auth.HasAuthMethod (Entity User) Controller Config where
 instance HasSqlBackend Config where
   getSqlBackend = configBackend
 
+--------------------------------------------------------------------------------
+-- | Responses
+--------------------------------------------------------------------------------
+
+defaultHeaders :: ResponseHeaders
+defaultHeaders = [(hContentType, "application/json")]
+
 {-@ respondJSON :: _ -> _ -> TaggedT<{\_ -> True}, {\v -> v == currentUser}> _ _ @-}
 respondJSON :: ToJSON a => Status -> a -> Controller b
 respondJSON status a = respondTagged (jsonResponse status a)
 
 jsonResponse :: ToJSON a => Status -> a -> Response
-jsonResponse status a = Response status [(hContentType, "application/json")] (encode a)
+jsonResponse status a = Response status defaultHeaders (encode a)
 
 {-@ respondError :: _ -> _ -> TaggedT<{\_ -> True}, {\v -> v == currentUser}> _ _ @-}
 respondError :: Status -> Maybe String -> Controller a
 respondError status error = respondTagged (errorResponse status error)
 
 errorResponse :: Status -> Maybe String -> Response
-errorResponse status error = Response status
-                                      [(hContentType, "application/json")]
-                                      (encodeError error)
+errorResponse status error = Response status defaultHeaders (encodeError error)
  where
   encodeError Nothing  = encode $ object []
   encodeError (Just e) = encode $ object ["error" .= e]
 
 notFoundJSON :: Response
 notFoundJSON = errorResponse status404 Nothing
+
+--------------------------------------------------------------------------------
+-- | Misc
+--------------------------------------------------------------------------------
+
+hAccessControlAllowOrigin :: HeaderName
+hAccessControlAllowOrigin = "Access-Control-Allow-Origin"
 
 -- TODO refine liftTIO
 {-@ ignore decodeBody @-}

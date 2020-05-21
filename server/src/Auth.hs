@@ -49,9 +49,9 @@ import           Model
 import           JSON
 
 
----------------------------------------------------------------------------------------------------
--- SignIn Controller
----------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+-- | SignIn Controller
+--------------------------------------------------------------------------------
 
 {-@ ignore signIn @-}
 signIn :: Controller ()
@@ -67,16 +67,15 @@ signIn = do
     <*> project userEmailAddress' user
     <*> project userLevel'        user
 
-  respondJSON status200
-    $ SignInRes { resToken = unpackLazy8 $ encodeCompact token, resUser = userRes }
+  respondJSON status200 $ SignInRes (unpackLazy8 token) userRes
 
 {-@ ignore genJwt @-}
-genJwt :: UserId -> Controller SignedJWT
+genJwt :: UserId -> Controller L.ByteString
 genJwt userId = do
   claims <- liftTIO $ mkClaims userId
   jwt    <- liftTIO $ doJwtSign claims
   case jwt of
-    Right jwt                         -> return jwt
+    Right jwt                         -> return (encodeCompact jwt)
     Left  (JWSError                e) -> respondError status500 (Just (show e))
     Left  (JWTClaimsSetDecodeError s) -> respondError status400 (Just s)
     Left  JWTExpired                  -> respondError status401 (Just "expired token")
@@ -91,13 +90,13 @@ authUser username password = do
     Just user -> return user
 
 data SignInReq = SignInReq
-  { reqUsername :: Text
-  , reqPassword :: Text
+  { signInReqUsername :: Text
+  , signInReqPassword :: Text
   }
   deriving Generic
 
 instance FromJSON SignInReq where
-  parseJSON = genericParseJSON (stripPrefix "res")
+  parseJSON = genericParseJSON (stripPrefix "signInReq")
 
 data UserRes = UserRes
   { userUsername :: Text
@@ -109,16 +108,16 @@ data UserRes = UserRes
   deriving Generic
 
 data SignInRes = SignInRes
-  { resToken :: String
-  , resUser  :: UserRes
+  { signInResAccessToken :: String
+  , signInResUser  :: UserRes
   }
   deriving Generic
 
 instance ToJSON UserRes where
-  toEncoding = genericToEncoding (stripPrefix "res")
+  toEncoding = genericToEncoding (stripPrefix "signInRes")
 
 instance ToJSON SignInRes where
-  toEncoding = genericToEncoding (stripPrefix "res")
+  toEncoding = genericToEncoding (stripPrefix "signInRes")
 
 
 ---------------------------------------------------------------------------------------------------

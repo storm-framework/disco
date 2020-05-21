@@ -5,6 +5,11 @@
 </template>
 
 <style lang="scss">
+:root {
+  --font-family-sans-serif: -apple-system, BlinkMacSystemFont, "Segoe UI",
+    Roboto, "Helvetica Neue", Arial, sans-serif, "Apple Color Emoji",
+    "Segoe UI Emoji", "Segoe UI Symbol";
+}
 html,
 body {
   height: 100%;
@@ -23,6 +28,7 @@ body {
   padding-top: 40px;
   padding-bottom: 40px;
   background-color: #f5f5f5;
+  font: 1rem/1.5 var(--font-family-sans-serif);
 }
 
 #app {

@@ -1,9 +1,10 @@
 <template>
-  <b-form class="form-signin text-center">
+  <b-form class="form-signin text-center" @submit="onSubmit" @reset="onReset">
     <h3 class="mb-4">Sign into your account</h3>
     <b-form-input
       id="email-address"
-      type="email"
+      type="text"
+      v-model="emailAddress"
       required
       placeholder="Email address"
     ></b-form-input>
@@ -11,6 +12,7 @@
     <b-form-input
       id="password"
       type="password"
+      v-model="password"
       required
       placeholder="Password"
     ></b-form-input>
@@ -21,11 +23,26 @@
   </b-form>
 </template>
 
-<script>
+<script lang="ts">
 import { Component, Vue } from "vue-property-decorator";
+import ApiService from "../services/api";
 
 @Component
-export default class SignIn extends Vue {}
+export default class SignIn extends Vue {
+  emailAddress = "";
+  password = "";
+
+  onSubmit(evt: Event) {
+    ApiService.signIn(this.emailAddress, this.password).then((response) => {
+      console.log(response);
+    });
+    evt.preventDefault();
+  }
+
+  onReset() {
+    console.log("here");
+  }
+}
 </script>
 
 <style lang="scss">
