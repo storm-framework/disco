@@ -28,19 +28,20 @@ import           Controllers
 import           Model
 import           JSON
 
----------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
 -- | User Put
----------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
 
 {-@ userPut :: TaggedT<{\_ -> False}, {\_ -> True}> _ _ @-}
 userPut :: Controller ()
 userPut = do
   (PutReq InvitationData {..} UserData {..}) <- decodeBody
-  let user = mkUser username password fullName emailAddress affiliation "attendee"
+  let user = mkUser emailAddress password fullName displayName affiliation "attendee"
   _ <- selectFirstOr
     (errorResponse status403 (Just "invalid invitation"))
     (   (invitationId' ==. invitationId)
     &&: (invitationCode' ==. invitationCode)
+    &&: (invitationEmailAddress' ==. emailAddress)
     &&: (invitationAccepted' ==. False)
     )
   userId <- insert user
@@ -66,11 +67,11 @@ instance FromJSON InvitationData where
   parseJSON = genericParseJSON (stripPrefix "invitation")
 
 data UserData = UserData
-  { username :: Text
+  { emailAddress :: Text
   , password :: Text
   , fullName :: Text
-  , emailAddress :: Text
-  , affiliation  :: Text
+  , displayName :: Text
+  , affiliation :: Text
   }
   deriving Generic
 

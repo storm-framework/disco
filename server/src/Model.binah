@@ -13,11 +13,11 @@ Invitation
   }
 
 User
-  username Text
+  emailAddress Text
   password Text
   fullName Text
-  affiliation  Text
-  emailAddress Text
+  displayName Text
+  affiliation Text
   level String
 
   insert {\user viewer -> IsOrganizer viewer || userLevel user == "attendee"}

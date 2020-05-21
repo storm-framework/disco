@@ -1,9 +1,9 @@
 <template>
-  <b-form class="form-signin text-center" @submit="onSubmit" @reset="onReset">
+  <b-form class="form-signin text-center" @submit="onSubmit">
     <h3 class="mb-4">Sign into your account</h3>
     <b-form-input
       id="email-address"
-      type="text"
+      type="email"
       v-model="emailAddress"
       required
       placeholder="Email address"
@@ -17,9 +17,20 @@
       placeholder="Password"
     ></b-form-input>
 
-    <b-button variant="primary" block size="lg" type="submit" class="mt-4"
-      >Sign in</b-button
+    <b-form-invalid-feedback :state="isValid">
+      Incorrect email address or password.
+    </b-form-invalid-feedback>
+
+    <b-button
+      :disabled="loading"
+      variant="primary"
+      block
+      size="lg"
+      type="submit"
+      class="mt-4"
     >
+      Sign in
+    </b-button>
   </b-form>
 </template>
 
@@ -31,16 +42,21 @@ import ApiService from "../services/api";
 export default class SignIn extends Vue {
   emailAddress = "";
   password = "";
+  isValid = true;
+  loading = false;
 
   onSubmit(evt: Event) {
-    ApiService.signIn(this.emailAddress, this.password).then((response) => {
-      console.log(response);
-    });
+    this.loading = true;
+    ApiService.signIn(this.emailAddress, this.password)
+      .then(() => {
+        this.isValid = true;
+        this.$router.replace({ name: "Home" });
+      })
+      .catch(() => {
+        this.loading = false;
+        this.isValid = false;
+      });
     evt.preventDefault();
-  }
-
-  onReset() {
-    console.log("here");
   }
 }
 </script>

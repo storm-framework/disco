@@ -23,11 +23,11 @@ module Model
   , invitationEmailAddress'
   , invitationAccepted'
   , userId'
-  , userUsername'
+  , userEmailAddress'
   , userPassword'
   , userFullName'
+  , userDisplayName'
   , userAffiliation'
-  , userEmailAddress'
   , userLevel'
   , InvitationId
   , UserId
@@ -55,11 +55,11 @@ Invitation
   accepted Bool
 
 User
-  username Text
+  emailAddress Text
   password Text
   fullName Text
+  displayName Text
   affiliation Text
-  emailAddress Text
   level String
 |]
 
@@ -209,7 +209,7 @@ invitationAccepted' = EntityFieldWrapper InvitationAccepted
   -> x_4: Text
   -> x_5: String
   -> BinahRecord <
-       {\row -> userUsername (entityVal row) == x_0 && userPassword (entityVal row) == x_1 && userFullName (entityVal row) == x_2 && userAffiliation (entityVal row) == x_3 && userEmailAddress (entityVal row) == x_4 && userLevel (entityVal row) == x_5}
+       {\row -> userEmailAddress (entityVal row) == x_0 && userPassword (entityVal row) == x_1 && userFullName (entityVal row) == x_2 && userDisplayName (entityVal row) == x_3 && userAffiliation (entityVal row) == x_4 && userLevel (entityVal row) == x_5}
      , {\user viewer -> IsOrganizer viewer || userLevel (entityVal user) == "attendee"}
      , {\x_0 x_1 -> (x_0 == x_1)}
      > User
@@ -231,20 +231,20 @@ mkUser x_0 x_1 x_2 x_3 x_4 x_5 = BinahRecord (User x_0 x_1 x_2 x_3 x_4 x_5)
 userId' :: EntityFieldWrapper User UserId
 userId' = EntityFieldWrapper UserId
 
-{-@ measure userUsername :: User -> Text @-}
+{-@ measure userEmailAddress :: User -> Text @-}
 
-{-@ measure userUsernameCap :: Entity User -> Bool @-}
+{-@ measure userEmailAddressCap :: Entity User -> Bool @-}
 
-{-@ assume userUsername' :: EntityFieldWrapper <
+{-@ assume userEmailAddress' :: EntityFieldWrapper <
     {\_ _ -> True}
-  , {\row field  -> field == userUsername (entityVal row)}
-  , {\field row  -> field == userUsername (entityVal row)}
-  , {\old -> userUsernameCap old}
-  , {\old _ _ -> userUsernameCap old}
+  , {\row field  -> field == userEmailAddress (entityVal row)}
+  , {\field row  -> field == userEmailAddress (entityVal row)}
+  , {\old -> userEmailAddressCap old}
+  , {\old _ _ -> userEmailAddressCap old}
   > _ _
 @-}
-userUsername' :: EntityFieldWrapper User Text
-userUsername' = EntityFieldWrapper UserUsername
+userEmailAddress' :: EntityFieldWrapper User Text
+userEmailAddress' = EntityFieldWrapper UserEmailAddress
 
 {-@ measure userPassword :: User -> Text @-}
 
@@ -276,6 +276,21 @@ userPassword' = EntityFieldWrapper UserPassword
 userFullName' :: EntityFieldWrapper User Text
 userFullName' = EntityFieldWrapper UserFullName
 
+{-@ measure userDisplayName :: User -> Text @-}
+
+{-@ measure userDisplayNameCap :: Entity User -> Bool @-}
+
+{-@ assume userDisplayName' :: EntityFieldWrapper <
+    {\_ _ -> True}
+  , {\row field  -> field == userDisplayName (entityVal row)}
+  , {\field row  -> field == userDisplayName (entityVal row)}
+  , {\old -> userDisplayNameCap old}
+  , {\old _ _ -> userDisplayNameCap old}
+  > _ _
+@-}
+userDisplayName' :: EntityFieldWrapper User Text
+userDisplayName' = EntityFieldWrapper UserDisplayName
+
 {-@ measure userAffiliation :: User -> Text @-}
 
 {-@ measure userAffiliationCap :: Entity User -> Bool @-}
@@ -290,21 +305,6 @@ userFullName' = EntityFieldWrapper UserFullName
 @-}
 userAffiliation' :: EntityFieldWrapper User Text
 userAffiliation' = EntityFieldWrapper UserAffiliation
-
-{-@ measure userEmailAddress :: User -> Text @-}
-
-{-@ measure userEmailAddressCap :: Entity User -> Bool @-}
-
-{-@ assume userEmailAddress' :: EntityFieldWrapper <
-    {\_ _ -> True}
-  , {\row field  -> field == userEmailAddress (entityVal row)}
-  , {\field row  -> field == userEmailAddress (entityVal row)}
-  , {\old -> userEmailAddressCap old}
-  , {\old _ _ -> userEmailAddressCap old}
-  > _ _
-@-}
-userEmailAddress' :: EntityFieldWrapper User Text
-userEmailAddress' = EntityFieldWrapper UserEmailAddress
 
 {-@ measure userLevel :: User -> String @-}
 

@@ -56,18 +56,27 @@ import           JSON
 {-@ ignore signIn @-}
 signIn :: Controller ()
 signIn = do
-  (SignInReq username password) <- decodeBody
-  user                          <- authUser username password
-  userId                        <- project userId' user
-  token                         <- genJwt userId
-  userRes                       <-
-    UserRes username
-    <$> project userFullName'     user
-    <*> project userAffiliation'  user
-    <*> project userEmailAddress' user
-    <*> project userLevel'        user
+  (SignInReq emailAddress password) <- decodeBody
+  user                              <- authUser emailAddress password
+  userId                            <- project userId' user
+  token                             <- genJwt userId
+  userRes                           <-
+    UserRes emailAddress
+    <$> project userFullName'    user
+
+    <*> project userDisplayName' user
+    <*> project userAffiliation' user
+    <*> project userLevel'       user
 
   respondJSON status200 $ SignInRes (unpackLazy8 token) userRes
+
+{-@ ignore authUser @-}
+authUser :: Text -> Text -> Controller (Entity User)
+authUser emailAddress password = do
+  maybeUser <- selectFirst (userPassword' ==. password &&: userEmailAddress' ==. emailAddress)
+  case maybeUser of
+    Nothing   -> respondError status401 (Just "incorrect login")
+    Just user -> return user
 
 {-@ ignore genJwt @-}
 genJwt :: UserId -> Controller L.ByteString
@@ -81,16 +90,8 @@ genJwt userId = do
     Left  JWTExpired                  -> respondError status401 (Just "expired token")
     Left  _                           -> respondError status401 Nothing
 
-{-@ ignore authUser @-}
-authUser :: Text -> Text -> Controller (Entity User)
-authUser username password = do
-  maybeUser <- selectFirst (userPassword' ==. password &&: userUsername' ==. username)
-  case maybeUser of
-    Nothing   -> respondError status401 (Just "incorrect login")
-    Just user -> return user
-
 data SignInReq = SignInReq
-  { signInReqUsername :: Text
+  { signInReqEmailAddress :: Text
   , signInReqPassword :: Text
   }
   deriving Generic
@@ -99,10 +100,10 @@ instance FromJSON SignInReq where
   parseJSON = genericParseJSON (stripPrefix "signInReq")
 
 data UserRes = UserRes
-  { userUsername :: Text
+  { userEmailAddress :: Text
   , userFullName :: Text
+  , userDisplayName :: Text
   , userAffiliation :: Text
-  , userEmailAddress :: Text
   , userLevel    :: String
   }
   deriving Generic
