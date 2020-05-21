@@ -8,7 +8,7 @@
 
 {-@ LIQUID "--compile-spec" @-}
 
-module Model 
+module Model
   ( EntityFieldWrapper(..)
   , migrateAll
   , BinahRecord
@@ -21,7 +21,7 @@ module Model
   , invitationCode'
   , invitationFullName'
   , invitationEmailAddress'
-  , invitationActivated'
+  , invitationAccepted'
   , userId'
   , userUsername'
   , userPassword'
@@ -52,7 +52,7 @@ Invitation
   code Text
   fullName Text
   emailAddress Text
-  activated Bool
+  accepted Bool
 
 User
   username Text
@@ -95,15 +95,15 @@ data EntityFieldWrapper record typ = EntityFieldWrapper (Persist.EntityField rec
 -- | Records
 --------------------------------------------------------------------------------
 
-{-@ data BinahRecord record < 
+{-@ data BinahRecord record <
     p :: Entity record -> Bool
   , insertpolicy :: Entity record -> Entity User -> Bool
-  , querypolicy  :: Entity record -> Entity User -> Bool 
+  , querypolicy  :: Entity record -> Entity User -> Bool
   >
   = BinahRecord _
 @-}
 data BinahRecord record = BinahRecord record
-{-@ data variance BinahRecord invariant invariant invariant invariant @-}
+{-@ data variance BinahRecord invariant covariant invariant invariant @-}
 
 {-@ persistentRecord :: BinahRecord record -> record @-}
 persistentRecord :: BinahRecord record -> record
@@ -112,14 +112,14 @@ persistentRecord (BinahRecord record) = record
 {-@ measure getJust :: Key record -> Entity record @-}
 
 -- * Invitation
-{-@ mkInvitation :: 
+{-@ mkInvitation ::
      x_0: Text
   -> x_1: Text
   -> x_2: Text
   -> x_3: Bool
-  -> BinahRecord < 
-       {\row -> invitationCode (entityVal row) == x_0 && invitationFullName (entityVal row) == x_1 && invitationEmailAddress (entityVal row) == x_2 && invitationActivated (entityVal row) == x_3}
-     , {\invitation viewer -> not (invitationActivated (entityVal invitation)) && IsOrganizer viewer}
+  -> BinahRecord <
+       {\row -> invitationCode (entityVal row) == x_0 && invitationFullName (entityVal row) == x_1 && invitationEmailAddress (entityVal row) == x_2 && invitationAccepted (entityVal row) == x_3}
+     , {\invitation viewer -> not (invitationAccepted (entityVal invitation)) && IsOrganizer viewer}
      , {\x_0 x_1 -> False}
      > Invitation
 @-}
@@ -185,32 +185,32 @@ invitationFullName' = EntityFieldWrapper InvitationFullName
 invitationEmailAddress' :: EntityFieldWrapper Invitation Text
 invitationEmailAddress' = EntityFieldWrapper InvitationEmailAddress
 
-{-@ measure invitationActivated :: Invitation -> Bool @-}
+{-@ measure invitationAccepted :: Invitation -> Bool @-}
 
-{-@ measure invitationActivatedCap :: Entity Invitation -> Bool @-}
+{-@ measure invitationAcceptedCap :: Entity Invitation -> Bool @-}
 
-{-@ assume invitationActivated' :: EntityFieldWrapper <
+{-@ assume invitationAccepted' :: EntityFieldWrapper <
     {\_ _ -> True}
-  , {\row field  -> field == invitationActivated (entityVal row)}
-  , {\field row  -> field == invitationActivated (entityVal row)}
-  , {\old -> invitationActivatedCap old}
-  , {\old _ _ -> invitationActivatedCap old}
+  , {\row field  -> field == invitationAccepted (entityVal row)}
+  , {\field row  -> field == invitationAccepted (entityVal row)}
+  , {\old -> invitationAcceptedCap old}
+  , {\x_0 x_1 x_2 -> ((not (invitationAccepted (entityVal x_0)) && invitationAccepted (entityVal x_1))) => (invitationAcceptedCap x_0)}
   > _ _
 @-}
-invitationActivated' :: EntityFieldWrapper Invitation Bool
-invitationActivated' = EntityFieldWrapper InvitationActivated
+invitationAccepted' :: EntityFieldWrapper Invitation Bool
+invitationAccepted' = EntityFieldWrapper InvitationAccepted
 
 -- * User
-{-@ mkUser :: 
+{-@ mkUser ::
      x_0: Text
   -> x_1: Text
   -> x_2: Text
   -> x_3: Text
   -> x_4: Text
   -> x_5: String
-  -> BinahRecord < 
+  -> BinahRecord <
        {\row -> userUsername (entityVal row) == x_0 && userPassword (entityVal row) == x_1 && userFullName (entityVal row) == x_2 && userAffiliation (entityVal row) == x_3 && userEmailAddress (entityVal row) == x_4 && userLevel (entityVal row) == x_5}
-     , {\_ _ -> True}
+     , {\user viewer -> IsOrganizer viewer || userLevel (entityVal user) == "attendee"}
      , {\x_0 x_1 -> (x_0 == x_1)}
      > User
 @-}

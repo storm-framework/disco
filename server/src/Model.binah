@@ -2,10 +2,14 @@ Invitation
   code Text
   fullName Text
   emailAddress Text
-  activated Bool
+  accepted Bool
 
   insert {\invitation viewer ->
-    not (invitationActivated invitation) && IsOrganizer viewer
+    not (invitationAccepted invitation) && IsOrganizer viewer
+  }
+
+  update [ accepted ] {\old new _ ->
+    not (invitationAccepted old) && invitationAccepted new
   }
 
 User
@@ -15,6 +19,8 @@ User
   affiliation  Text
   emailAddress Text
   level String
+
+  insert {\user viewer -> IsOrganizer viewer || userLevel user == "attendee"}
 
   read [ password ] @IsSelf
 

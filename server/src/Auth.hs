@@ -97,7 +97,7 @@ data SignInReq = SignInReq
   deriving Generic
 
 instance FromJSON SignInReq where
-  parseJSON = genericParseJSON defaultOptions
+  parseJSON = genericParseJSON (stripPrefix "res")
 
 data UserRes = UserRes
   { userUsername :: Text
@@ -115,10 +115,10 @@ data SignInRes = SignInRes
   deriving Generic
 
 instance ToJSON UserRes where
-  toEncoding = genericToEncoding defaultOptions
+  toEncoding = genericToEncoding (stripPrefix "res")
 
 instance ToJSON SignInRes where
-  toEncoding = genericToEncoding defaultOptions
+  toEncoding = genericToEncoding (stripPrefix "res")
 
 
 ---------------------------------------------------------------------------------------------------
