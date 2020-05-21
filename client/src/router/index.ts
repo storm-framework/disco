@@ -2,14 +2,20 @@ import Vue from "vue";
 import VueRouter, { RouteConfig } from "vue-router";
 import Home from "../views/Home.vue";
 import SignIn from "../views/SignIn.vue";
+import SendInvitations from "../views/SendInvitations.vue";
 
 Vue.use(VueRouter);
 
 const routes: Array<RouteConfig> = [
   {
-    path: "/sign_in",
+    path: "/signin",
     name: "SignIn",
     component: SignIn
+  },
+  {
+    path: "/invitations",
+    name: "SendInvitations",
+    component: SendInvitations
   },
   {
     path: "/",

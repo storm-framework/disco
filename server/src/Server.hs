@@ -57,12 +57,12 @@ runServer = runNoLoggingT $ do
             port 3000
             initWith $ initFromPool pool
         dispatch $ do
-            post "/sign_in" signIn
+            post "/api/signin" signIn
 
-            get "/invitation/:id" invitationGet
-            put "/invitation" invitationPut
+            get "/api/invitation/:id" invitationGet
+            put "/api/invitation" invitationPut
 
-            put "/user"       userPut
+            put "/api/user"       userPut
 
             fallback $ respondError status404 (Just "invalid route")
 

@@ -34,22 +34,22 @@ import           JSON
 {-@ invitationPut :: TaggedT<{\_ -> False}, {\_ -> True}> _ _ @-}
 invitationPut :: Controller ()
 invitationPut = do
-  viewer                     <- requireAuthUser
-  _                          <- requireOrganizer viewer
-  (InvitationPutReq reqData) <- decodeBody
+  viewer           <- requireAuthUser
+  _                <- requireOrganizer viewer
+  (PutReq reqData) <- decodeBody
   let invitations = map (\(InvitationData f e) -> mkInvitation "code" f e False) reqData
   ids <- insertMany invitations
   respondJSON status201 (object ["keys" .= map fromSqlKey ids])
 
-newtype InvitationPutReq = InvitationPutReq [InvitationData]
+newtype PutReq = PutReq [InvitationData]
   deriving Generic
 
-instance FromJSON InvitationPutReq where
+instance FromJSON PutReq where
   parseJSON = genericParseJSON defaultOptions
 
----------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 -- | Invitation Get
----------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
 {-@ invitationGet :: _ -> TaggedT<{\_ -> False}, {\_ -> True}> _ _ @-}
 invitationGet :: Int64 -> Controller ()
@@ -67,9 +67,9 @@ invitationGet iid = do
         <*> project invitationEmailAddress' invitation
       respondJSON status200 res
 
----------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 -- | Invitation Data
----------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
 data InvitationData = InvitationData
   { invitationFullName     :: Text
