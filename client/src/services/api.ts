@@ -30,6 +30,12 @@ class ApiService {
     localStorage.removeItem("accessToken");
   }
 
+  getInvitation(code: String) {
+    return axios.get(API_URL + `invitation?code=${code}`, {
+      headers: authHeader()
+    });
+  }
+
   sendInvitations(invitations: Invitation[]) {
     return axios.put(API_URL + "invitation", invitations, {
       headers: authHeader()

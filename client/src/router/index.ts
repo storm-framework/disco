@@ -2,6 +2,7 @@ import Vue from "vue";
 import VueRouter, { RouteConfig } from "vue-router";
 import Home from "../views/Home.vue";
 import SignIn from "../views/SignIn.vue";
+import SignUp from "../views/SignUp.vue";
 import SendInvitations from "../views/SendInvitations.vue";
 
 Vue.use(VueRouter);
@@ -11,6 +12,11 @@ const routes: Array<RouteConfig> = [
     path: "/signin",
     name: "SignIn",
     component: SignIn
+  },
+  {
+    path: "/signup",
+    name: "SignUp",
+    component: SignUp
   },
   {
     path: "/invitations",

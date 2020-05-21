@@ -59,7 +59,7 @@ runServer = runNoLoggingT $ do
         dispatch $ do
             post "/api/signin" signIn
 
-            get "/api/invitation/:id" invitationGet
+            get "/api/invitation" invitationGet
             put "/api/invitation" invitationPut
 
             put "/api/user"       userPut

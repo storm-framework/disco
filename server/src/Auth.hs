@@ -63,7 +63,6 @@ signIn = do
   userRes                           <-
     UserRes emailAddress
     <$> project userFullName'    user
-
     <*> project userDisplayName' user
     <*> project userAffiliation' user
     <*> project userLevel'       user
@@ -121,9 +120,9 @@ instance ToJSON SignInRes where
   toEncoding = genericToEncoding (stripPrefix "signInRes")
 
 
----------------------------------------------------------------------------------------------------
--- Auth method
----------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
+-- | Auth method
+-------------------------------------------------------------------------------
 
 authMethod :: AuthMethod (Entity User) Controller
 authMethod = AuthMethod
@@ -148,9 +147,9 @@ checkIfAuth = do
         Just userId -> selectFirst (userId' ==. userId)
     _ -> return Nothing
 
----------------------------------------------------------------------------------------------------
--- JWT
----------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
+-- | JWT
+-------------------------------------------------------------------------------
 
 mkClaims :: UserId -> TIO ClaimsSet
 mkClaims userId = do
@@ -175,6 +174,16 @@ key = fromOctets raw
  where
   raw :: ByteString
   raw = "\xe5L\xb7\xf6\x03|\xb6\n\x10\xd8\xb8\x96\xe2\xc4W@#W\xb4>\th*iiW\x12\x80z\x04i="
+
+-------------------------------------------------------------------------------
+-- | Random
+-------------------------------------------------------------------------------
+
+{-@ ignore randomCode @-}
+{-@ assume randomCode :: TaggedT<{\_ -> True}, {\_ -> False}> _ _@-}
+randomCode :: Controller String
+randomCode = do
+  bytes <- liftTIO (getRandomBytes 10)
 
 instance MonadRandom TIO where
   getRandomBytes x = TIO (getRandomBytes x)

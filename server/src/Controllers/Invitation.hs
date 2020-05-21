@@ -51,17 +51,15 @@ instance FromJSON PutReq where
 -- | Invitation Get
 --------------------------------------------------------------------------------
 
-{-@ invitationGet :: _ -> TaggedT<{\_ -> False}, {\_ -> True}> _ _ @-}
-invitationGet :: Int64 -> Controller ()
-invitationGet iid = do
-  let invitationId = toSqlKey iid
+{-@ invitationGet :: TaggedT<{\_ -> False}, {\_ -> True}> _ _ @-}
+invitationGet :: Controller ()
+invitationGet = do
   code <- listToMaybe <$> queryParams "code"
   case code of
     Nothing   -> respondError status400 (Just "missing code")
     Just code -> do
-      invitation <- selectFirstOr notFoundJSON
-                                  (invitationId' ==. invitationId &&: invitationCode' ==. code)
-      res <-
+      invitation <- selectFirstOr notFoundJSON (invitationCode' ==. code)
+      res        <-
         InvitationData
         <$> project invitationFullName'     invitation
         <*> project invitationEmailAddress' invitation

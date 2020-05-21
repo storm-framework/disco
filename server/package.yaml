@@ -23,7 +23,7 @@ dependencies:
   - aeson
   - jose
   - base >= 4.7 && < 5
-  - base64-bytestring
+  - base64
   - bytestring
   - either
   - frankie
