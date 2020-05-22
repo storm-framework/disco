@@ -34,4 +34,12 @@ body {
 #app {
   width: 100%;
 }
+
+.form-control {
+  position: relative;
+  box-sizing: border-box;
+  height: auto;
+  padding: 10px;
+  font-size: 16px;
+}
 </style>

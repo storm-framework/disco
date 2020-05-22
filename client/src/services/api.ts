@@ -13,6 +13,14 @@ function authHeader() {
   }
 }
 
+function wait(ms = 1000) {
+  if (process.env.NODE_ENV === "development") {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  } else {
+    return Promise.resolve();
+  }
+}
+
 class ApiService {
   async signIn(emailAddress: string, password: string) {
     const response = await axios.post(API_URL + "signin", {
@@ -30,17 +38,40 @@ class ApiService {
     localStorage.removeItem("accessToken");
   }
 
-  getInvitation(code: String) {
-    return axios.get(API_URL + `invitation?code=${code}`, {
+  async getInvitation(code: string): Promise<Invitation> {
+    await wait();
+    const response = await axios.get(API_URL + `invitation?code=${code}`, {
       headers: authHeader()
     });
+    return response.data;
   }
 
-  sendInvitations(invitations: Invitation[]) {
-    return axios.put(API_URL + "invitation", invitations, {
+  async sendInvitations(invitations: Invitation[]) {
+    await wait();
+    const response = await axios.put(API_URL + "invitation", invitations, {
       headers: authHeader()
     });
+    return response.data;
   }
+
+  public async signUp(data: UserSignUp) {
+    await wait();
+    const response = await axios.put(API_URL + "user", data, {
+      headers: authHeader()
+    });
+    return response.data;
+  }
+}
+
+export interface UserSignUp {
+  invitationCode: string;
+  user: {
+    emailAddress: string;
+    password: string;
+    fullName: string;
+    displayName: string;
+    affiliation: string;
+  };
 }
 
 export default new ApiService();

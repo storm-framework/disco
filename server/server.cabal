@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 1a2f4c75a5bbf782969ae417ac20c5bef8b6cf3ccb6cc611d2fb2575f7c57716
+-- hash: 36cbb9852471371005175af385bb8bb0f694ccbf47b2bbc078b87e35891bbae6
 
 name:           server
 version:        0.1.0.0
@@ -51,7 +51,7 @@ library
   build-depends:
       aeson
     , base >=4.7 && <5
-    , base64
+    , base64-bytestring
     , bytestring
     , either
     , frankie
@@ -85,7 +85,7 @@ executable server-exe
   build-depends:
       aeson
     , base >=4.7 && <5
-    , base64
+    , base64-bytestring
     , bytestring
     , either
     , frankie
@@ -121,7 +121,7 @@ test-suite server-test
   build-depends:
       aeson
     , base >=4.7 && <5
-    , base64
+    , base64-bytestring
     , bytestring
     , either
     , frankie

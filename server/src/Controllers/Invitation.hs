@@ -6,8 +6,10 @@
 module Controllers.Invitation where
 
 import           Data.Text                      ( Text )
+import qualified Data.Text                     as T
 import           Data.Int                       ( Int64 )
 import           Data.Maybe
+import           Data.Aeson.Types
 import           Database.Persist.Sql           ( fromSqlKey
                                                 , toSqlKey
                                                 )
@@ -26,6 +28,8 @@ import           Binah.Frankie
 import           Controllers
 import           Model
 import           JSON
+import           Auth                           ( genRandomCodes )
+import           Text.Read                      ( readMaybe )
 
 --------------------------------------------------------------------------------
 -- | Invitation Put (create invitations)
@@ -37,7 +41,9 @@ invitationPut = do
   viewer           <- requireAuthUser
   _                <- requireOrganizer viewer
   (PutReq reqData) <- decodeBody
-  let invitations = map (\(InvitationData f e) -> mkInvitation "code" f e False) reqData
+  codes            <- genRandomCodes (length reqData)
+  let invitations =
+        map (\((InvitationData f e), code) -> mkInvitation code f e False) (zip reqData codes)
   ids <- insertMany invitations
   respondJSON status201 (object ["keys" .= map fromSqlKey ids])
 
@@ -55,11 +61,13 @@ instance FromJSON PutReq where
 invitationGet :: Controller ()
 invitationGet = do
   code <- listToMaybe <$> queryParams "code"
-  case code of
-    Nothing   -> respondError status400 (Just "missing code")
-    Just code -> do
-      invitation <- selectFirstOr notFoundJSON (invitationCode' ==. code)
-      res        <-
+  case code >>= parseCode of
+    Nothing                       -> respondError status400 (Just "missing code")
+    Just (InvitationCode id code) -> do
+      invitation <- selectFirstOr
+        notFoundJSON
+        (invitationCode' ==. code &&: invitationId' ==. id &&: invitationAccepted' ==. False)
+      res <-
         InvitationData
         <$> project invitationFullName'     invitation
         <*> project invitationEmailAddress' invitation
@@ -80,3 +88,18 @@ instance FromJSON InvitationData where
 
 instance ToJSON InvitationData where
   toEncoding = genericToEncoding (stripPrefix "invitation")
+
+data InvitationCode = InvitationCode InvitationId Text deriving Generic
+
+instance FromJSON InvitationCode where
+  parseJSON = withText "InvitationCode" parse
+   where
+    parse t = case parseCode t of
+      Nothing -> fail "Invalid invitation id"
+      Just id -> return id
+
+parseCode :: Text -> Maybe InvitationCode
+parseCode text = case readMaybe (T.unpack h) of
+  Nothing -> Nothing
+  Just id -> Just $ InvitationCode (toSqlKey id) (T.drop 1 t)
+  where (h, t) = T.breakOn "." text

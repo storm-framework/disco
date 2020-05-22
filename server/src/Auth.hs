@@ -9,6 +9,7 @@ module Auth where
 import           Control.Monad.Trans.Class      ( lift )
 import           Control.Monad.Time             ( MonadTime(..) )
 import           Control.Monad.Except           ( runExceptT )
+import           Control.Monad                  ( replicateM )
 import           Control.Lens.Operators         ( (?~)
                                                 , (^.)
                                                 , (^?)
@@ -24,8 +25,10 @@ import           Crypto.JOSE.Types              ( Base64Octets(..) )
 import           Data.Text                      ( Text(..) )
 import qualified Data.Text                     as T
 import qualified Data.Text.Encoding            as T
+import qualified Data.Text.Lazy.Encoding       as L
 import           Data.ByteString                ( ByteString )
 import qualified Data.ByteString               as ByteString
+import qualified Data.ByteString.Base64.URL    as B64Url
 import qualified Data.ByteString.Lazy          as L
 import           Data.Int                       ( Int64 )
 import           Database.Persist.Sql           ( toSqlKey
@@ -179,11 +182,17 @@ key = fromOctets raw
 -- | Random
 -------------------------------------------------------------------------------
 
-{-@ ignore randomCode @-}
-{-@ assume randomCode :: TaggedT<{\_ -> True}, {\_ -> False}> _ _@-}
-randomCode :: Controller String
-randomCode = do
-  bytes <- liftTIO (getRandomBytes 10)
+{-@ ignore genRandomCodes @-}
+{-@ genRandomCodes :: _ -> TaggedT<{\_ -> True}, {\_ -> False}> _ _ @-}
+genRandomCodes :: Int -> Controller [Text]
+genRandomCodes n = replicateM n genRandomCode
+
+{-@ ignore genRandomCode @-}
+{-@ genRandomCode :: TaggedT<{\_ -> True}, {\_ -> False}> _ _@-}
+genRandomCode :: Controller Text
+genRandomCode = do
+  bytes <- liftTIO (getRandomBytes 24)
+  return $ T.decodeUtf8 $ B64Url.encode bytes
 
 instance MonadRandom TIO where
   getRandomBytes x = TIO (getRandomBytes x)
