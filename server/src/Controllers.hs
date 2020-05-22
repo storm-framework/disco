@@ -76,9 +76,9 @@ decodeBody :: FromJSON a => Controller a
 decodeBody = do
   req  <- request
   body <- liftTIO $ reqBody req
-  case decode body of
-    Nothing -> respondError status400 Nothing
-    Just a  -> return a
+  case eitherDecode body of
+    Left  s -> respondError status400 (Just s)
+    Right a -> return a
 
 {-@ requireOrganizer ::
   u: _ -> TaggedT<{\_ -> True}, {\v -> v == currentUser}> _ {v: () | IsOrganizer u}
@@ -87,3 +87,10 @@ requireOrganizer :: Entity User -> Controller ()
 requireOrganizer user = do
   level <- project userLevel' user
   if level == "organizer" then return () else respondError status403 Nothing
+
+{-@ ignore mapMC @-}
+{-@ mapMC :: forall <inn :: Entity User -> Bool, out :: Entity User -> Bool>.
+(a -> TaggedT<inn, out> _ b) -> [a] -> TaggedT<inn, out> _ [b]
+@-}
+mapMC :: (a -> Controller b) -> [a] -> Controller [b]
+mapMC = mapM

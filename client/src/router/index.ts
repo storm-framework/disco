@@ -4,6 +4,7 @@ import Home from "../views/Home.vue";
 import SignIn from "../views/SignIn.vue";
 import SignUp from "../views/SignUp.vue";
 import SendInvitations from "../views/SendInvitations.vue";
+import Admin from "../views/Admin.vue";
 
 Vue.use(VueRouter);
 
@@ -22,6 +23,11 @@ const routes: Array<RouteConfig> = [
     path: "/invitations",
     name: "SendInvitations",
     component: SendInvitations
+  },
+  {
+    path: "/admin",
+    name: "Admin",
+    component: Admin
   },
   {
     path: "/",

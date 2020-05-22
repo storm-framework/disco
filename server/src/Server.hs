@@ -42,6 +42,7 @@ import           Binah.Filters
 import           Controllers
 import           Controllers.Invitation
 import           Controllers.User
+import           Controllers.Room
 import           Model
 import           Auth
 
@@ -63,6 +64,9 @@ runServer = runNoLoggingT $ do
             put "/api/invitation" invitationPut
 
             put "/api/user"       userPut
+
+            get "/api/room" roomGet
+            post "/api/room" roomPost
 
             fallback $ respondError status404 (Just "invalid route")
 

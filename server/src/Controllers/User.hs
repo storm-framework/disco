@@ -24,9 +24,9 @@ import           Binah.Infrastructure
 import           Binah.Templates
 import           Binah.Frankie
 
-import           Controllers.Invitation         ( InvitationCode(..) )
 
 import           Controllers
+import           Controllers.Invitation         ( InvitationCode(..) )
 import           Model
 import           JSON
 

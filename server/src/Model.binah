@@ -20,9 +20,18 @@ User
   affiliation Text
   level String
 
-  insert {\user viewer -> IsOrganizer viewer || userLevel user == "attendee"}
+  insert {\new viewer -> IsOrganizer viewer || userLevel new == "attendee"}
 
   read [ password ] @IsSelf
+
+Room
+  name Text
+  capacity Int
+  zoomLink Text
+
+  insert {\_ viewer -> IsOrganizer viewer}
+
+  update [ name, capacity, zoomLink ] {\_ _ viewer -> IsOrganizer viewer}
 
 policy IsSelf = \user viewer ->
   user == viewer

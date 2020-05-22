@@ -15,8 +15,10 @@ module Model
   , persistentRecord
   , mkInvitation
   , mkUser
+  , mkRoom
   , Invitation
   , User
+  , Room
   , invitationId'
   , invitationCode'
   , invitationFullName'
@@ -29,8 +31,13 @@ module Model
   , userDisplayName'
   , userAffiliation'
   , userLevel'
+  , roomId'
+  , roomName'
+  , roomCapacity'
+  , roomZoomLink'
   , InvitationId
   , UserId
+  , RoomId
   )
 
 where
@@ -61,6 +68,11 @@ User
   displayName Text
   affiliation Text
   level String
+
+Room
+  name Text
+  capacity Int
+  zoomLink Text
 |]
 
 {-@
@@ -210,7 +222,7 @@ invitationAccepted' = EntityFieldWrapper InvitationAccepted
   -> x_5: String
   -> BinahRecord <
        {\row -> userEmailAddress (entityVal row) == x_0 && userPassword (entityVal row) == x_1 && userFullName (entityVal row) == x_2 && userDisplayName (entityVal row) == x_3 && userAffiliation (entityVal row) == x_4 && userLevel (entityVal row) == x_5}
-     , {\user viewer -> IsOrganizer viewer || userLevel (entityVal user) == "attendee"}
+     , {\new viewer -> IsOrganizer viewer || userLevel (entityVal new) == "attendee"}
      , {\x_0 x_1 -> (x_0 == x_1)}
      > User
 @-}
@@ -320,6 +332,79 @@ userAffiliation' = EntityFieldWrapper UserAffiliation
 @-}
 userLevel' :: EntityFieldWrapper User String
 userLevel' = EntityFieldWrapper UserLevel
+
+-- * Room
+{-@ mkRoom ::
+     x_0: Text
+  -> x_1: Int
+  -> x_2: Text
+  -> BinahRecord <
+       {\row -> roomName (entityVal row) == x_0 && roomCapacity (entityVal row) == x_1 && roomZoomLink (entityVal row) == x_2}
+     , {\_ viewer -> IsOrganizer viewer}
+     , {\x_0 x_1 -> False}
+     > Room
+@-}
+mkRoom x_0 x_1 x_2 = BinahRecord (Room x_0 x_1 x_2)
+
+{-@ invariant {v: Entity Room | v == getJust (entityKey v)} @-}
+
+
+
+{-@ assume roomId' :: EntityFieldWrapper <
+    {\row viewer -> True}
+  , {\row field  -> field == entityKey row}
+  , {\field row  -> field == entityKey row}
+  , {\_ -> False}
+  , {\_ _ _ -> True}
+  > _ _
+@-}
+roomId' :: EntityFieldWrapper Room RoomId
+roomId' = EntityFieldWrapper RoomId
+
+{-@ measure roomName :: Room -> Text @-}
+
+{-@ measure roomNameCap :: Entity Room -> Bool @-}
+
+{-@ assume roomName' :: EntityFieldWrapper <
+    {\_ _ -> True}
+  , {\row field  -> field == roomName (entityVal row)}
+  , {\field row  -> field == roomName (entityVal row)}
+  , {\old -> roomNameCap old}
+  , {\x_0 x_1 x_2 -> ((IsOrganizer x_2)) => (roomNameCap x_0)}
+  > _ _
+@-}
+roomName' :: EntityFieldWrapper Room Text
+roomName' = EntityFieldWrapper RoomName
+
+{-@ measure roomCapacity :: Room -> Int @-}
+
+{-@ measure roomCapacityCap :: Entity Room -> Bool @-}
+
+{-@ assume roomCapacity' :: EntityFieldWrapper <
+    {\_ _ -> True}
+  , {\row field  -> field == roomCapacity (entityVal row)}
+  , {\field row  -> field == roomCapacity (entityVal row)}
+  , {\old -> roomCapacityCap old}
+  , {\x_0 x_1 x_2 -> ((IsOrganizer x_2)) => (roomCapacityCap x_0)}
+  > _ _
+@-}
+roomCapacity' :: EntityFieldWrapper Room Int
+roomCapacity' = EntityFieldWrapper RoomCapacity
+
+{-@ measure roomZoomLink :: Room -> Text @-}
+
+{-@ measure roomZoomLinkCap :: Entity Room -> Bool @-}
+
+{-@ assume roomZoomLink' :: EntityFieldWrapper <
+    {\_ _ -> True}
+  , {\row field  -> field == roomZoomLink (entityVal row)}
+  , {\field row  -> field == roomZoomLink (entityVal row)}
+  , {\old -> roomZoomLinkCap old}
+  , {\x_0 x_1 x_2 -> ((IsOrganizer x_2)) => (roomZoomLinkCap x_0)}
+  > _ _
+@-}
+roomZoomLink' :: EntityFieldWrapper Room Text
+roomZoomLink' = EntityFieldWrapper RoomZoomLink
 
 --------------------------------------------------------------------------------
 -- | Inline

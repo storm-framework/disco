@@ -5,7 +5,6 @@
     spinner-type="grow"
     spinner-small
     rounded="sm"
-    style="max-width: 320px;"
     class="form-signup"
     bg-color="#f5f5f5"
   >

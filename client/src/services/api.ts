@@ -1,5 +1,5 @@
 import axios from "axios";
-import { Invitation } from "../models";
+import { Invitation, Room, RoomEntity } from "../models";
 
 const API_URL = "http://localhost:3000/api/";
 
@@ -54,11 +54,34 @@ class ApiService {
     return response.data;
   }
 
-  public async signUp(data: UserSignUp) {
+  async signUp(data: UserSignUp) {
     await wait();
     const response = await axios.put(API_URL + "user", data, {
       headers: authHeader()
     });
+    return response.data;
+  }
+
+  async rooms(): Promise<[RoomEntity]> {
+    await wait();
+    const response = await axios.get(API_URL + "room", {
+      headers: authHeader()
+    });
+    return response.data;
+  }
+
+  async updateRooms(
+    updates: { id: string; room: Room }[],
+    inserts: Room[]
+  ): Promise<[string]> {
+    await wait();
+    const response = await axios.post(
+      API_URL + "room",
+      { inserts: inserts, updates: updates },
+      {
+        headers: authHeader()
+      }
+    );
     return response.data;
   }
 }
