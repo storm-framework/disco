@@ -1,7 +1,7 @@
-import axios from "axios";
+import axios, { AxiosRequestConfig } from "axios";
 import { Invitation, Room, Entity } from "../models";
 
-const API_URL = "http://localhost:3000/api/";
+const API_URL = "http://localhost:3000/api";
 
 function authHeader() {
   const accessToken = localStorage.getItem("accessToken");
@@ -13,7 +13,7 @@ function authHeader() {
   }
 }
 
-function wait(ms = 1000) {
+function delay(ms = 1000) {
   if (process.env.NODE_ENV === "development") {
     return new Promise(resolve => setTimeout(resolve, ms));
   } else {
@@ -22,8 +22,11 @@ function wait(ms = 1000) {
 }
 
 class ApiService {
+  // Auth
+
   async signIn(emailAddress: string, password: string) {
-    const response = await axios.post(API_URL + "signin", {
+    await delay();
+    const response = await axios.post(`${API_URL}/signin`, {
       emailAddress: emailAddress,
       password: password
     });
@@ -34,57 +37,81 @@ class ApiService {
     return response.data.user;
   }
 
+  async signUp(data: UserSignUp) {
+    await delay();
+    const response = await axios.put(`${API_URL}/user`, data);
+    return response.data;
+  }
+
   logOut() {
     localStorage.removeItem("accessToken");
   }
 
-  async getInvitation(code: string): Promise<Invitation> {
-    await wait();
-    const response = await axios.get(API_URL + `invitation?code=${code}`, {
-      headers: authHeader()
-    });
-    return response.data;
+  // Invitations
+
+  getInvitation(code: string): Promise<Invitation> {
+    return this.get(`/invitation?code=${code}`);
   }
 
-  async sendInvitations(invitations: Invitation[]) {
-    await wait();
-    const response = await axios.put(API_URL + "invitation", invitations, {
-      headers: authHeader()
-    });
-    return response.data;
+  sendInvitations(invitations: Invitation[]) {
+    return this.put("/invitation", invitations);
   }
 
-  async signUp(data: UserSignUp) {
-    await wait();
-    const response = await axios.put(API_URL + "user", data, {
-      headers: authHeader()
-    });
-    return response.data;
-  }
+  // Rooms
 
-  async rooms(withUsers = false): Promise<Entity<Room>[]> {
-    await wait();
-    const response = await axios.get(API_URL + "room", {
-      headers: authHeader(),
+  rooms(withUsers = false): Promise<Entity<Room>[]> {
+    return this.get("/room", {
       params: {
         withUsers: withUsers ? "true" : "false"
       }
     });
+  }
+
+  updateRooms(updates: Entity<Room>[], inserts: Room[]): Promise<[string]> {
+    return this.post("/room", {
+      inserts: inserts,
+      updates: updates
+    });
+  }
+
+  joinRoom(roomId: string): Promise<Room> {
+    return this.post(`/room/${roomId}/join`);
+  }
+
+  // Request
+
+  async post(
+    path: string,
+    data?: any,
+    config?: AxiosRequestConfig
+  ): Promise<any> {
+    await delay();
+    const response = await axios.post(`${API_URL}${path}`, data, {
+      headers: authHeader(),
+      ...config
+    });
     return response.data;
   }
 
-  async updateRooms(
-    updates: Entity<Room>[],
-    inserts: Room[]
-  ): Promise<[string]> {
-    await wait();
-    const response = await axios.post(
-      API_URL + "room",
-      { inserts: inserts, updates: updates },
-      {
-        headers: authHeader()
-      }
-    );
+  async get(path: string, config?: AxiosRequestConfig): Promise<any> {
+    await delay();
+    const response = await axios.get(`${API_URL}${path}`, {
+      headers: authHeader(),
+      ...config
+    });
+    return response.data;
+  }
+
+  async put(
+    path: string,
+    data?: any,
+    config?: AxiosRequestConfig
+  ): Promise<any> {
+    await delay();
+    const response = await axios.put(`${API_URL}${path}`, data, {
+      headers: authHeader(),
+      ...config
+    });
     return response.data;
   }
 }

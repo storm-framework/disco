@@ -27,6 +27,8 @@ User
   read [ password ] @IsSelf
   read [ room ] {\user _ -> userVisibility user == "public"}
 
+  update [ room ] {\old _ viewer -> IsSelf old viewer}
+
 Room
   name Text
   capacity Int

@@ -9,6 +9,7 @@
 module Controllers.Room where
 
 import           Data.Text                      ( Text )
+import           Data.Text.Encoding             ( encodeUtf8 )
 import           Data.Int                       ( Int64 )
 import           Data.Maybe
 import           Database.Persist.Sql           ( fromSqlKey
@@ -62,6 +63,25 @@ instance FromJSON PostReq where
   parseJSON = genericParseJSON (stripPrefix "postReq")
 
 -------------------------------------------------------------------------------
+-- | Join Room
+-------------------------------------------------------------------------------
+
+{-@ joinRoom :: _ -> TaggedT<{\_ -> False}, {\_ -> True}> _ _ @-}
+joinRoom :: Int64 -> Controller ()
+joinRoom rid = do
+  let roomId = toSqlKey rid
+  viewer       <- requireAuthUser
+  viewerId     <- project userId' viewer
+  room         <- selectFirstOr notFoundJSON (roomId' ==. roomId)
+  _            <- updateWhere (userId' ==. viewerId) (userRoom' `assign` Just roomId)
+  users        <- selectList (userVisibility' ==. "public" &&: userRoom' ==. Just roomId)
+  users        <- extractUsersData users
+  roomName     <- project roomName' room
+  roomCapacity <- project roomCapacity' room
+  roomZoomLink <- project roomZoomLink' room
+  respondJSON status200 (RoomData roomName roomCapacity roomZoomLink users)
+
+-------------------------------------------------------------------------------
 -- | Room Get
 -------------------------------------------------------------------------------
 
@@ -77,33 +97,10 @@ roomGet = do
       <$> project roomName'     room
       <*> project roomCapacity' room
       <*> project roomZoomLink' room
-      <*> return Nothing
+      <*> return []
     return $ RoomEntity id roomData
-  rooms <- if withUsers == ["true"] then fetchUsers rooms else return rooms
+  rooms <- if withUsers == ["true"] then appendUsers rooms else return rooms
   respondJSON status200 rooms
-
-{-@ fetchUsers :: _ -> TaggedT<{\_ -> True}, {\_ -> False}> _ _ @-}
-fetchUsers :: [RoomEntity] -> Controller [RoomEntity]
-fetchUsers rooms = do
-  users     <- selectList (userVisibility' ==. "public")
-  usersRoom <- projectList userRoom' users
-  let usersByRoom = mapMaybe (\(x, y) -> fmap (, y) x) (zip usersRoom users)
-  forMC rooms $ \(RoomEntity id d) -> do
-    users <- usersForRoom usersByRoom id
-    return $ RoomEntity id (d { roomUsers = Just users })
-
-{-@ usersForRoom :: _ -> _ -> TaggedT<{\_ -> True}, {\_ -> False}> _ _ @-}
-usersForRoom :: [(RoomId, Entity User)] -> RoomId -> Controller [UserData]
-usersForRoom usersByRoom roomId = do
-  flip mapMC (lookupAll roomId usersByRoom) $ \u -> do
-    userId <- project userId' u
-    name   <- project userDisplayName' u
-    return $ UserData userId name
-
-lookupAll :: Eq a => a -> [(a, b)] -> [b]
-lookupAll _ [] = []
-lookupAll a ((a', b) : xs) | a == a'   = b : lookupAll a xs
-                           | otherwise = lookupAll a xs
 
 -- | RoomEntity
 
@@ -119,13 +116,28 @@ instance FromJSON RoomEntity where
 instance ToJSON RoomEntity where
   toEncoding = genericToEncoding (stripPrefix "roomEntity")
 
+{-@ appendUsers :: _ -> TaggedT<{\_ -> True}, {\_ -> False}> _ _ @-}
+appendUsers :: [RoomEntity] -> Controller [RoomEntity]
+appendUsers rooms = do
+  users     <- selectList (userVisibility' ==. "public")
+  usersRoom <- projectList userRoom' users
+  let usersByRoom = mapMaybe (\(x, y) -> fmap (, y) x) (zip usersRoom users)
+  forMC rooms $ \(RoomEntity roomId roomData) -> do
+    users <- extractUsersData (lookupAll roomId usersByRoom)
+    return $ RoomEntity roomId (roomData { roomUsers = users })
+
+lookupAll :: Eq a => a -> [(a, b)] -> [b]
+lookupAll _ [] = []
+lookupAll a ((a', b) : xs) | a == a'   = b : lookupAll a xs
+                           | otherwise = lookupAll a xs
+
 -- | RoomData
 
 data RoomData = RoomData
   { roomName :: Text
   , roomCapacity :: Int
   , roomZoomLink :: Text
-  , roomUsers :: Maybe [UserData]
+  , roomUsers :: [UserData]
   }
   deriving Generic
 
@@ -148,3 +160,11 @@ instance FromJSON UserData where
 
 instance ToJSON UserData where
   toEncoding = genericToEncoding (stripPrefix "user")
+
+{-@ extractUsersData :: _ -> TaggedT<{\_ -> True}, {\_ -> False}> _ _ @-}
+extractUsersData :: [Entity User] -> Controller [UserData]
+extractUsersData users = do
+  forMC users $ \u -> do
+    userId <- project userId' u
+    name   <- project userDisplayName' u
+    return $ UserData userId name

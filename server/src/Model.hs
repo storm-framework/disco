@@ -363,7 +363,7 @@ userVisibility' = EntityFieldWrapper UserVisibility
   , {\row field  -> field == userRoom (entityVal row)}
   , {\field row  -> field == userRoom (entityVal row)}
   , {\old -> userRoomCap old}
-  , {\old _ _ -> userRoomCap old}
+  , {\x_0 x_1 x_2 -> ((IsSelf x_0 x_2)) => (userRoomCap x_0)}
   > _ _
 @-}
 userRoom' :: EntityFieldWrapper User (Maybe RoomId)

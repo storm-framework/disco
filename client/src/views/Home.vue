@@ -38,7 +38,6 @@ export default class Home extends Vue {
   mounted() {
     ApiService.rooms(true)
       .then(rooms => {
-        console.log("here");
         this.rooms = rooms;
       })
       .catch(console.log);
@@ -49,7 +48,10 @@ export default class Home extends Vue {
   }
 
   joinRoom(room: Entity<Room>) {
-    console.log(room);
+    ApiService.joinRoom(room.id).then(updated => {
+      room.data = updated;
+      window.open(room.data.zoomLink, "_blank");
+    });
   }
 }
 </script>
