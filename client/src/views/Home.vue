@@ -1,18 +1,55 @@
 <template>
-  <div class="home">
-    <img alt="Vue logo" src="../assets/logo.png" />
-    <HelloWorld msg="Welcome to Your Vue.js App" />
-  </div>
+  <b-container class="home">
+    <b-row>
+      <b-col sm>
+        <div v-for="room in rooms" v-bind:key="room.id">
+          <a v-on:click.stop="selectRoom(room)" href="#">
+            {{ room.data.name }}
+          </a>
+        </div>
+      </b-col>
+
+      <b-col sm>
+        <div class="active-room" v-if="activeRoom">
+          {{ activeRoom.data.name }}
+          <a v-on:click.stop="joinRoom(activeRoom)" href="#">
+            Join Room
+          </a>
+          <div v-for="user in activeRoom.data.users" v-bind:key="user.id">
+            {{ user.displayName }}
+          </div>
+        </div>
+      </b-col>
+    </b-row>
+  </b-container>
 </template>
 
-<script>
+<script lang="ts">
 // @ is an alias to /src
-import HelloWorld from "@/components/HelloWorld.vue";
+import { Component, Vue } from "vue-property-decorator";
+import ApiService from "@/services/api";
+import { Room, Entity } from "@/models";
 
-export default {
-  name: "Home",
-  components: {
-    HelloWorld
+@Component
+export default class Home extends Vue {
+  rooms: Entity<Room>[] = [];
+  activeRoom: Entity<Room> | null = null;
+
+  mounted() {
+    ApiService.rooms(true)
+      .then(rooms => {
+        console.log("here");
+        this.rooms = rooms;
+      })
+      .catch(console.log);
   }
-};
+
+  selectRoom(room: Entity<Room>) {
+    this.activeRoom = room;
+  }
+
+  joinRoom(room: Entity<Room>) {
+    console.log(room);
+  }
+}
 </script>

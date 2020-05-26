@@ -24,7 +24,6 @@ import           Binah.Infrastructure
 import           Binah.Templates
 import           Binah.Frankie
 
-
 import           Controllers
 import           Controllers.Invitation         ( InvitationCode(..) )
 import           Model
@@ -38,7 +37,8 @@ import           JSON
 userPut :: Controller ()
 userPut = do
   (PutReq (InvitationCode id code) UserData {..}) <- decodeBody
-  let user = mkUser emailAddress password fullName displayName affiliation "attendee"
+  let user =
+        mkUser emailAddress password fullName displayName affiliation "attendee" "public" Nothing
   _ <- selectFirstOr
     (errorResponse status403 (Just "invalid invitation"))
     (   (invitationId' ==. id)

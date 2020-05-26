@@ -31,6 +31,8 @@ module Model
   , userDisplayName'
   , userAffiliation'
   , userLevel'
+  , userVisibility'
+  , userRoom'
   , roomId'
   , roomName'
   , roomCapacity'
@@ -68,6 +70,8 @@ User
   displayName Text
   affiliation Text
   level String
+  visibility String
+  room RoomId Maybe
 
 Room
   name Text
@@ -220,13 +224,15 @@ invitationAccepted' = EntityFieldWrapper InvitationAccepted
   -> x_3: Text
   -> x_4: Text
   -> x_5: String
+  -> x_6: String
+  -> x_7: (Maybe RoomId)
   -> BinahRecord <
-       {\row -> userEmailAddress (entityVal row) == x_0 && userPassword (entityVal row) == x_1 && userFullName (entityVal row) == x_2 && userDisplayName (entityVal row) == x_3 && userAffiliation (entityVal row) == x_4 && userLevel (entityVal row) == x_5}
+       {\row -> userEmailAddress (entityVal row) == x_0 && userPassword (entityVal row) == x_1 && userFullName (entityVal row) == x_2 && userDisplayName (entityVal row) == x_3 && userAffiliation (entityVal row) == x_4 && userLevel (entityVal row) == x_5 && userVisibility (entityVal row) == x_6 && userRoom (entityVal row) == x_7}
      , {\new viewer -> IsOrganizer viewer || userLevel (entityVal new) == "attendee"}
-     , {\x_0 x_1 -> (x_0 == x_1)}
+     , {\x_0 x_1 -> (userVisibility (entityVal x_0) == "public") || (x_0 == x_1)}
      > User
 @-}
-mkUser x_0 x_1 x_2 x_3 x_4 x_5 = BinahRecord (User x_0 x_1 x_2 x_3 x_4 x_5)
+mkUser x_0 x_1 x_2 x_3 x_4 x_5 x_6 x_7 = BinahRecord (User x_0 x_1 x_2 x_3 x_4 x_5 x_6 x_7)
 
 {-@ invariant {v: Entity User | v == getJust (entityKey v)} @-}
 
@@ -332,6 +338,36 @@ userAffiliation' = EntityFieldWrapper UserAffiliation
 @-}
 userLevel' :: EntityFieldWrapper User String
 userLevel' = EntityFieldWrapper UserLevel
+
+{-@ measure userVisibility :: User -> String @-}
+
+{-@ measure userVisibilityCap :: Entity User -> Bool @-}
+
+{-@ assume userVisibility' :: EntityFieldWrapper <
+    {\_ _ -> True}
+  , {\row field  -> field == userVisibility (entityVal row)}
+  , {\field row  -> field == userVisibility (entityVal row)}
+  , {\old -> userVisibilityCap old}
+  , {\old _ _ -> userVisibilityCap old}
+  > _ _
+@-}
+userVisibility' :: EntityFieldWrapper User String
+userVisibility' = EntityFieldWrapper UserVisibility
+
+{-@ measure userRoom :: User -> (Maybe RoomId) @-}
+
+{-@ measure userRoomCap :: Entity User -> Bool @-}
+
+{-@ assume userRoom' :: EntityFieldWrapper <
+    {\x_0 x_1 -> (userVisibility (entityVal x_0) == "public")}
+  , {\row field  -> field == userRoom (entityVal row)}
+  , {\field row  -> field == userRoom (entityVal row)}
+  , {\old -> userRoomCap old}
+  , {\old _ _ -> userRoomCap old}
+  > _ _
+@-}
+userRoom' :: EntityFieldWrapper User (Maybe RoomId)
+userRoom' = EntityFieldWrapper UserRoom
 
 -- * Room
 {-@ mkRoom ::

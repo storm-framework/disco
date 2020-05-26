@@ -107,23 +107,23 @@
 
 <script lang="ts">
 import { Component, Vue } from "vue-property-decorator";
-import { Room, RoomEntity } from "../models";
+import { Room, Entity } from "../models";
 import ApiService from "../services/api";
 
-interface OldRow {
+interface OldRoom {
   id: string;
   name: string;
   capacity: string;
   zoomLink: string;
 }
 
-interface NewRow {
+interface NewRoom {
   name: string;
   capacity: string;
   zoomLink: string;
 }
 
-function parseNewRow(row: NewRow): Room {
+function parseNewRoom(row: NewRoom): Room {
   return {
     name: row.name,
     capacity: parseInt(row.capacity) || 0,
@@ -131,18 +131,18 @@ function parseNewRow(row: NewRow): Room {
   };
 }
 
-function parseOldRow(row: OldRow): RoomEntity {
+function parseOldRoom(row: OldRoom): Entity<Room> {
   return {
     id: row.id,
-    room: parseNewRow(row)
+    data: parseNewRoom(row)
   };
 }
 
 @Component
 export default class SignIn extends Vue {
   loading = false;
-  oldRooms: OldRow[] = [];
-  newRooms: NewRow[] = [];
+  oldRooms: OldRoom[] = [];
+  newRooms: NewRoom[] = [];
   fatalError = false;
   errorMsg = "";
 
@@ -154,9 +154,9 @@ export default class SignIn extends Vue {
         this.oldRooms = rooms.map(r => {
           return {
             id: r.id,
-            name: r.room.name,
-            capacity: r.room.capacity.toString(),
-            zoomLink: r.room.zoomLink
+            name: r.data.name,
+            capacity: r.data.capacity.toString(),
+            zoomLink: r.data.zoomLink
           };
         });
       })
@@ -171,8 +171,8 @@ export default class SignIn extends Vue {
   }
 
   onSubmit(evt: Event) {
-    const updates = this.oldRooms.map(parseOldRow);
-    const inserts = this.newRooms.map(parseNewRow);
+    const updates = this.oldRooms.map(parseOldRoom);
+    const inserts = this.newRooms.map(parseNewRoom);
     this.loading = true;
     ApiService.updateRooms(updates, inserts)
       .then(ids => {

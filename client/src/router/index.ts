@@ -1,10 +1,10 @@
 import Vue from "vue";
 import VueRouter, { RouteConfig } from "vue-router";
-import Home from "../views/Home.vue";
-import SignIn from "../views/SignIn.vue";
-import SignUp from "../views/SignUp.vue";
-import SendInvitations from "../views/SendInvitations.vue";
-import Admin from "../views/Admin.vue";
+import Home from "@/views/Home.vue";
+import SignIn from "@/views/SignIn.vue";
+import SignUp from "@/views/SignUp.vue";
+import SendInvitations from "@/views/SendInvitations.vue";
+import Admin from "@/views/Admin.vue";
 
 Vue.use(VueRouter);
 

@@ -19,10 +19,13 @@ User
   displayName Text
   affiliation Text
   level String
+  visibility String
+  room RoomId Maybe
 
   insert {\new viewer -> IsOrganizer viewer || userLevel new == "attendee"}
 
   read [ password ] @IsSelf
+  read [ room ] {\user _ -> userVisibility user == "public"}
 
 Room
   name Text

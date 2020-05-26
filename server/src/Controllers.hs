@@ -94,3 +94,9 @@ requireOrganizer user = do
 @-}
 mapMC :: (a -> Controller b) -> [a] -> Controller [b]
 mapMC = mapM
+
+{-@ forMC :: forall <inn :: Entity User -> Bool, out :: Entity User -> Bool>.
+[a] -> (a -> TaggedT<inn, out> _ b) -> TaggedT<inn, out> _ [b]
+@-}
+forMC :: [a] -> (a -> Controller b) -> Controller [b]
+forMC = flip mapMC

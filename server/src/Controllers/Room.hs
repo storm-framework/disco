@@ -1,3 +1,4 @@
+{-# LANGUAGE TupleSections #-}
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE DeriveGeneric #-}
@@ -40,11 +41,12 @@ roomPost = do
   _                         <- requireOrganizer viewer
   (PostReq inserts updates) <- decodeBody
 
-  ids <- insertMany (map (\RoomData {..} -> mkRoom name capacity zoomLink) inserts)
-  _                         <- flip mapMC updates $ \(RoomEntity id RoomData {..}) -> do
-    let up1 = roomName' `assign` name
-    let up2 = roomCapacity' `assign` capacity
-    let up3 = roomZoomLink' `assign` zoomLink
+  let rooms = map (\RoomData {..} -> mkRoom roomName roomCapacity roomZoomLink) inserts
+  ids <- insertMany rooms
+  _   <- forMC updates $ \(RoomEntity id RoomData {..}) -> do
+    let up1 = roomName' `assign` roomName
+    let up2 = roomCapacity' `assign` roomCapacity
+    let up3 = roomZoomLink' `assign` roomZoomLink
     let up  = up1 `combine` up2 `combine` up3
     updateWhere (roomId' ==. id) up
 
@@ -66,33 +68,48 @@ instance FromJSON PostReq where
 {-@ roomGet :: TaggedT<{\_ -> False}, {\_ -> True}> _ _ @-}
 roomGet :: Controller ()
 roomGet = do
-  rooms <- selectList trueF
-  rooms <- flip mapMC rooms $ \room -> do
+  withUsers <- queryParams "withUsers" :: Controller [String]
+  rooms     <- selectList trueF
+  rooms     <- forMC rooms $ \room -> do
     id       <- project roomId' room
     roomData <-
       RoomData
       <$> project roomName'     room
       <*> project roomCapacity' room
       <*> project roomZoomLink' room
+      <*> return Nothing
     return $ RoomEntity id roomData
+  rooms <- if withUsers == ["true"] then fetchUsers rooms else return rooms
   respondJSON status200 rooms
 
-data RoomData = RoomData
-  { name :: Text
-  , capacity :: Int
-  , zoomLink :: Text
-  }
-  deriving Generic
+{-@ fetchUsers :: _ -> TaggedT<{\_ -> True}, {\_ -> False}> _ _ @-}
+fetchUsers :: [RoomEntity] -> Controller [RoomEntity]
+fetchUsers rooms = do
+  users     <- selectList (userVisibility' ==. "public")
+  usersRoom <- projectList userRoom' users
+  let usersByRoom = mapMaybe (\(x, y) -> fmap (, y) x) (zip usersRoom users)
+  forMC rooms $ \(RoomEntity id d) -> do
+    users <- usersForRoom usersByRoom id
+    return $ RoomEntity id (d { roomUsers = Just users })
 
-instance FromJSON RoomData where
-  parseJSON = genericParseJSON defaultOptions
+{-@ usersForRoom :: _ -> _ -> TaggedT<{\_ -> True}, {\_ -> False}> _ _ @-}
+usersForRoom :: [(RoomId, Entity User)] -> RoomId -> Controller [UserData]
+usersForRoom usersByRoom roomId = do
+  flip mapMC (lookupAll roomId usersByRoom) $ \u -> do
+    userId <- project userId' u
+    name   <- project userDisplayName' u
+    return $ UserData userId name
 
-instance ToJSON RoomData where
-  toEncoding = genericToEncoding defaultOptions
+lookupAll :: Eq a => a -> [(a, b)] -> [b]
+lookupAll _ [] = []
+lookupAll a ((a', b) : xs) | a == a'   = b : lookupAll a xs
+                           | otherwise = lookupAll a xs
+
+-- | RoomEntity
 
 data RoomEntity = RoomEntity
   { roomEntityId :: RoomId
-  , roomEntityRoom :: RoomData
+  , roomEntityData :: RoomData
   }
   deriving Generic
 
@@ -101,3 +118,33 @@ instance FromJSON RoomEntity where
 
 instance ToJSON RoomEntity where
   toEncoding = genericToEncoding (stripPrefix "roomEntity")
+
+-- | RoomData
+
+data RoomData = RoomData
+  { roomName :: Text
+  , roomCapacity :: Int
+  , roomZoomLink :: Text
+  , roomUsers :: Maybe [UserData]
+  }
+  deriving Generic
+
+instance FromJSON RoomData where
+  parseJSON = genericParseJSON (stripPrefix "room")
+
+instance ToJSON RoomData where
+  toEncoding = genericToEncoding (stripPrefix "room")
+
+-- | UserData
+
+data UserData = UserData
+  { userId          :: UserId
+  , userDisplayName :: Text
+  }
+  deriving Generic
+
+instance FromJSON UserData where
+  parseJSON = genericParseJSON (stripPrefix "user")
+
+instance ToJSON UserData where
+  toEncoding = genericToEncoding (stripPrefix "user")
