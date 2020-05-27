@@ -1,6 +1,6 @@
 import axios, { AxiosRequestConfig } from "axios";
 import _ from "lodash";
-import { Entity, Invitation, Room, User } from "../models";
+import { Invitation, Room, RoomInsert, User } from "../models";
 
 const API_URL = "http://localhost:3000/api";
 
@@ -75,11 +75,11 @@ class ApiService {
 
   // Rooms
 
-  rooms(): Promise<Entity<Room>[]> {
+  rooms(): Promise<Room[]> {
     return this.get("/room");
   }
 
-  updateRooms(updates: Entity<Room>[], inserts: Room[]): Promise<[string]> {
+  updateRooms(updates: Room[], inserts: RoomInsert[]): Promise<[string]> {
     return this.post("/room", {
       inserts: inserts,
       updates: updates

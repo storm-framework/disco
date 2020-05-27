@@ -41,20 +41,20 @@ roomPost = do
   _                         <- requireOrganizer viewer
   (PostReq inserts updates) <- decodeBody
 
-  let rooms = map (\RoomData {..} -> mkRoom roomName roomCapacity roomZoomLink) inserts
+  let rooms = map (\RoomInsert {..} -> mkRoom insertName insertCapacity insertZoomLink) inserts
   ids <- insertMany rooms
-  _   <- forMC updates $ \(RoomEntity id RoomData {..}) -> do
+  _   <- forMC updates $ \RoomData {..} -> do
     let up1 = roomName' `assign` roomName
     let up2 = roomCapacity' `assign` roomCapacity
     let up3 = roomZoomLink' `assign` roomZoomLink
     let up  = up1 `combine` up2 `combine` up3
-    updateWhere (roomId' ==. id) up
+    updateWhere (roomId' ==. roomId) up
 
   respondJSON status200 ids
 
 data PostReq = PostReq
-  { postReqInserts :: [RoomData]
-  , postReqUpdates :: [RoomEntity]
+  { postReqInserts :: [RoomInsert]
+  , postReqUpdates :: [RoomData]
   }
   deriving Generic
 
@@ -85,33 +85,35 @@ roomGet :: Controller ()
 roomGet = do
   _     <- requireAuthUser
   rooms <- selectList trueF
-  rooms <- forMC rooms $ \room -> do
-    id       <- project roomId' room
-    roomData <-
-      RoomData
-      <$> project roomName'     room
-      <*> project roomCapacity' room
-      <*> project roomZoomLink' room
-    return $ RoomEntity id roomData
+  rooms <- forMC rooms $ \r ->
+    do
+        RoomData
+      <$> project roomId'       r
+      <*> project roomName'     r
+      <*> project roomCapacity' r
+      <*> project roomZoomLink' r
   respondJSON status200 rooms
 
--- | RoomEntity
+-- | RoomInsert
 
-data RoomEntity = RoomEntity
-  { roomEntityId :: RoomId
-  , roomEntityData :: RoomData
+data RoomInsert = RoomInsert
+  { insertName :: Text
+  , insertCapacity :: Int
+  , insertZoomLink :: Text
   }
   deriving Generic
 
-instance FromJSON RoomEntity where
-  parseJSON = genericParseJSON (stripPrefix "roomEntity")
+instance FromJSON RoomInsert where
+  parseJSON = genericParseJSON (stripPrefix "insert")
 
-instance ToJSON RoomEntity where
-  toEncoding = genericToEncoding (stripPrefix "roomEntity")
--- | RoomData
+instance ToJSON RoomInsert where
+  toEncoding = genericToEncoding (stripPrefix "insert")
+
+-- | RoomUpdate
 
 data RoomData = RoomData
-  { roomName :: Text
+  { roomId :: RoomId
+  , roomName :: Text
   , roomCapacity :: Int
   , roomZoomLink :: Text
   }

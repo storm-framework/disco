@@ -107,7 +107,7 @@
 
 <script lang="ts">
 import { Component, Vue } from "vue-property-decorator";
-import { Room, Entity } from "@/models";
+import { Room, RoomInsert } from "@/models";
 import ApiService from "@/services/api";
 import Navbar from "@/components/Navbar.vue";
 
@@ -124,7 +124,7 @@ interface NewRoom {
   zoomLink: string;
 }
 
-function parseNewRoom(row: NewRoom): Room {
+function parseNewRoom(row: NewRoom): RoomInsert {
   return {
     name: row.name,
     capacity: parseInt(row.capacity) || 0,
@@ -132,10 +132,10 @@ function parseNewRoom(row: NewRoom): Room {
   };
 }
 
-function parseOldRoom(row: OldRoom): Entity<Room> {
+function parseOldRoom(row: OldRoom): Room {
   return {
     id: row.id,
-    data: parseNewRoom(row)
+    ...parseNewRoom(row)
   };
 }
 
@@ -156,9 +156,9 @@ export default class SignIn extends Vue {
         this.oldRooms = rooms.map(r => {
           return {
             id: r.id,
-            name: r.data.name,
-            capacity: r.data.capacity.toString(),
-            zoomLink: r.data.zoomLink
+            name: r.name,
+            capacity: r.capacity.toString(),
+            zoomLink: r.zoomLink
           };
         });
       })

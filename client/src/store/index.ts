@@ -1,4 +1,4 @@
-import { Entity, Room, User } from "@/models";
+import { Room, User } from "@/models";
 import ApiService from "@/services/api";
 import _ from "lodash";
 import Vue from "vue";
@@ -9,7 +9,7 @@ Vue.use(Vuex);
 interface State {
   sessionUserId: string | null;
   users: { [key: string]: User };
-  rooms: { [key: string]: Entity<Room> };
+  rooms: { [key: string]: Room };
   activeRoomId: string | null;
 }
 
@@ -20,20 +20,17 @@ const initialState: State = {
   activeRoomId: null
 };
 
-function addUsersToRoom(room: Entity<Room>, users: User[]) {
+function addUsersToRoom(room: Room, users: User[]) {
   return {
-    id: room.id,
-    data: {
-      users,
-      ...room.data
-    }
+    users,
+    ...room
   };
 }
 
 export default new Vuex.Store({
   state: initialState,
   mutations: {
-    sync(state, { rooms, users }: { rooms: Entity<Room>[]; users: User[] }) {
+    sync(state, { rooms, users }: { rooms: Room[]; users: User[] }) {
       state.rooms = Object.fromEntries(rooms.map(r => [r.id, r]));
       state.users = Object.fromEntries(users.map(u => [u.id, u]));
     },
