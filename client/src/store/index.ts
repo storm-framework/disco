@@ -7,7 +7,7 @@ import _ from "lodash";
 Vue.use(Vuex);
 
 interface State {
-  sessionUser: User | null;
+  sessionUserId: string | null;
   loading: boolean;
   users: { [key: string]: User };
   rooms: { [key: string]: Entity<Room> };
@@ -15,7 +15,7 @@ interface State {
 }
 
 const initialState: State = {
-  sessionUser: null,
+  sessionUserId: ApiService.sessionUserId,
   loading: false,
   users: {},
   rooms: {},
@@ -40,13 +40,13 @@ export default new Vuex.Store({
       state.activeRoomId = roomId;
     },
     swithToRoom(state, roomId) {
-      const u = state.sessionUser && state.users[state.sessionUser.id];
+      const u = state.sessionUserId && state.users[state.sessionUserId];
       if (u) {
         u.room = roomId;
       }
     },
     setSessionUser(state, user) {
-      state.sessionUser = user;
+      state.sessionUserId = user.id;
     }
   },
   actions: {

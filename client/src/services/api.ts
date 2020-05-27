@@ -1,17 +1,8 @@
 import axios, { AxiosRequestConfig } from "axios";
 import { Invitation, Room, Entity, User } from "../models";
+import _ from "lodash";
 
 const API_URL = "http://localhost:3000/api";
-
-function authHeader() {
-  const accessToken = localStorage.getItem("accessToken");
-
-  if (accessToken) {
-    return { Authorization: "Bearer " + accessToken };
-  } else {
-    return {};
-  }
-}
 
 function delay(ms = 1000) {
   if (process.env.NODE_ENV === "development") {
@@ -22,6 +13,16 @@ function delay(ms = 1000) {
 }
 
 class ApiService {
+  constructor(private accessToken: string | null) {}
+
+  get sessionUserId(): string | null {
+    if (!this.accessToken) {
+      return null;
+    }
+    const [_header, payload, _signature] = _.split(this.accessToken, ".");
+    return JSON.parse(atob(payload)).sub;
+  }
+
   // Auth
 
   async signIn(emailAddress: string, password: string) {
@@ -89,7 +90,7 @@ class ApiService {
   ): Promise<any> {
     await delay();
     const response = await axios.post(`${API_URL}${path}`, data, {
-      headers: authHeader(),
+      headers: this.authHeader(),
       ...config
     });
     return response.data;
@@ -98,7 +99,7 @@ class ApiService {
   async get(path: string, config?: AxiosRequestConfig): Promise<any> {
     await delay();
     const response = await axios.get(`${API_URL}${path}`, {
-      headers: authHeader(),
+      headers: this.authHeader(),
       ...config
     });
     return response.data;
@@ -111,10 +112,18 @@ class ApiService {
   ): Promise<any> {
     await delay();
     const response = await axios.put(`${API_URL}${path}`, data, {
-      headers: authHeader(),
+      headers: this.authHeader(),
       ...config
     });
     return response.data;
+  }
+
+  authHeader() {
+    if (this.accessToken) {
+      return { Authorization: "Bearer " + this.accessToken };
+    } else {
+      return {};
+    }
   }
 }
 
@@ -129,4 +138,6 @@ export interface UserSignUp {
   };
 }
 
-export default new ApiService();
+const accessToken = localStorage.getItem("accessToken");
+
+export default new ApiService(accessToken);
