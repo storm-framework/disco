@@ -9,12 +9,13 @@ export interface Entity<T> {
 }
 
 export interface User {
+  id: string;
   displyName: string;
+  room: string | null;
 }
 
 export interface Room {
   name: string;
   capacity: number;
   zoomLink: string;
-  users?: User[];
 }

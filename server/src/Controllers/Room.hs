@@ -1,4 +1,3 @@
-{-# LANGUAGE TupleSections #-}
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE DeriveGeneric #-}
@@ -70,16 +69,12 @@ instance FromJSON PostReq where
 joinRoom :: Int64 -> Controller ()
 joinRoom rid = do
   let roomId = toSqlKey rid
-  viewer       <- requireAuthUser
-  viewerId     <- project userId' viewer
-  room         <- selectFirstOr notFoundJSON (roomId' ==. roomId)
-  _            <- updateWhere (userId' ==. viewerId) (userRoom' `assign` Just roomId)
-  users        <- selectList (userVisibility' ==. "public" &&: userRoom' ==. Just roomId)
-  users        <- extractUsersData users
-  roomName     <- project roomName' room
-  roomCapacity <- project roomCapacity' room
-  roomZoomLink <- project roomZoomLink' room
-  respondJSON status200 (RoomData roomName roomCapacity roomZoomLink users)
+  viewer   <- requireAuthUser
+  viewerId <- project userId' viewer
+  room     <- selectFirstOr notFoundJSON (roomId' ==. roomId)
+  _        <- updateWhere (userId' ==. viewerId) (userRoom' `assign` Just roomId)
+  zoomLink <- project roomZoomLink' room
+  respondJSON status200 zoomLink
 
 -------------------------------------------------------------------------------
 -- | Room Get
@@ -88,18 +83,15 @@ joinRoom rid = do
 {-@ roomGet :: TaggedT<{\_ -> False}, {\_ -> True}> _ _ @-}
 roomGet :: Controller ()
 roomGet = do
-  withUsers <- queryParams "withUsers" :: Controller [String]
-  rooms     <- selectList trueF
-  rooms     <- forMC rooms $ \room -> do
+  rooms <- selectList trueF
+  rooms <- forMC rooms $ \room -> do
     id       <- project roomId' room
     roomData <-
       RoomData
       <$> project roomName'     room
       <*> project roomCapacity' room
       <*> project roomZoomLink' room
-      <*> return []
     return $ RoomEntity id roomData
-  rooms <- if withUsers == ["true"] then appendUsers rooms else return rooms
   respondJSON status200 rooms
 
 -- | RoomEntity
@@ -115,29 +107,12 @@ instance FromJSON RoomEntity where
 
 instance ToJSON RoomEntity where
   toEncoding = genericToEncoding (stripPrefix "roomEntity")
-
-{-@ appendUsers :: _ -> TaggedT<{\_ -> True}, {\_ -> False}> _ _ @-}
-appendUsers :: [RoomEntity] -> Controller [RoomEntity]
-appendUsers rooms = do
-  users     <- selectList (userVisibility' ==. "public")
-  usersRoom <- projectList userRoom' users
-  let usersByRoom = mapMaybe (\(x, y) -> fmap (, y) x) (zip usersRoom users)
-  forMC rooms $ \(RoomEntity roomId roomData) -> do
-    users <- extractUsersData (lookupAll roomId usersByRoom)
-    return $ RoomEntity roomId (roomData { roomUsers = users })
-
-lookupAll :: Eq a => a -> [(a, b)] -> [b]
-lookupAll _ [] = []
-lookupAll a ((a', b) : xs) | a == a'   = b : lookupAll a xs
-                           | otherwise = lookupAll a xs
-
 -- | RoomData
 
 data RoomData = RoomData
   { roomName :: Text
   , roomCapacity :: Int
   , roomZoomLink :: Text
-  , roomUsers :: [UserData]
   }
   deriving Generic
 
@@ -146,25 +121,3 @@ instance FromJSON RoomData where
 
 instance ToJSON RoomData where
   toEncoding = genericToEncoding (stripPrefix "room")
-
--- | UserData
-
-data UserData = UserData
-  { userId          :: UserId
-  , userDisplayName :: Text
-  }
-  deriving Generic
-
-instance FromJSON UserData where
-  parseJSON = genericParseJSON (stripPrefix "user")
-
-instance ToJSON UserData where
-  toEncoding = genericToEncoding (stripPrefix "user")
-
-{-@ extractUsersData :: _ -> TaggedT<{\_ -> True}, {\_ -> False}> _ _ @-}
-extractUsersData :: [Entity User] -> Controller [UserData]
-extractUsersData users = do
-  forMC users $ \u -> do
-    userId <- project userId' u
-    name   <- project userDisplayName' u
-    return $ UserData userId name

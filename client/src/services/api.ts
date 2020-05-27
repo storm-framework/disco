@@ -1,5 +1,5 @@
 import axios, { AxiosRequestConfig } from "axios";
-import { Invitation, Room, Entity } from "../models";
+import { Invitation, Room, Entity, User } from "../models";
 
 const API_URL = "http://localhost:3000/api";
 
@@ -57,14 +57,16 @@ class ApiService {
     return this.put("/invitation", invitations);
   }
 
+  // Users
+
+  users(): Promise<[User]> {
+    return this.get("/user");
+  }
+
   // Rooms
 
-  rooms(withUsers = false): Promise<Entity<Room>[]> {
-    return this.get("/room", {
-      params: {
-        withUsers: withUsers ? "true" : "false"
-      }
-    });
+  rooms(): Promise<Entity<Room>[]> {
+    return this.get("/room");
   }
 
   updateRooms(updates: Entity<Room>[], inserts: Room[]): Promise<[string]> {
@@ -74,7 +76,7 @@ class ApiService {
     });
   }
 
-  joinRoom(roomId: string): Promise<Room> {
+  joinRoom(roomId: string): Promise<string> {
     return this.post(`/room/${roomId}/join`);
   }
 

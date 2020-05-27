@@ -36,7 +36,7 @@ import           JSON
 {-@ userPut :: TaggedT<{\_ -> False}, {\_ -> True}> _ _ @-}
 userPut :: Controller ()
 userPut = do
-  (PutReq (InvitationCode id code) UserData {..}) <- decodeBody
+  (PutReq (InvitationCode id code) UserCreate {..}) <- decodeBody
   let user =
         mkUser emailAddress password fullName displayName affiliation "attendee" "public" Nothing
   _ <- selectFirstOr
@@ -50,16 +50,35 @@ userPut = do
   _      <- updateWhere (invitationId' ==. id) (invitationAccepted' `assign` True)
   respondJSON status201 (object ["id" .= userId])
 
+-------------------------------------------------------------------------------
+-- | User Get
+-------------------------------------------------------------------------------
+
+{-@ userGet :: TaggedT<{\_ -> False}, {\_ -> True}> _ _ @-}
+userGet :: Controller ()
+userGet = do
+  users <- selectList trueF
+  users <- forMC users $ \u -> do
+    id           <- project userId' u
+    emailAddress <- project userEmailAddress' u
+    fullName     <- project userFullName' u
+    displayName  <- project userDisplayName' u
+    affiliation  <- project userAffiliation' u
+    visibility   <- project userVisibility' u
+    room         <- if visibility == "public" then project userRoom' u else return Nothing
+    return $ UserData id emailAddress fullName displayName affiliation room
+  respondJSON status200 users
+
 data PutReq = PutReq
   { putReqInvitationCode :: InvitationCode
-  , putReqUser :: UserData
+  , putReqUser :: UserCreate
   }
   deriving Generic
 
 instance FromJSON PutReq where
   parseJSON = genericParseJSON (stripPrefix "putReq")
 
-data UserData = UserData
+data UserCreate = UserCreate
   { emailAddress :: Text
   , password :: Text
   , fullName :: Text
@@ -68,8 +87,18 @@ data UserData = UserData
   }
   deriving Generic
 
-instance FromJSON UserData where
+instance FromJSON UserCreate where
   parseJSON = genericParseJSON defaultOptions
 
+data UserData = UserData
+  { userId :: UserId
+  , userEmailAddress :: Text
+  , userFullName :: Text
+  , userDisplayName :: Text
+  , userAffiliation :: Text
+  , userRoom :: Maybe RoomId
+  }
+  deriving Generic
+
 instance ToJSON UserData where
-  toEncoding = genericToEncoding defaultOptions
+  toEncoding = genericToEncoding (stripPrefix "user")

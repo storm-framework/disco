@@ -3,7 +3,7 @@
     <b-row>
       <b-col sm>
         <div v-for="room in rooms" v-bind:key="room.id">
-          <a v-on:click.stop="selectRoom(room)" href="#">
+          <a v-on:click.stop="selectRoom(room.id)" href="#">
             {{ room.data.name }}
           </a>
         </div>
@@ -32,25 +32,25 @@ import { Room, Entity } from "@/models";
 
 @Component
 export default class Home extends Vue {
-  rooms: Entity<Room>[] = [];
-  activeRoom: Entity<Room> | null = null;
-
-  mounted() {
-    ApiService.rooms(true)
-      .then(rooms => {
-        this.rooms = rooms;
-      })
-      .catch(console.log);
+  get activeRoom(): Entity<Room> | null {
+    return this.$store.getters.activeRoom;
   }
 
-  selectRoom(room: Entity<Room>) {
-    this.activeRoom = room;
+  get rooms(): Entity<Room>[] {
+    return this.$store.getters.roomsWithUsers;
+  }
+
+  mounted() {
+    this.$store.dispatch("initHome");
+  }
+
+  selectRoom(roomId: string) {
+    this.$store.dispatch("selectRoom", roomId);
   }
 
   joinRoom(room: Entity<Room>) {
-    ApiService.joinRoom(room.id).then(updated => {
-      room.data = updated;
-      window.open(room.data.zoomLink, "_blank");
+    ApiService.joinRoom(room.id).then(zoomLink => {
+      window.open(zoomLink, "_blank");
     });
   }
 }

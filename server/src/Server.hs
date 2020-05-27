@@ -62,6 +62,7 @@ runServer = runNoLoggingT $ do
             get "/api/invitation" invitationGet
             put "/api/invitation" invitationPut
             put "/api/user"       userPut
+            get "/api/user" userGet
             get "/api/room" roomGet
             post "/api/room"          roomPost
             post "/api/room/:id/join" joinRoom
