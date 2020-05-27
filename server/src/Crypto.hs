@@ -9,6 +9,8 @@ import           Control.Monad                  ( replicateM )
 
 import           Controllers
 import           Binah.Infrastructure
+import           Binah.Filters
+import           Model
 
 instance MonadRandom TIO where
   getRandomBytes x = TIO (getRandomBytes x)

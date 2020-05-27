@@ -1,14 +1,8 @@
 <template>
-  <b-form class="form-send-invitations text-center" @submit="onSubmit">
-    <b-overlay
-      :show="loading"
-      spinner-variant="primary"
-      spinner-type="grow"
-      spinner-small
-      rounded="sm"
-      bg-color="#f5f5f5"
-    >
-      <b-container>
+  <div class="admin">
+    <navbar :activity="loading" />
+    <b-form class="form-send-invitations text-center mt-5" @submit="onSubmit">
+      <b-container v-if="!loading">
         <b-alert :show="fatalError" variant="danger">{{ errorMsg }}</b-alert>
         <b-row class="mb-3">
           <b-col sm>
@@ -97,18 +91,25 @@
           </b-button>
         </div>
 
-        <b-button variant="primary" size="lg" type="submit" class="mt-4">
+        <b-button
+          variant="primary"
+          size="lg"
+          type="submit"
+          :disabled="saving"
+          class="mt-3"
+        >
           Save
         </b-button>
       </b-container>
-    </b-overlay>
-  </b-form>
+    </b-form>
+  </div>
 </template>
 
 <script lang="ts">
 import { Component, Vue } from "vue-property-decorator";
-import { Room, Entity } from "../models";
-import ApiService from "../services/api";
+import { Room, Entity } from "@/models";
+import ApiService from "@/services/api";
+import Navbar from "@/components/Navbar.vue";
 
 interface OldRoom {
   id: string;
@@ -138,9 +139,10 @@ function parseOldRoom(row: OldRoom): Entity<Room> {
   };
 }
 
-@Component
+@Component({ components: { Navbar } })
 export default class SignIn extends Vue {
   loading = false;
+  saving = false;
   oldRooms: OldRoom[] = [];
   newRooms: NewRoom[] = [];
   fatalError = false;
@@ -171,19 +173,22 @@ export default class SignIn extends Vue {
   }
 
   onSubmit(evt: Event) {
+    if (this.saving) {
+      return;
+    }
     const updates = this.oldRooms.map(parseOldRoom);
     const inserts = this.newRooms.map(parseNewRoom);
-    this.loading = true;
+    this.saving = true;
     ApiService.updateRooms(updates, inserts)
       .then(ids => {
         for (const i in this.newRooms) {
           this.oldRooms.push({ id: ids[i], ...this.newRooms[i] });
         }
         this.newRooms = [];
-        this.loading = false;
+        this.saving = false;
       })
       .catch(() => {
-        this.loading = false;
+        this.saving = false;
       });
     evt.preventDefault();
   }

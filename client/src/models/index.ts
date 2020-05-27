@@ -11,6 +11,7 @@ export interface Entity<T> {
 export interface User {
   id: string;
   displyName: string;
+  level: string;
   room: string | null;
 }
 

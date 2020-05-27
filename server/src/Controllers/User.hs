@@ -58,7 +58,7 @@ userPut = do
 {-@ userGet :: TaggedT<{\_ -> False}, {\_ -> True}> _ _ @-}
 userGet :: Controller ()
 userGet = do
-  _ <- requireAuthUser
+  _     <- requireAuthUser
   users <- selectList trueF
   users <- forMC users $ \u -> do
     id           <- project userId' u
@@ -66,9 +66,10 @@ userGet = do
     fullName     <- project userFullName' u
     displayName  <- project userDisplayName' u
     affiliation  <- project userAffiliation' u
+    level        <- project userLevel' u
     visibility   <- project userVisibility' u
     room         <- if visibility == "public" then project userRoom' u else return Nothing
-    return $ UserData id emailAddress fullName displayName affiliation room
+    return $ UserData id emailAddress fullName displayName affiliation level room
   respondJSON status200 users
 
 data PutReq = PutReq
@@ -98,6 +99,7 @@ data UserData = UserData
   , userFullName :: Text
   , userDisplayName :: Text
   , userAffiliation :: Text
+  , userLevel :: String
   , userRoom :: Maybe RoomId
   }
   deriving Generic

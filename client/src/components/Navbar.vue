@@ -5,6 +5,9 @@
         <b-navbar-brand to="/">Community Video</b-navbar-brand>
 
         <b-navbar-nav class="ml-auto">
+          <b-nav-item v-if="isOrganizer" :to="{ name: 'Admin' }">
+            Admin
+          </b-nav-item>
           <b-nav-item v-on:click="signOut">Sign out</b-nav-item>
         </b-navbar-nav>
       </b-container>
@@ -31,6 +34,10 @@ import { vueWindowSizeMixin } from "vue-window-size";
 export default class Navbar extends Vue {
   @Prop({ default: false }) activity!: boolean;
 
+  get isOrganizer() {
+    return this.$store.getters.sessionUser?.level == "organizer";
+  }
+
   signOut() {
     this.$store
       .dispatch("signOut")
@@ -41,7 +48,7 @@ export default class Navbar extends Vue {
 
 <style lang="scss">
 .navbar-activity-indicator {
-  position: absolute;
+  position: relative;
   top: -11px;
   left: -25px;
 }

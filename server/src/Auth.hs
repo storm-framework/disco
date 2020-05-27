@@ -72,6 +72,7 @@ signIn = do
     <*> project userFullName'     user
     <*> project userDisplayName'  user
     <*> project userAffiliation'  user
+    <*> project userLevel'        user
     <*> project userRoom'         user
 
   respondJSON status200 $ SignInRes (unpackLazy8 token) userData
