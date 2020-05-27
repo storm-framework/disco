@@ -46,7 +46,7 @@ export default new Vuex.Store({
     setSessionUser(state, user) {
       state.sessionUserId = user.id;
     },
-    removeSessionUser(state, user) {
+    removeSessionUser(state) {
       state.sessionUserId = null;
     }
   },
@@ -97,7 +97,7 @@ export default new Vuex.Store({
       rooms[roomId] && addUsersToRoom(rooms[roomId], getters.roomUsers(roomId)),
     activeRoom: ({ activeRoomId }, getters) =>
       activeRoomId && getters.room(activeRoomId),
-    currentRoom: ({ rooms }, getters) => {
+    currentRoom: (_state, getters) => {
       const currentRoomId = getters.sessionUser?.room;
       return currentRoomId && getters.room(currentRoomId);
     }

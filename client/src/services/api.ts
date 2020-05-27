@@ -19,7 +19,7 @@ class ApiService {
     if (!this.accessToken) {
       return null;
     }
-    const [_header, payload, _signature] = _.split(this.accessToken, ".");
+    const payload = _.split(this.accessToken, ".")[1];
     return JSON.parse(atob(payload)).sub;
   }
 
@@ -50,7 +50,6 @@ class ApiService {
   }
 
   signOut() {
-    console.log("hola");
     this.accessToken = null;
     localStorage.removeItem("accessToken");
     // TODO: Remove user from room
