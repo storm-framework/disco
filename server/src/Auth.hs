@@ -48,8 +48,10 @@ import           Binah.Templates
 import           Binah.Frankie
 
 import           Controllers
+import           Controllers.User               ( UserData(..) )
 import           Model
 import           JSON
+import           Crypto
 
 
 --------------------------------------------------------------------------------
@@ -63,14 +65,16 @@ signIn = do
   user                              <- authUser emailAddress password
   userId                            <- project userId' user
   token                             <- genJwt userId
-  userRes                           <-
-    UserRes emailAddress
-    <$> project userFullName'    user
-    <*> project userDisplayName' user
-    <*> project userAffiliation' user
-    <*> project userLevel'       user
+  userData                          <-
+    UserData
+    <$> project userId'           user
+    <*> project userEmailAddress' user
+    <*> project userFullName'     user
+    <*> project userDisplayName'  user
+    <*> project userAffiliation'  user
+    <*> project userRoom'         user
 
-  respondJSON status200 $ SignInRes (unpackLazy8 token) userRes
+  respondJSON status200 $ SignInRes (unpackLazy8 token) userData
 
 {-@ ignore authUser @-}
 authUser :: Text -> Text -> Controller (Entity User)
@@ -101,23 +105,11 @@ data SignInReq = SignInReq
 instance FromJSON SignInReq where
   parseJSON = genericParseJSON (stripPrefix "signInReq")
 
-data UserRes = UserRes
-  { userEmailAddress :: Text
-  , userFullName :: Text
-  , userDisplayName :: Text
-  , userAffiliation :: Text
-  , userLevel    :: String
-  }
-  deriving Generic
-
 data SignInRes = SignInRes
   { signInResAccessToken :: String
-  , signInResUser  :: UserRes
+  , signInResUser :: UserData
   }
   deriving Generic
-
-instance ToJSON UserRes where
-  toEncoding = genericToEncoding (stripPrefix "signInRes")
 
 instance ToJSON SignInRes where
   toEncoding = genericToEncoding (stripPrefix "signInRes")
@@ -177,25 +169,3 @@ key = fromOctets raw
  where
   raw :: ByteString
   raw = "\xe5L\xb7\xf6\x03|\xb6\n\x10\xd8\xb8\x96\xe2\xc4W@#W\xb4>\th*iiW\x12\x80z\x04i="
-
--------------------------------------------------------------------------------
--- | Random
--------------------------------------------------------------------------------
-
-{-@ ignore genRandomCodes @-}
-{-@ genRandomCodes :: _ -> TaggedT<{\_ -> True}, {\_ -> False}> _ _ @-}
-genRandomCodes :: Int -> Controller [Text]
-genRandomCodes n = replicateM n genRandomCode
-
-{-@ ignore genRandomCode @-}
-{-@ genRandomCode :: TaggedT<{\_ -> True}, {\_ -> False}> _ _@-}
-genRandomCode :: Controller Text
-genRandomCode = do
-  bytes <- liftTIO (getRandomBytes 24)
-  return $ T.decodeUtf8 $ B64Url.encode bytes
-
-instance MonadRandom TIO where
-  getRandomBytes x = TIO (getRandomBytes x)
-
-instance MonadTime TIO where
-  currentTime = TIO currentTime

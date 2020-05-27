@@ -28,7 +28,7 @@ import           Binah.Frankie
 import           Controllers
 import           Model
 import           JSON
-import           Auth                           ( genRandomCodes )
+import           Crypto                         ( genRandomCodes )
 import           Text.Read                      ( readMaybe )
 
 --------------------------------------------------------------------------------

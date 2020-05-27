@@ -3,7 +3,7 @@
     <b-row>
       <b-col sm>
         <div v-for="room in rooms" v-bind:key="room.id">
-          <a v-on:click.stop="selectRoom(room.id)" href="#">
+          <a v-on:click.prevent.stop="selectRoom(room.id)" href="#">
             {{ room.data.name }}
           </a>
         </div>
@@ -27,16 +27,14 @@
 <script lang="ts">
 // @ is an alias to /src
 import { Component, Vue } from "vue-property-decorator";
-import ApiService from "@/services/api";
-import { Room, Entity } from "@/models";
 
 @Component
 export default class Home extends Vue {
-  get activeRoom(): Entity<Room> | null {
+  get activeRoom() {
     return this.$store.getters.activeRoom;
   }
 
-  get rooms(): Entity<Room>[] {
+  get rooms() {
     return this.$store.getters.roomsWithUsers;
   }
 
@@ -48,8 +46,8 @@ export default class Home extends Vue {
     this.$store.dispatch("selectRoom", roomId);
   }
 
-  joinRoom(room: Entity<Room>) {
-    ApiService.joinRoom(room.id).then(zoomLink => {
+  joinRoom(roomId: string) {
+    this.$store.dispatch("joinRoom", roomId).then(zoomLink => {
       window.open(zoomLink, "_blank");
     });
   }

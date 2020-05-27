@@ -25,7 +25,9 @@ User
   insert {\new viewer -> IsOrganizer viewer || userLevel new == "attendee"}
 
   read [ password ] @IsSelf
-  read [ room ] {\user _ -> userVisibility user == "public"}
+  read [ room ] {\user viewer ->
+    userVisibility user == "public" || IsSelf user viewer
+  }
 
   update [ room ] {\old _ viewer -> IsSelf old viewer}
 

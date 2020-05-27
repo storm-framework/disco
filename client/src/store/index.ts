@@ -2,20 +2,23 @@ import Vue from "vue";
 import Vuex from "vuex";
 import ApiService from "@/services/api";
 import { Entity, Room, User } from "@/models";
+import _ from "lodash";
 
 Vue.use(Vuex);
 
 interface State {
+  sessionUser: User | null;
   loading: boolean;
-  users: Map<string, User>;
-  rooms: Map<string, any>;
+  users: { [key: string]: User };
+  rooms: { [key: string]: Entity<Room> };
   activeRoomId: string | null;
 }
 
 const initialState: State = {
+  sessionUser: null,
   loading: false,
-  users: new Map(),
-  rooms: new Map(),
+  users: {},
+  rooms: {},
   activeRoomId: null
 };
 
@@ -30,51 +33,85 @@ export default new Vuex.Store({
       { rooms, users }: { rooms: Entity<Room>[]; users: User[] }
     ) {
       state.loading = false;
-      state.rooms = new Map(rooms.map(r => [r.id, r]));
-      state.users = new Map(users.map(u => [u.id, u]));
+      state.rooms = Object.fromEntries(rooms.map(r => [r.id, r]));
+      state.users = Object.fromEntries(users.map(u => [u.id, u]));
     },
     changeActiveRoom(state, roomId: string) {
       state.activeRoomId = roomId;
     },
-    updateRoom(state, { roomId, room }) {
-      state.rooms.set(roomId, room);
+    swithToRoom(state, roomId) {
+      const u = state.sessionUser && state.users[state.sessionUser.id];
+      if (u) {
+        u.room = roomId;
+      }
+    },
+    setSessionUser(state, user) {
+      state.sessionUser = user;
     }
   },
   actions: {
-    initHome({ commit }) {
+    signIn: ({ commit }, { emailAddress, password }) =>
+      ApiService.signIn(emailAddress, password).then(user => {
+        commit("setSessionUser", user);
+      }),
+    initHome: ({ commit }) => {
       commit("requestStart");
-      Promise.all([ApiService.rooms(), ApiService.users()])
-        .then(r => commit("initHome", { rooms: r[0], users: r[1] }))
-        .catch(console.log);
+      Promise.all([ApiService.rooms(), ApiService.users()]).then(r =>
+        commit("initHome", { rooms: r[0], users: r[1] })
+      );
     },
-    selectRoom({ commit }, roomId: string) {
+    selectRoom: ({ commit }, roomId: string) => {
       commit("changeActiveRoom", roomId);
     },
-    joinRoom({ commit, state }) {
+    joinRoom: ({ commit, state }) => {
       const roomId = state.activeRoomId;
       if (!roomId) {
         return;
       }
       commit("requestStart");
-      ApiService.joinRoom(roomId)
-        .then(room => commit("updateRoom", { roomId, room }))
-        .catch(console.log);
+      return ApiService.joinRoom(roomId).then(zoomLink => {
+        commit("swithToRoom", roomId);
+        return zoomLink;
+      });
     }
   },
   getters: {
     roomsWithUsers: ({ rooms, users }) => {
-      const result = new Map(rooms.entries());
-      for (const u of users.values()) {
-        const r = u.room && result.get(u.room);
-        if (r) {
-          r.data.users = r?.data.users || [];
-          r.data.users.push(u);
-        }
-      }
-      return Array.from(result.values());
+      const usersByRoom = _(users)
+        .values()
+        .groupBy(u => u.room)
+        .value();
+      return _({})
+        .assign(rooms)
+        .assignWith(usersByRoom, (room, users) => {
+          return {
+            id: room.id,
+            data: {
+              users,
+              ...room.data
+            }
+          };
+        })
+        .values()
+        .value();
     },
-    activeRoom: ({ rooms, activeRoomId }) =>
-      activeRoomId && rooms.get(activeRoomId)
+    activeRoom: ({ rooms, activeRoomId, users }) => {
+      if (activeRoomId && rooms[activeRoomId]) {
+        const roomUsers = _(users)
+          .values()
+          .filter(u => u.room == activeRoomId)
+          .value();
+        return {
+          id: activeRoomId,
+          data: {
+            users: roomUsers,
+            ...rooms[activeRoomId].data
+          }
+        };
+      } else {
+        return null;
+      }
+    }
   },
   modules: {},
   strict: process.env.NODE_ENV !== "production"

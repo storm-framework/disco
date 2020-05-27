@@ -1,5 +1,5 @@
 <template>
-  <b-form class="form-signin text-center" @submit="onSubmit">
+  <b-form class="form-signin text-center" @submit.prevent="onSubmit">
     <h3 class="mb-4">Sign into your account</h3>
     <b-form-input
       id="email-address"
@@ -36,7 +36,6 @@
 
 <script lang="ts">
 import { Component, Vue } from "vue-property-decorator";
-import ApiService from "../services/api";
 
 @Component
 export default class SignIn extends Vue {
@@ -45,9 +44,14 @@ export default class SignIn extends Vue {
   isValid = true;
   loading = false;
 
-  onSubmit(evt: Event) {
+  onSubmit() {
     this.loading = true;
-    ApiService.signIn(this.emailAddress, this.password)
+    const payload = {
+      emailAddress: this.emailAddress,
+      password: this.password
+    };
+    this.$store
+      .dispatch("signIn", payload)
       .then(() => {
         this.isValid = true;
         this.$router.replace({ name: "Home" });
@@ -56,7 +60,6 @@ export default class SignIn extends Vue {
         this.loading = false;
         this.isValid = false;
       });
-    evt.preventDefault();
   }
 }
 </script>

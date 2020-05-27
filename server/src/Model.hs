@@ -229,7 +229,7 @@ invitationAccepted' = EntityFieldWrapper InvitationAccepted
   -> BinahRecord <
        {\row -> userEmailAddress (entityVal row) == x_0 && userPassword (entityVal row) == x_1 && userFullName (entityVal row) == x_2 && userDisplayName (entityVal row) == x_3 && userAffiliation (entityVal row) == x_4 && userLevel (entityVal row) == x_5 && userVisibility (entityVal row) == x_6 && userRoom (entityVal row) == x_7}
      , {\new viewer -> IsOrganizer viewer || userLevel (entityVal new) == "attendee"}
-     , {\x_0 x_1 -> (userVisibility (entityVal x_0) == "public") || (x_0 == x_1)}
+     , {\x_0 x_1 -> (userVisibility (entityVal x_0) == "public" || IsSelf x_0 x_1) || (x_0 == x_1)}
      > User
 @-}
 mkUser x_0 x_1 x_2 x_3 x_4 x_5 x_6 x_7 = BinahRecord (User x_0 x_1 x_2 x_3 x_4 x_5 x_6 x_7)
@@ -359,7 +359,7 @@ userVisibility' = EntityFieldWrapper UserVisibility
 {-@ measure userRoomCap :: Entity User -> Bool @-}
 
 {-@ assume userRoom' :: EntityFieldWrapper <
-    {\x_0 x_1 -> (userVisibility (entityVal x_0) == "public")}
+    {\x_0 x_1 -> (userVisibility (entityVal x_0) == "public" || IsSelf x_0 x_1)}
   , {\row field  -> field == userRoom (entityVal row)}
   , {\field row  -> field == userRoom (entityVal row)}
   , {\old -> userRoomCap old}
