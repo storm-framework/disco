@@ -83,6 +83,7 @@ joinRoom rid = do
 {-@ roomGet :: TaggedT<{\_ -> False}, {\_ -> True}> _ _ @-}
 roomGet :: Controller ()
 roomGet = do
+  _     <- requireAuthUser
   rooms <- selectList trueF
   rooms <- forMC rooms $ \room -> do
     id       <- project roomId' room

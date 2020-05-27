@@ -1,37 +1,39 @@
 <template>
-  <b-form class="form-signin text-center" @submit.prevent="onSubmit">
-    <h3 class="mb-4">Sign into your account</h3>
-    <b-form-input
-      id="email-address"
-      type="email"
-      v-model="emailAddress"
-      required
-      placeholder="Email address"
-    ></b-form-input>
+  <div class="signin">
+    <b-form class="form-signin text-center" @submit.prevent="onSubmit">
+      <h3 class="mb-4">Sign into your account</h3>
+      <b-form-input
+        id="email-address"
+        type="email"
+        v-model="emailAddress"
+        required
+        placeholder="Email address"
+      ></b-form-input>
 
-    <b-form-input
-      id="password"
-      type="password"
-      v-model="password"
-      required
-      placeholder="Password"
-    ></b-form-input>
+      <b-form-input
+        id="password"
+        type="password"
+        v-model="password"
+        required
+        placeholder="Password"
+      ></b-form-input>
 
-    <b-form-invalid-feedback :state="isValid">
-      Incorrect email address or password.
-    </b-form-invalid-feedback>
+      <b-form-invalid-feedback :state="isValid">
+        Incorrect email address or password.
+      </b-form-invalid-feedback>
 
-    <b-button
-      :disabled="loading"
-      variant="primary"
-      block
-      size="lg"
-      type="submit"
-      class="mt-4"
-    >
-      Sign in
-    </b-button>
-  </b-form>
+      <b-button
+        :disabled="loading"
+        variant="primary"
+        block
+        size="lg"
+        type="submit"
+        class="mt-4"
+      >
+        Sign in
+      </b-button>
+    </b-form>
+  </div>
 </template>
 
 <script lang="ts">
@@ -65,6 +67,13 @@ export default class SignIn extends Vue {
 </script>
 
 <style lang="scss">
+.signin {
+  height: 100%;
+  width: 100%;
+  display: flex;
+  align-items: center;
+}
+
 .form-signin {
   width: 100%;
   max-width: 350px;

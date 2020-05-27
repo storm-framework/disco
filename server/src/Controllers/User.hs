@@ -36,6 +36,7 @@ import           JSON
 {-@ userPut :: TaggedT<{\_ -> False}, {\_ -> True}> _ _ @-}
 userPut :: Controller ()
 userPut = do
+  _ <- requireAuthUser
   (PutReq (InvitationCode id code) UserCreate {..}) <- decodeBody
   let user =
         mkUser emailAddress password fullName displayName affiliation "attendee" "public" Nothing
@@ -57,6 +58,7 @@ userPut = do
 {-@ userGet :: TaggedT<{\_ -> False}, {\_ -> True}> _ _ @-}
 userGet :: Controller ()
 userGet = do
+  _ <- requireAuthUser
   users <- selectList trueF
   users <- forMC users $ \u -> do
     id           <- project userId' u

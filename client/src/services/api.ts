@@ -1,6 +1,6 @@
 import axios, { AxiosRequestConfig } from "axios";
-import { Invitation, Room, Entity, User } from "../models";
 import _ from "lodash";
+import { Entity, Invitation, Room, User } from "../models";
 
 const API_URL = "http://localhost:3000/api";
 
@@ -33,6 +33,7 @@ class ApiService {
     });
     if (response.data.accessToken) {
       localStorage.setItem("accessToken", response.data.accessToken);
+      this.accessToken = response.data.accessToken;
     }
 
     return response.data.user;
@@ -44,8 +45,16 @@ class ApiService {
     return response.data;
   }
 
-  logOut() {
+  signedIn() {
+    return this.accessToken !== null;
+  }
+
+  signOut() {
+    console.log("hola");
+    this.accessToken = null;
     localStorage.removeItem("accessToken");
+    // TODO: Remove user from room
+    return Promise.resolve();
   }
 
   // Invitations

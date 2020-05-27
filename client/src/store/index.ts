@@ -1,14 +1,13 @@
+import { Entity, Room, User } from "@/models";
+import ApiService from "@/services/api";
+import _ from "lodash";
 import Vue from "vue";
 import Vuex from "vuex";
-import ApiService from "@/services/api";
-import { Entity, Room, User } from "@/models";
-import _ from "lodash";
 
 Vue.use(Vuex);
 
 interface State {
   sessionUserId: string | null;
-  loading: boolean;
   users: { [key: string]: User };
   rooms: { [key: string]: Entity<Room> };
   activeRoomId: string | null;
@@ -16,23 +15,25 @@ interface State {
 
 const initialState: State = {
   sessionUserId: ApiService.sessionUserId,
-  loading: false,
   users: {},
   rooms: {},
   activeRoomId: null
 };
 
+function addUsersToRoom(room: Entity<Room>, users: User[]) {
+  return {
+    id: room.id,
+    data: {
+      users,
+      ...room.data
+    }
+  };
+}
+
 export default new Vuex.Store({
   state: initialState,
   mutations: {
-    requestStart(state) {
-      state.loading = true;
-    },
-    initHome(
-      state,
-      { rooms, users }: { rooms: Entity<Room>[]; users: User[] }
-    ) {
-      state.loading = false;
+    sync(state, { rooms, users }: { rooms: Entity<Room>[]; users: User[] }) {
       state.rooms = Object.fromEntries(rooms.map(r => [r.id, r]));
       state.users = Object.fromEntries(users.map(u => [u.id, u]));
     },
@@ -47,6 +48,9 @@ export default new Vuex.Store({
     },
     setSessionUser(state, user) {
       state.sessionUserId = user.id;
+    },
+    removeSessionUser(state, user) {
+      state.sessionUserId = null;
     }
   },
   actions: {
@@ -54,63 +58,51 @@ export default new Vuex.Store({
       ApiService.signIn(emailAddress, password).then(user => {
         commit("setSessionUser", user);
       }),
-    initHome: ({ commit }) => {
-      commit("requestStart");
+    signOut: ({ commit }) =>
+      ApiService.signOut().then(() => commit("removeSessionUser")),
+    sync: ({ commit }) =>
       Promise.all([ApiService.rooms(), ApiService.users()]).then(r =>
-        commit("initHome", { rooms: r[0], users: r[1] })
-      );
-    },
+        commit("sync", { rooms: r[0], users: r[1] })
+      ),
     selectRoom: ({ commit }, roomId: string) => {
       commit("changeActiveRoom", roomId);
     },
-    joinRoom: ({ commit, state }) => {
+    joinRoom: async ({ commit, state }) => {
       const roomId = state.activeRoomId;
       if (!roomId) {
-        return;
+        return Promise.reject();
       }
-      commit("requestStart");
-      return ApiService.joinRoom(roomId).then(zoomLink => {
-        commit("swithToRoom", roomId);
-        return zoomLink;
-      });
+      const zoomLink = await ApiService.joinRoom(roomId);
+      commit("swithToRoom", roomId);
+      return zoomLink;
     }
   },
   getters: {
-    roomsWithUsers: ({ rooms, users }) => {
+    sessionUser: ({ users, sessionUserId }) =>
+      sessionUserId && users[sessionUserId],
+    rooms: ({ rooms, users }) => {
       const usersByRoom = _(users)
         .values()
         .groupBy(u => u.room)
         .value();
       return _({})
         .assign(rooms)
-        .assignWith(usersByRoom, (room, users) => {
-          return {
-            id: room.id,
-            data: {
-              users,
-              ...room.data
-            }
-          };
-        })
+        .assignWith(usersByRoom, addUsersToRoom)
         .values()
         .value();
     },
-    activeRoom: ({ rooms, activeRoomId, users }) => {
-      if (activeRoomId && rooms[activeRoomId]) {
-        const roomUsers = _(users)
-          .values()
-          .filter(u => u.room == activeRoomId)
-          .value();
-        return {
-          id: activeRoomId,
-          data: {
-            users: roomUsers,
-            ...rooms[activeRoomId].data
-          }
-        };
-      } else {
-        return null;
-      }
+    roomUsers: ({ users }) => (roomId: string) =>
+      _(users)
+        .values()
+        .filter(u => u.room == roomId)
+        .value(),
+    room: ({ rooms }, getters) => (roomId: string) =>
+      rooms[roomId] && addUsersToRoom(rooms[roomId], getters.roomUsers(roomId)),
+    activeRoom: ({ activeRoomId }, getters) =>
+      activeRoomId && getters.room(activeRoomId),
+    currentRoom: ({ rooms }, getters) => {
+      const currentRoomId = getters.sessionUser?.room;
+      return currentRoomId && getters.room(currentRoomId);
     }
   },
   modules: {},
