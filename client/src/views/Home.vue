@@ -7,7 +7,7 @@
         <div v-if="currentRoom">
           You are currently in
           <a v-on:click.prevent.stop="selectRoom(currentRoom.id)" href="#">
-            {{ currentRoom.data.name }}
+            {{ currentRoom.name }}
           </a>
         </div>
       </b-container>
@@ -18,7 +18,7 @@
             <h3>Rooms</h3>
             <div v-for="room in rooms" v-bind:key="room.id">
               <a v-on:click.prevent.stop="selectRoom(room.id)" href="#">
-                {{ room.data.name }}
+                {{ room.name }}
               </a>
             </div>
           </b-col>
@@ -26,7 +26,7 @@
           <b-col sm>
             <div class="active-room" v-if="activeRoom">
               <h3>
-                {{ activeRoom.data.name }}
+                {{ activeRoom.name }}
               </h3>
               <b-overlay
                 :show="joiningRoom"
@@ -39,7 +39,7 @@
                 </b-button>
               </b-overlay>
               <h4 class="mt-5">Users</h4>
-              <div v-for="user in activeRoom.data.users" v-bind:key="user.id">
+              <div v-for="user in activeRoom.users" v-bind:key="user.id">
                 {{ user.displayName }}
               </div>
             </div>

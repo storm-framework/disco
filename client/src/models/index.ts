@@ -3,11 +3,6 @@ export interface Invitation {
   fullName: string;
 }
 
-export interface Entity<T> {
-  id: string;
-  data: T;
-}
-
 export interface User {
   id: string;
   displyName: string;
@@ -15,8 +10,12 @@ export interface User {
   room: string | null;
 }
 
-export interface Room {
+export interface RoomInsert {
   name: string;
   capacity: number;
   zoomLink: string;
+}
+
+export interface Room extends RoomInsert {
+  id: string;
 }

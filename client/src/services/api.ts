@@ -1,6 +1,6 @@
 import axios, { AxiosRequestConfig } from "axios";
 import _ from "lodash";
-import { Entity, Invitation, Room, User } from "../models";
+import { Invitation, Room, RoomInsert, User } from "../models";
 
 const API_URL = "/api";
 
@@ -19,7 +19,7 @@ class ApiService {
     if (!this.accessToken) {
       return null;
     }
-    const [_header, payload, _signature] = _.split(this.accessToken, ".");
+    const payload = _.split(this.accessToken, ".")[1];
     return JSON.parse(atob(payload)).sub;
   }
 
@@ -50,7 +50,6 @@ class ApiService {
   }
 
   signOut() {
-    console.log("hola");
     this.accessToken = null;
     localStorage.removeItem("accessToken");
     // TODO: Remove user from room
@@ -75,11 +74,11 @@ class ApiService {
 
   // Rooms
 
-  rooms(): Promise<Entity<Room>[]> {
+  rooms(): Promise<Room[]> {
     return this.get("/room");
   }
 
-  updateRooms(updates: Entity<Room>[], inserts: Room[]): Promise<[string]> {
+  updateRooms(updates: Room[], inserts: RoomInsert[]): Promise<[string]> {
     return this.post("/room", {
       inserts: inserts,
       updates: updates
