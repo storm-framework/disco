@@ -1,4 +1,5 @@
 import "@babel/polyfill";
+import "@fortawesome/fontawesome-free/css/all.css";
 import { BootstrapVueIcons } from "bootstrap-vue";
 import "mutationobserver-shim";
 import Vue from "vue";

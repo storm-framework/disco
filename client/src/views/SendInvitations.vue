@@ -41,7 +41,6 @@
       centered
       title="Import file"
       size="lg"
-      visible
       ok-title="Import"
       ok-only
       :ok-disabled="!importFileShowPreview"
@@ -170,7 +169,9 @@ export default class SendInvitations extends Vue {
           invitations.pop();
         }
         if (!_.isEmpty(invitations)) {
-          ApiService.sendInvitations(invitations).then(console.log);
+          ApiService.sendInvitations(invitations).then(() =>
+            this.$router.push({ name: "Invitations" })
+          );
         }
       }
     });
@@ -255,8 +256,6 @@ export default class SendInvitations extends Vue {
 
   extractDataFromImportedFile(nrows?: number): [string, string][] {
     let rows = this.importFileRows;
-    const emailAddress = this.importFileEmailAddressIdx;
-    const fullName = this.importFileFullNameIdx;
     if (rows === null) {
       return [];
     }
@@ -265,7 +264,10 @@ export default class SendInvitations extends Vue {
     } else {
       rows = rows.slice(0, nrows);
     }
-    return rows.map(r => [r[emailAddress], r[fullName]]);
+    return rows.map(r => [
+      r[this.importFileEmailAddressIdx] || "",
+      r[this.importFileFullNameIdx] || ""
+    ]);
   }
 
   onFileChange(file: File) {

@@ -57,13 +57,14 @@ instance FromJSON PutReq where
 -- | Invitation Get
 --------------------------------------------------------------------------------
 
-{-@ invitationGet :: TaggedT<{\_ -> False}, {\_ -> True}> _ _ @-}
-invitationGet :: Controller ()
-invitationGet = do
+{-@ invitationGet :: _ -> TaggedT<{\_ -> False}, {\_ -> True}> _ _ @-}
+invitationGet :: Int64 -> Controller ()
+invitationGet iid = do
+  let id = toSqlKey iid :: InvitationId
   code <- listToMaybe <$> queryParams "code"
-  case code >>= parseCode of
-    Nothing                       -> respondError status400 (Just "missing code")
-    Just (InvitationCode id code) -> do
+  case code of
+    Nothing   -> respondError status400 (Just "missing code")
+    Just code -> do
       invitation <- selectFirstOr
         notFoundJSON
         (invitationCode' ==. code &&: invitationId' ==. id &&: invitationAccepted' ==. False)
@@ -74,6 +75,25 @@ invitationGet = do
         <*> project invitationEmailAddress' invitation
         <*> project invitationAccepted'     invitation
       respondJSON status200 res
+
+--------------------------------------------------------------------------------
+-- | Invitation Index
+--------------------------------------------------------------------------------
+
+{-@ invitationIndex :: TaggedT<{\_ -> False}, {\_ -> True}> _ _ @-}
+invitationIndex :: Controller ()
+invitationIndex = do
+  viewer      <- requireAuthUser
+  _           <- requireOrganizer viewer
+  invitations <- selectList trueF
+  res         <- forMC invitations $ \invitation ->
+    do
+        InvitationData
+      <$> project invitationId'           invitation
+      <*> project invitationFullName'     invitation
+      <*> project invitationEmailAddress' invitation
+      <*> project invitationAccepted'     invitation
+  respondJSON status200 res
 
 --------------------------------------------------------------------------------
 -- | Invitation Data

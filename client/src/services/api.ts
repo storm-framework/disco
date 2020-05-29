@@ -58,12 +58,17 @@ class ApiService {
 
   // Invitations
 
-  getInvitation(code: string): Promise<Invitation> {
-    return this.get(`/invitation?code=${code}`);
+  getInvitation(param: string): Promise<Invitation> {
+    const [id, code] = _.split(param, ".", 2);
+    return this.get(`/invitation/${id}?code=${code}`);
   }
 
   sendInvitations(invitations: InvitationInsert[]) {
     return this.put("/invitation", invitations);
+  }
+
+  getInvitations(): Promise<Invitation[]> {
+    return this.get("/invitation");
   }
 
   // Users
