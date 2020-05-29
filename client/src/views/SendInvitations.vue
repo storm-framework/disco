@@ -15,10 +15,10 @@
             v-b-modal.import-file-modal
             variant="outline-primary"
           >
-            <b-icon-file-spreadsheet /> Import
+            <i class="fa fa-file-import" /> Import
           </b-button>
           <b-button size="sm" v-on:click="onSend" variant="primary">
-            <b-icon-cursor /> Send
+            <i class="fa fa-paper-plane" /> Send
           </b-button>
         </b-col>
       </b-row>
@@ -26,7 +26,7 @@
         ref="table"
         :data="rows"
         :settings="hotSettings"
-        :height="windowHeight - 150"
+        height="calc(100vh - 150px)"
       >
         <hot-column
           title="Email address"
@@ -87,7 +87,10 @@
           </b-col>
         </b-form-row>
         <div v-show="importFileShowPreview">
-          <span><b-icon-search font-scale="0.8" /> Preview</span>
+          <span
+            ><i class="fa fa-search preview-icon" font-scale="0.8" />
+            Preview</span
+          >
           <hot-table
             :data="importFilePreviewData"
             :settings="importFileHotSettings"
@@ -106,11 +109,9 @@ import { Component, Vue, Watch } from "vue-property-decorator";
 import ApiService from "@/services/api";
 import Navbar from "@/components/Navbar.vue";
 import { HotTable, HotColumn } from "@handsontable/vue";
-import "handsontable/dist/handsontable.full.css";
 import XLSX from "xlsx";
 import _ from "lodash";
 import { BvModalEvent } from "bootstrap-vue";
-import { vueWindowSizeMixin } from "vue-window-size";
 import Handsontable from "handsontable";
 
 const PREVIEW_SIZE = 3;
@@ -124,10 +125,7 @@ Handsontable.validators.registerValidator(
   }
 );
 
-@Component({
-  components: { Navbar, HotTable, HotColumn },
-  mixins: [vueWindowSizeMixin]
-})
+@Component({ components: { Navbar, HotTable, HotColumn } })
 export default class SendInvitations extends Vue {
   hotSettings = {
     width: "100%",
@@ -297,5 +295,17 @@ export default class SendInvitations extends Vue {
 .send-invitations .invalid-data {
   font-size: 80%;
   color: var(--danger);
+}
+
+.preview-icon {
+  font-size: 12px;
+  vertical-align: middle;
+}
+
+.send-invitations {
+  .handsontable td,
+  .handsontable th {
+    line-height: 28px;
+  }
 }
 </style>
