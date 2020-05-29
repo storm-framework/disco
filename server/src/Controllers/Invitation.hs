@@ -43,11 +43,11 @@ invitationPut = do
   (PutReq reqData) <- decodeBody
   codes            <- genRandomCodes (length reqData)
   let invitations =
-        map (\((InvitationData f e), code) -> mkInvitation code f e False) (zip reqData codes)
+        map (\((InvitationInsert f e), code) -> mkInvitation code f e False) (zip reqData codes)
   ids <- insertMany invitations
   respondJSON status201 (object ["keys" .= map fromSqlKey ids])
 
-newtype PutReq = PutReq [InvitationData]
+newtype PutReq = PutReq [InvitationInsert]
   deriving Generic
 
 instance FromJSON PutReq where
@@ -69,22 +69,32 @@ invitationGet = do
         (invitationCode' ==. code &&: invitationId' ==. id &&: invitationAccepted' ==. False)
       res <-
         InvitationData
-        <$> project invitationFullName'     invitation
+        <$> project invitationId'           invitation
+        <*> project invitationFullName'     invitation
         <*> project invitationEmailAddress' invitation
+        <*> project invitationAccepted'     invitation
       respondJSON status200 res
 
 --------------------------------------------------------------------------------
 -- | Invitation Data
 --------------------------------------------------------------------------------
 
-data InvitationData = InvitationData
-  { invitationFullName     :: Text
-  , invitationEmailAddress :: Text
+data InvitationInsert = InvitationInsert
+  { insertFullName     :: Text
+  , insertEmailAddress :: Text
   }
   deriving Generic
 
-instance FromJSON InvitationData where
-  parseJSON = genericParseJSON (stripPrefix "invitation")
+instance FromJSON InvitationInsert where
+  parseJSON = genericParseJSON (stripPrefix "insert")
+
+data InvitationData = InvitationData
+  { invitationId :: InvitationId
+  , invitationFullName :: Text
+  , invitationEmailAddress :: Text
+  , invitationAccepted :: Bool
+  }
+  deriving Generic
 
 instance ToJSON InvitationData where
   toEncoding = genericToEncoding (stripPrefix "invitation")

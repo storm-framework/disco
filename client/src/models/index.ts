@@ -1,4 +1,11 @@
 export interface Invitation {
+  id: string;
+  emailAddress: string;
+  fullName: string;
+  accepted: boolean;
+}
+
+export interface InvitationInsert {
   emailAddress: string;
   fullName: string;
 }

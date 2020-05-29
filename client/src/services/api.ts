@@ -1,6 +1,6 @@
+import { Invitation, InvitationInsert, Room, RoomInsert, User } from "@/models";
 import axios, { AxiosRequestConfig } from "axios";
 import _ from "lodash";
-import { Invitation, Room, RoomInsert, User } from "../models";
 
 const API_URL = "http://localhost:3000/api";
 
@@ -62,7 +62,7 @@ class ApiService {
     return this.get(`/invitation?code=${code}`);
   }
 
-  sendInvitations(invitations: Invitation[]) {
+  sendInvitations(invitations: InvitationInsert[]) {
     return this.put("/invitation", invitations);
   }
 
