@@ -43,11 +43,11 @@ invitationPut = do
   (PutReq reqData) <- decodeBody
   codes            <- genRandomCodes (length reqData)
   let invitations =
-        map (\((InvitationData f e), code) -> mkInvitation code f e False) (zip reqData codes)
+        map (\((InvitationInsert f e), code) -> mkInvitation code f e False) (zip reqData codes)
   ids <- insertMany invitations
   respondJSON status201 (object ["keys" .= map fromSqlKey ids])
 
-newtype PutReq = PutReq [InvitationData]
+newtype PutReq = PutReq [InvitationInsert]
   deriving Generic
 
 instance FromJSON PutReq where
@@ -57,34 +57,64 @@ instance FromJSON PutReq where
 -- | Invitation Get
 --------------------------------------------------------------------------------
 
-{-@ invitationGet :: TaggedT<{\_ -> False}, {\_ -> True}> _ _ @-}
-invitationGet :: Controller ()
-invitationGet = do
+{-@ invitationGet :: _ -> TaggedT<{\_ -> False}, {\_ -> True}> _ _ @-}
+invitationGet :: Int64 -> Controller ()
+invitationGet iid = do
+  let id = toSqlKey iid :: InvitationId
   code <- listToMaybe <$> queryParams "code"
-  case code >>= parseCode of
-    Nothing                       -> respondError status400 (Just "missing code")
-    Just (InvitationCode id code) -> do
+  case code of
+    Nothing   -> respondError status400 (Just "missing code")
+    Just code -> do
       invitation <- selectFirstOr
         notFoundJSON
         (invitationCode' ==. code &&: invitationId' ==. id &&: invitationAccepted' ==. False)
       res <-
         InvitationData
-        <$> project invitationFullName'     invitation
+        <$> project invitationId'           invitation
+        <*> project invitationFullName'     invitation
         <*> project invitationEmailAddress' invitation
+        <*> project invitationAccepted'     invitation
       respondJSON status200 res
+
+--------------------------------------------------------------------------------
+-- | Invitation Index
+--------------------------------------------------------------------------------
+
+{-@ invitationIndex :: TaggedT<{\_ -> False}, {\_ -> True}> _ _ @-}
+invitationIndex :: Controller ()
+invitationIndex = do
+  viewer      <- requireAuthUser
+  _           <- requireOrganizer viewer
+  invitations <- selectList trueF
+  res         <- forMC invitations $ \invitation ->
+    do
+        InvitationData
+      <$> project invitationId'           invitation
+      <*> project invitationFullName'     invitation
+      <*> project invitationEmailAddress' invitation
+      <*> project invitationAccepted'     invitation
+  respondJSON status200 res
 
 --------------------------------------------------------------------------------
 -- | Invitation Data
 --------------------------------------------------------------------------------
 
-data InvitationData = InvitationData
-  { invitationFullName     :: Text
-  , invitationEmailAddress :: Text
+data InvitationInsert = InvitationInsert
+  { insertFullName     :: Text
+  , insertEmailAddress :: Text
   }
   deriving Generic
 
-instance FromJSON InvitationData where
-  parseJSON = genericParseJSON (stripPrefix "invitation")
+instance FromJSON InvitationInsert where
+  parseJSON = genericParseJSON (stripPrefix "insert")
+
+data InvitationData = InvitationData
+  { invitationId :: InvitationId
+  , invitationFullName :: Text
+  , invitationEmailAddress :: Text
+  , invitationAccepted :: Bool
+  }
+  deriving Generic
 
 instance ToJSON InvitationData where
   toEncoding = genericToEncoding (stripPrefix "invitation")

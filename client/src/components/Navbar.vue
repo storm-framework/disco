@@ -17,7 +17,7 @@
       shape="line"
       height="5"
       fillDuration="3"
-      :size="windowWidth"
+      :size="windowWidth - 50"
       hideBackground
       class="navbar-activity-indicator"
     />

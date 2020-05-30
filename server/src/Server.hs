@@ -59,9 +59,10 @@ runServer = runNoLoggingT $ do
             initWith $ initFromPool pool
         dispatch $ do
             post "/api/signin" signIn
-            get "/api/invitation" invitationGet
             put "/api/invitation" invitationPut
-            put "/api/user"       userPut
+            get "/api/invitation/:id" invitationGet
+            get "/api/invitation"     invitationIndex
+            put "/api/user" userPut
             get "/api/user" userGet
             get "/api/room" roomGet
             post "/api/room"          roomPost
