@@ -1,22 +1,17 @@
-import "@babel/polyfill";
-import "@fortawesome/fontawesome-free/css/all.css";
-import { BootstrapVueIcons } from "bootstrap-vue";
+// Polyfills
+import "core-js/stable";
+import "regenerator-runtime/runtime";
 import "mutationobserver-shim";
+
+// Introspect types
+import "reflect-metadata";
+
+// Vue setup
 import Vue from "vue";
-import VueProgress from "vue-progress-path";
-import "vue-progress-path/dist/vue-progress-path.css";
 import App from "./App.vue";
 import "./plugins/bootstrap-vue";
-import router from "./router";
-import store from "./store";
+import "./plugins/vue-fontawesome";
 
 Vue.config.productionTip = false;
 
-Vue.use(BootstrapVueIcons);
-Vue.use(VueProgress);
-
-new Vue({
-  router,
-  store,
-  render: h => h(App)
-}).$mount("#app");
+new App().$mount("#app");

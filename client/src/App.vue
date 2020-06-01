@@ -1,10 +1,30 @@
 <template>
   <div id="app">
+    <header class="mb-4">
+      <navbar />
+    </header>
     <router-view />
   </div>
 </template>
 
+<script lang="ts">
+  import { Vue, Component } from "vue-property-decorator";
+  import Navbar from "@/components/Navbar.vue"
+  import router from "@/router";
+  import store from "@/store";
+
+  @Component({
+    store,
+    router,
+    components: { Navbar }
+  })
+  export default class App extends Vue {}
+</script>
+
 <style lang="scss">
+  @import "~bootstrap/scss/bootstrap";
+  @import "~bootstrap-vue/src/index.scss";
+
 // :root {
 //   --font-family-sans-serif: -apple-system, BlinkMacSystemFont, "Segoe UI",
 //     Roboto, "Helvetica Neue", Arial, sans-serif, "Apple Color Emoji",

@@ -1,69 +1,65 @@
 <template>
-  <div class="home">
-    <navbar :activity="syncing" />
-    <div v-if="sessionUser">
-      <b-container>
-        <h2 class="mt-3">{{ sessionUser.fullName }}</h2>
-        <div v-if="currentRoom">
-          You are currently in
-          <a v-on:click.prevent.stop="selectRoom(currentRoom.id)" href="#">
-            {{ currentRoom.name }}
-          </a>
-        </div>
-      </b-container>
-      <hr />
-      <b-container>
-        <b-row class="mt-5">
-          <b-col sm>
-            <h3>Rooms</h3>
-            <div v-for="room in rooms" v-bind:key="room.id">
-              <a v-on:click.prevent.stop="selectRoom(room.id)" href="#">
-                {{ room.name }}
-              </a>
-            </div>
-          </b-col>
+  <b-container v-if="sessionUser" tag="main">
+    <h1 class="sr-only">Overview</h1>
+    <h2 class="sr-only">Your status</h2>
+    <section v-if="sessionUser" class="row">
+      <b-media tag="section" vertical-align="center" class="col-7 align-items-center">
+        <template v-slot:aside>
+          <b-img src="https://placekitten.com/300/300" fluid-grow rounded="circle" />
+        </template>
 
-          <b-col sm>
-            <div class="active-room" v-if="activeRoom">
-              <h3>
-                {{ activeRoom.name }}
-              </h3>
-              <b-overlay
-                :show="joiningRoom"
-                class="d-inline-block"
-                spinner-small
-                round
-              >
-                <b-button v-on:click="joinRoom(activeRoom)">
-                  Join Room
-                </b-button>
-              </b-overlay>
-              <h4 class="mt-5">Users</h4>
-              <div v-for="user in activeRoom.users" v-bind:key="user.id">
-                {{ user.displayName }}
-              </div>
-            </div>
-          </b-col>
-        </b-row>
-      </b-container>
-    </div>
-  </div>
+        <h3>{{ sessionUser.fullName }}</h3>
+
+        <dl>
+          <dt>Display name</dt>
+          <dd>{{ sessionUser.displayName }}</dd>
+        </dl>
+      </b-media>
+
+      <room-card v-if="currentRoom" :room="currentRoom" :h-context="4" class="col-5" />
+      <p v-else>You have not joined a room</p>
+    </section>
+    <section v-if="roomsAreAvailable">
+      <h2 v-if="currentRoom">Other Rooms</h2>
+      <h2 v-else>All Rooms</h2>
+      <ul class="row list-unstyled">
+        <li class="mb-4 col-4" v-for="room in availableRooms" :key="room.id">
+          <room-card :room="room" :h-context="3" class="available-room" />
+        </li>
+      </ul>
+    </section>
+  </b-container>
 </template>
 
 <script lang="ts">
 import { Component, Vue } from "vue-property-decorator";
-import Navbar from "@/components/Navbar.vue";
+import RoomCard from "@/components/RoomCard.vue";
+import { Room } from "@/models";
 import { mapGetters } from "vuex";
+import _ from "lodash";
 
 const SYNC_INTERVAL = 10000;
 
 @Component({
-  components: { Navbar },
-  computed: mapGetters(["activeRoom", "rooms", "sessionUser", "currentRoom"])
+  components: { RoomCard },
+  computed: mapGetters(["sessionUser", "currentRoom"])
 })
 export default class Home extends Vue {
-  joiningRoom = false;
   syncing = false;
+  currentRoom!: Room;
+
+  get roomsAreAvailable() {
+    return this.availableRooms.length !== 0;
+  }
+
+  get availableRooms() {
+    const allRooms = this.$store.getters.rooms;
+    if (this.currentRoom) {
+      return _.filter(allRooms, room => room.id !== this.currentRoom.id);
+    } else {
+      return allRooms;
+    }
+  }
 
   mounted() {
     this.sync();
@@ -79,17 +75,11 @@ export default class Home extends Vue {
       setTimeout(this.sync, SYNC_INTERVAL);
     });
   }
-
-  selectRoom(roomId: string) {
-    this.$store.dispatch("selectRoom", roomId);
-  }
-
-  joinRoom(roomId: string) {
-    this.joiningRoom = true;
-    this.$store.dispatch("joinRoom", roomId).then(zoomLink => {
-      this.joiningRoom = false;
-      window.open(zoomLink, "_blank");
-    });
-  }
 }
 </script>
+
+<style lang="scss" scoped>
+  .available-room {
+    height: 100%;
+  }
+</style>
