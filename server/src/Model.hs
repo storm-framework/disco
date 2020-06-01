@@ -24,6 +24,8 @@ module Model
   , invitationFullName'
   , invitationEmailAddress'
   , invitationAccepted'
+  , invitationEmailStatus'
+  , invitationEmailError'
   , userId'
   , userEmailAddress'
   , userPassword'
@@ -62,6 +64,8 @@ Invitation
   fullName Text
   emailAddress Text
   accepted Bool
+  emailStatus String
+  emailError String Maybe
 
 User
   emailAddress Text
@@ -133,13 +137,15 @@ persistentRecord (BinahRecord record) = record
   -> x_1: Text
   -> x_2: Text
   -> x_3: Bool
+  -> x_4: String
+  -> x_5: (Maybe String)
   -> BinahRecord <
-       {\row -> invitationCode (entityVal row) == x_0 && invitationFullName (entityVal row) == x_1 && invitationEmailAddress (entityVal row) == x_2 && invitationAccepted (entityVal row) == x_3}
-     , {\invitation viewer -> not (invitationAccepted (entityVal invitation)) && IsOrganizer viewer}
+       {\row -> invitationCode (entityVal row) == x_0 && invitationFullName (entityVal row) == x_1 && invitationEmailAddress (entityVal row) == x_2 && invitationAccepted (entityVal row) == x_3 && invitationEmailStatus (entityVal row) == x_4 && invitationEmailError (entityVal row) == x_5}
+     , {\invitation viewer -> not (invitationAccepted (entityVal invitation)) && IsOrganizer viewer && emailStatus invitation == "not_sent"}
      , {\x_0 x_1 -> False}
      > Invitation
 @-}
-mkInvitation x_0 x_1 x_2 x_3 = BinahRecord (Invitation x_0 x_1 x_2 x_3)
+mkInvitation x_0 x_1 x_2 x_3 x_4 x_5 = BinahRecord (Invitation x_0 x_1 x_2 x_3 x_4 x_5)
 
 {-@ invariant {v: Entity Invitation | v == getJust (entityKey v)} @-}
 
@@ -215,6 +221,36 @@ invitationEmailAddress' = EntityFieldWrapper InvitationEmailAddress
 @-}
 invitationAccepted' :: EntityFieldWrapper Invitation Bool
 invitationAccepted' = EntityFieldWrapper InvitationAccepted
+
+{-@ measure invitationEmailStatus :: Invitation -> String @-}
+
+{-@ measure invitationEmailStatusCap :: Entity Invitation -> Bool @-}
+
+{-@ assume invitationEmailStatus' :: EntityFieldWrapper <
+    {\_ _ -> True}
+  , {\row field  -> field == invitationEmailStatus (entityVal row)}
+  , {\field row  -> field == invitationEmailStatus (entityVal row)}
+  , {\old -> invitationEmailStatusCap old}
+  , {\x_0 x_1 x_2 -> ((IsOrganizer viewer && (emailStatus x_1 == "sent" || emailStatus x_1 == "error"))) => (invitationEmailStatusCap x_0)}
+  > _ _
+@-}
+invitationEmailStatus' :: EntityFieldWrapper Invitation String
+invitationEmailStatus' = EntityFieldWrapper InvitationEmailStatus
+
+{-@ measure invitationEmailError :: Invitation -> (Maybe String) @-}
+
+{-@ measure invitationEmailErrorCap :: Entity Invitation -> Bool @-}
+
+{-@ assume invitationEmailError' :: EntityFieldWrapper <
+    {\_ _ -> True}
+  , {\row field  -> field == invitationEmailError (entityVal row)}
+  , {\field row  -> field == invitationEmailError (entityVal row)}
+  , {\old -> invitationEmailErrorCap old}
+  , {\old _ _ -> invitationEmailErrorCap old}
+  > _ _
+@-}
+invitationEmailError' :: EntityFieldWrapper Invitation (Maybe String)
+invitationEmailError' = EntityFieldWrapper InvitationEmailError
 
 -- * User
 {-@ mkUser ::
