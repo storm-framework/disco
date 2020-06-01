@@ -54,7 +54,7 @@ runServer = runNoLoggingT $ do
     pool <- createSqlitePool "db.sqlite" 1
     liftIO . runFrankieServer "dev" $ do
         mode "dev" $ do
-            host "localhost"
+            host "127.0.0.1" -- Note: this is not the same as "localhost", which might use IPv6
             port 3000
             initWith $ initFromPool pool
         dispatch $ do

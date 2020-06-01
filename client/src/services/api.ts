@@ -2,7 +2,7 @@ import { Invitation, InvitationInsert, Room, RoomInsert, User } from "@/models";
 import axios, { AxiosRequestConfig } from "axios";
 import _ from "lodash";
 
-const API_URL = "http://localhost:3000/api";
+const API_URL = "/api";
 
 function delay(ms = 1000) {
   if (process.env.NODE_ENV === "development") {
