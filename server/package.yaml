@@ -44,6 +44,8 @@ dependencies:
   - transformers-base
   - monad-control
   - monad-logger
+  - smtp-mail
+  - mime-mail
 
 library:
   source-dirs: src

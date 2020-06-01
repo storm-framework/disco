@@ -1,10 +1,10 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.33.1.
+-- This file has been generated from package.yaml by hpack version 0.34.1.
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 0340987190c83ec72d52d7bd1564e4af70a5e727259f8f495d79db7dd6e37478
+-- hash: 37a91f89377da544b1aedd5583d77a599e1eebdad5d3e5c483c252009db813c8
 
 name:           server
 version:        0.1.0.0
@@ -42,10 +42,13 @@ library
       Controllers.Room
       Controllers.User
       Crypto
+      Exception
       JSON
       Lib
       Model
       Server
+      SMTP
+      Worker
   other-modules:
       Paths_server
   hs-source-dirs:
@@ -59,6 +62,7 @@ library
     , frankie
     , jose
     , lens
+    , mime-mail
     , monad-control
     , monad-logger
     , monad-time
@@ -68,6 +72,7 @@ library
     , persistent-sqlite
     , persistent-template
     , resource-pool
+    , smtp-mail
     , text
     , transformers
     , transformers-base
@@ -93,6 +98,7 @@ executable server-exe
     , frankie
     , jose
     , lens
+    , mime-mail
     , monad-control
     , monad-logger
     , monad-time
@@ -103,6 +109,7 @@ executable server-exe
     , persistent-template
     , resource-pool
     , server
+    , smtp-mail
     , text
     , transformers
     , transformers-base
@@ -129,6 +136,7 @@ test-suite server-test
     , frankie
     , jose
     , lens
+    , mime-mail
     , monad-control
     , monad-logger
     , monad-time
@@ -139,6 +147,7 @@ test-suite server-test
     , persistent-template
     , resource-pool
     , server
+    , smtp-mail
     , text
     , transformers
     , transformers-base

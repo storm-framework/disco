@@ -1,6 +1,6 @@
 import "@babel/polyfill";
 import "@fortawesome/fontawesome-free/css/all.css";
-import { BootstrapVueIcons } from "bootstrap-vue";
+import "handsontable/dist/handsontable.full.css";
 import "mutationobserver-shim";
 import Vue from "vue";
 import VueProgress from "vue-progress-path";
@@ -12,7 +12,6 @@ import store from "./store";
 
 Vue.config.productionTip = false;
 
-Vue.use(BootstrapVueIcons);
 Vue.use(VueProgress);
 
 new Vue({
