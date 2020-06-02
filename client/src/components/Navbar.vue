@@ -1,40 +1,27 @@
 <template>
-  <div>
-    <b-navbar toggleable="lg" type="dark" variant="info">
-      <b-container>
-        <b-navbar-brand to="/">Community Video</b-navbar-brand>
-
-        <b-navbar-nav class="ml-auto">
-          <b-nav-item v-if="isOrganizer" :to="{ name: 'Admin' }">
-            Admin
-          </b-nav-item>
-          <b-nav-item v-on:click="signOut">Sign out</b-nav-item>
-        </b-navbar-nav>
-      </b-container>
-    </b-navbar>
-    <loading-progress
-      :indeterminate="activity"
-      shape="line"
-      height="5"
-      fillDuration="3"
-      :size="windowWidth - 50"
-      hideBackground
-      class="navbar-activity-indicator"
-    />
-  </div>
+  <b-navbar toggleable="lg" type="dark" variant="info">
+    <b-navbar-brand to="/">Community Video</b-navbar-brand>
+    <b-navbar-nav class="ml-auto">
+      <b-nav-item v-if="isOrganizer" :to="{ name: 'Admin' }">
+        Admin
+      </b-nav-item>
+      <b-nav-item v-if="loggedIn" @click="signOut">Sign out</b-nav-item>
+    </b-navbar-nav>
+  </b-navbar>
 </template>
 
 <script lang="ts">
-import { Component, Vue, Prop } from "vue-property-decorator";
-import { vueWindowSizeMixin } from "vue-window-size";
+import { Component, Vue } from "vue-property-decorator";
+import { mapGetters } from "vuex";
 
 @Component({
-  mixins: [vueWindowSizeMixin]
+  computed: mapGetters(["loggedIn"])
 })
 export default class Navbar extends Vue {
-  @Prop({ default: false }) activity!: boolean;
-
   get isOrganizer() {
+    // This is not ideal because it only works if we have the logged in user,
+    // but doing a whole sync just to find out if the current user is an admin
+    // seems overkill
     return this.$store.getters.sessionUser?.level == "organizer";
   }
 
@@ -45,15 +32,3 @@ export default class Navbar extends Vue {
   }
 }
 </script>
-
-<style lang="scss">
-.navbar-activity-indicator {
-  position: relative;
-  top: -11px;
-  left: -25px;
-}
-
-.navbar-activity-indicator .progress {
-  stroke: gray;
-}
-</style>

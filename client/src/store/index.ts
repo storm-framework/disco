@@ -64,8 +64,7 @@ export default new Vuex.Store({
     selectRoom: ({ commit }, roomId: string) => {
       commit("changeActiveRoom", roomId);
     },
-    joinRoom: async ({ commit, state }) => {
-      const roomId = state.activeRoomId;
+    joinRoom: async ({ commit }, roomId: string) => {
       if (!roomId) {
         return Promise.reject();
       }
@@ -75,6 +74,7 @@ export default new Vuex.Store({
     }
   },
   getters: {
+    loggedIn: ({ sessionUserId }) => !!sessionUserId,
     sessionUser: ({ users, sessionUserId }) =>
       sessionUserId && users[sessionUserId],
     rooms: ({ rooms, users }) => {
