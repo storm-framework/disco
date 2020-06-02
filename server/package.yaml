@@ -46,6 +46,9 @@ dependencies:
   - monad-logger
   - smtp-mail
   - mime-mail
+  - mime-types
+  - filepath
+  - directory
 
 library:
   source-dirs: src

@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 37a91f89377da544b1aedd5583d77a599e1eebdad5d3e5c483c252009db813c8
+-- hash: f23dc373c1833dfee365e23fc213872b2d26950f89c3790cbbacfcfb3d6e0957
 
 name:           server
 version:        0.1.0.0
@@ -58,11 +58,14 @@ library
     , base >=4.7 && <5
     , base64-bytestring
     , bytestring
+    , directory
     , either
+    , filepath
     , frankie
     , jose
     , lens
     , mime-mail
+    , mime-types
     , monad-control
     , monad-logger
     , monad-time
@@ -94,11 +97,14 @@ executable server-exe
     , base >=4.7 && <5
     , base64-bytestring
     , bytestring
+    , directory
     , either
+    , filepath
     , frankie
     , jose
     , lens
     , mime-mail
+    , mime-types
     , monad-control
     , monad-logger
     , monad-time
@@ -132,11 +138,14 @@ test-suite server-test
     , base >=4.7 && <5
     , base64-bytestring
     , bytestring
+    , directory
     , either
+    , filepath
     , frankie
     , jose
     , lens
     , mime-mail
+    , mime-types
     , monad-control
     , monad-logger
     , monad-time
