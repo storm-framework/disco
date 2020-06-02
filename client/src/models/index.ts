@@ -12,7 +12,7 @@ export interface InvitationInsert {
 
 export interface User {
   id: string;
-  displyName: string;
+  displayName: string;
   level: string;
   room: string | null;
 }
