@@ -14,10 +14,10 @@
             v-b-modal.import-file-modal
             variant="outline-primary"
           >
-            <i class="fa fa-file-import" /> Import
+            <font-awesome-icon icon="file-import" /> Import
           </b-button>
           <b-button size="sm" v-on:click="onSend" variant="primary">
-            <i class="fa fa-paper-plane" /> Send
+            <font-awesome-icon icon="paper-plane" /> Send
           </b-button>
         </b-col>
       </b-row>
@@ -86,8 +86,8 @@
           </b-col>
         </b-form-row>
         <div v-show="importFileShowPreview">
-          <span
-            ><i class="fa fa-search preview-icon" font-scale="0.8" />
+          <span>
+            <font-awesome-icon icon="search" class="preview-icon" />
             Preview</span
           >
           <hot-table
@@ -111,6 +111,14 @@ import XLSX from "xlsx";
 import _ from "lodash";
 import { BvModalEvent } from "bootstrap-vue";
 import Handsontable from "handsontable";
+
+import { library } from "@fortawesome/fontawesome-svg-core";
+import {
+  faFileImport,
+  faPaperPlane,
+  faSearch
+} from "@fortawesome/free-solid-svg-icons";
+library.add(faFileImport, faPaperPlane, faSearch);
 
 const PREVIEW_SIZE = 3;
 
