@@ -54,13 +54,13 @@ import           Auth
 
 
 {-@ ignore runServer @-}
-runServer :: IO ()
-runServer = runNoLoggingT $ do
+runServer :: HostPreference -> Port -> IO ()
+runServer h p = runNoLoggingT $ do
     pool <- createSqlitePool "db.sqlite" 1
     liftIO . runFrankieServer "dev" $ do
         mode "dev" $ do
-            host "127.0.0.1" -- Note: this is not the same as "localhost", which might use IPv6
-            port 3000
+            host h
+            port p
             initWith $ initFromPool pool
         dispatch $ do
             post "/api/signin" signIn
@@ -88,13 +88,11 @@ sendFromDirectory dir fallback = do
     req <- request
     let path = dir </> joinPath (map T.unpack (reqPathInfo req))
     exists <- liftTIO . TIO $ doesFileExist path
-    if exists
-        then sendFile path
-        else sendFile (dir </> fallback)
+    if exists then sendFile path else sendFile (dir </> fallback)
 
 {-@ ignore sendFile @-}
 sendFile :: FilePath -> Controller ()
-sendFile path =  do
+sendFile path = do
     let mime = defaultMimeLookup (T.pack path)
     content <- liftTIO . TIO . LBS.readFile $ path
     respondTagged $ Response status200 [(hContentType, mime)] content
