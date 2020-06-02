@@ -15,6 +15,13 @@ packages:
       sha256: 8bb2c1ca960e6ccc2861abd25ee984c842651ece475302f49dd6899431bdb5fe
   original:
     url: https://github.com/PLSysSec/frankie/archive/8894b528847a9f3bdef7ec47e905fc81081c2940.tar.gz
+- completed:
+    hackage: smtp-mail-0.2.0.0@sha256:b91c81f6dbb41a9ceee8c443385118684ecec55006b77f7d3c0e49cffd2468cf,1211
+    pantry-tree:
+      size: 449
+      sha256: 413c4c7e7c7573c8bf906c136a282aebfe37ecc25492ff4b5ec8c69ff8d190fe
+  original:
+    hackage: smtp-mail-0.2.0.0@sha256:b91c81f6dbb41a9ceee8c443385118684ecec55006b77f7d3c0e49cffd2468cf,1211
 snapshots:
 - completed:
     size: 523700

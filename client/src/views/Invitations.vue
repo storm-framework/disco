@@ -8,8 +8,6 @@
         :settings="hotSettings"
         :height="windowHeight - 150"
       >
-        <!-- <hot-column title="Email address" validator="email-address"></hot-column>
-      <hot-column title="Full name"></hot-column> -->
       </hot-table>
     </b-container>
   </div>

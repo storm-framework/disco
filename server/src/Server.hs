@@ -20,8 +20,13 @@ import           Database.Persist.Sqlite        ( SqlBackend
                                                 , runMigration
                                                 , createSqlitePool
                                                 )
+import           System.FilePath               as P
+import           System.Directory
+import qualified Data.ByteString.Lazy          as LBS
+import           Network.Mime
 import           Frankie.Config
 import           Frankie.Auth
+import qualified Data.Text                     as T
 
 import           Data.Pool                      ( Pool )
 import qualified Data.Pool                     as Pool
@@ -68,12 +73,31 @@ runServer = runNoLoggingT $ do
             post "/api/room"          roomPost
             post "/api/room/:id/join" joinRoom
 
-            fallback $ respondError status404 (Just "invalid route")
+            fallback (sendFromDirectory "static" "index.html")
 
 {-@ ignore initDB @-}
 initDB :: IO ()
 initDB = runSqlite "db.sqlite" $ do
     runMigration migrateAll
+
+-- Static files
+
+{-@ ignore sendFromDirectory @-}
+sendFromDirectory :: FilePath -> FilePath -> Controller ()
+sendFromDirectory dir fallback = do
+    req <- request
+    let path = dir </> joinPath (map T.unpack (reqPathInfo req))
+    exists <- liftTIO . TIO $ doesFileExist path
+    if exists
+        then sendFile path
+        else sendFile (dir </> fallback)
+
+{-@ ignore sendFile @-}
+sendFile :: FilePath -> Controller ()
+sendFile path =  do
+    let mime = defaultMimeLookup (T.pack path)
+    content <- liftTIO . TIO . LBS.readFile $ path
+    respondTagged $ Response status200 [(hContentType, mime)] content
 
 -- TODO find a way to provide this without exposing the instance of MonadBaseControl
 

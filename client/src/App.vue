@@ -24,6 +24,7 @@ export default class App extends Vue {}
 <style lang="scss">
 @import "~bootstrap/scss/bootstrap";
 @import "~bootstrap-vue/src/index.scss";
+@import "~handsontable/dist/handsontable.full.css";
 
 // :root {
 //   --font-family-sans-serif: -apple-system, BlinkMacSystemFont, "Segoe UI",

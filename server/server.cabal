@@ -1,10 +1,10 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.33.1.
+-- This file has been generated from package.yaml by hpack version 0.34.1.
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 0340987190c83ec72d52d7bd1564e4af70a5e727259f8f495d79db7dd6e37478
+-- hash: f23dc373c1833dfee365e23fc213872b2d26950f89c3790cbbacfcfb3d6e0957
 
 name:           server
 version:        0.1.0.0
@@ -42,10 +42,13 @@ library
       Controllers.Room
       Controllers.User
       Crypto
+      Exception
       JSON
       Lib
       Model
       Server
+      SMTP
+      Worker
   other-modules:
       Paths_server
   hs-source-dirs:
@@ -55,10 +58,14 @@ library
     , base >=4.7 && <5
     , base64-bytestring
     , bytestring
+    , directory
     , either
+    , filepath
     , frankie
     , jose
     , lens
+    , mime-mail
+    , mime-types
     , monad-control
     , monad-logger
     , monad-time
@@ -68,6 +75,7 @@ library
     , persistent-sqlite
     , persistent-template
     , resource-pool
+    , smtp-mail
     , text
     , transformers
     , transformers-base
@@ -89,10 +97,14 @@ executable server-exe
     , base >=4.7 && <5
     , base64-bytestring
     , bytestring
+    , directory
     , either
+    , filepath
     , frankie
     , jose
     , lens
+    , mime-mail
+    , mime-types
     , monad-control
     , monad-logger
     , monad-time
@@ -103,6 +115,7 @@ executable server-exe
     , persistent-template
     , resource-pool
     , server
+    , smtp-mail
     , text
     , transformers
     , transformers-base
@@ -125,10 +138,14 @@ test-suite server-test
     , base >=4.7 && <5
     , base64-bytestring
     , bytestring
+    , directory
     , either
+    , filepath
     , frankie
     , jose
     , lens
+    , mime-mail
+    , mime-types
     , monad-control
     , monad-logger
     , monad-time
@@ -139,6 +156,7 @@ test-suite server-test
     , persistent-template
     , resource-pool
     , server
+    , smtp-mail
     , text
     , transformers
     , transformers-base

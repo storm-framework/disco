@@ -7,6 +7,7 @@ module Controllers.Invitation where
 
 import           Data.Text                      ( Text )
 import qualified Data.Text                     as T
+import qualified Data.Text.Lazy                as LT
 import           Data.Int                       ( Int64 )
 import           Data.Maybe
 import           Data.Aeson.Types
@@ -30,6 +31,10 @@ import           Model
 import           JSON
 import           Crypto                         ( genRandomCodes )
 import           Text.Read                      ( readMaybe )
+import           Worker
+import           SMTP
+import           Exception
+import           System.IO.Unsafe               ( unsafePerformIO )
 
 --------------------------------------------------------------------------------
 -- | Invitation Put (create invitations)
@@ -42,10 +47,40 @@ invitationPut = do
   _                <- requireOrganizer viewer
   (PutReq reqData) <- decodeBody
   codes            <- genRandomCodes (length reqData)
-  let invitations =
-        map (\((InvitationInsert f e), code) -> mkInvitation code f e False) (zip reqData codes)
+  let invitations = map
+        (\((InvitationInsert f e), code) -> mkInvitation code f e False "not_sent" Nothing)
+        (zip reqData codes)
   ids <- insertMany invitations
+  _   <- runWorker (sendEmails ids)
   respondJSON status201 (object ["keys" .= map fromSqlKey ids])
+
+sendEmails :: [InvitationId] -> Worker ()
+sendEmails ids = do
+  invitations <- selectList (invitationId' <-. ids)
+  conn        <- connectSMTP "localhost"
+  forMC invitations $ \invitation -> do
+    id           <- project invitationId' invitation
+    emailAddress <- project invitationEmailAddress' invitation
+    code         <- project invitationCode' invitation
+    fullName     <- project invitationFullName' invitation
+    let from = mkPublicAddress (Just "Binah Team") ("binah@goto.binah.com")
+    let to   = mkPublicAddress (Just fullName) emailAddress
+    let body = "To join please visit the following link\n" ++ invitationLink id code
+    let mail = simpleMail' to from "Invitation" (LT.pack body)
+    res <- tryT $ renderAndSend conn mail
+    case res of
+      Left (SomeException e) -> do
+        let up1 = (invitationEmailError' `assign` (Just (show e)))
+        let up2 = invitationEmailStatus' `assign` "error"
+        updateWhere (invitationId' ==. id) (up1 `combine` up2)
+      Right _ -> updateWhere (invitationId' ==. id) (invitationEmailStatus' `assign` "sent")
+  return ()
+
+
+invitationLink :: InvitationId -> Text -> String
+invitationLink id code = "http://localhost:8000/invitation?code=" ++ sid ++ "." ++ (T.unpack code)
+  where sid = show (fromSqlKey id)
+
 
 newtype PutReq = PutReq [InvitationInsert]
   deriving Generic

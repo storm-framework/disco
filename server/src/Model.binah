@@ -3,13 +3,22 @@ Invitation
   fullName Text
   emailAddress Text
   accepted Bool
+  emailStatus String
+  emailError String Maybe
 
   insert {\invitation viewer ->
-    not (invitationAccepted invitation) && IsOrganizer viewer
+    not (invitationAccepted invitation)
+    && IsOrganizer viewer
+    && emailStatus invitation == "not_sent"
   }
 
   update [ accepted ] {\old new _ ->
     not (invitationAccepted old) && invitationAccepted new
+  }
+
+  update [ emailStatus ] {\_ new _ ->
+     IsOrganizer viewer
+     && (emailStatus new == "sent" || emailStatus new == "error")
   }
 
 User
