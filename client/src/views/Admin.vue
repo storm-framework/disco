@@ -1,6 +1,5 @@
 <template>
   <div class="admin">
-    <navbar :activity="loading" />
     <b-form class="form-send-invitations text-center mt-5" @submit="onSubmit">
       <b-container v-if="!loading">
         <b-alert :show="fatalError" variant="danger">{{ errorMsg }}</b-alert>
@@ -109,7 +108,6 @@
 import { Component, Vue } from "vue-property-decorator";
 import { Room, RoomInsert } from "@/models";
 import ApiService from "@/services/api";
-import Navbar from "@/components/Navbar.vue";
 
 interface OldRoom {
   id: string;
@@ -139,7 +137,7 @@ function parseOldRoom(row: OldRoom): Room {
   };
 }
 
-@Component({ components: { Navbar } })
+@Component
 export default class SignIn extends Vue {
   loading = false;
   saving = false;

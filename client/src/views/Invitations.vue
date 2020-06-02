@@ -1,6 +1,5 @@
 <template>
   <div class="invitations">
-    <navbar />
     <b-container>
       <hot-table
         ref="table"
@@ -15,7 +14,6 @@
 
 <script lang="ts">
 import { HotTable, HotColumn } from "@handsontable/vue";
-import Navbar from "@/components/Navbar.vue";
 import { Component, Vue } from "vue-property-decorator";
 import ApiService from "@/services/api";
 import "handsontable/dist/handsontable.full.css";
@@ -23,7 +21,7 @@ import { vueWindowSizeMixin } from "vue-window-size";
 import Handsontable from "handsontable";
 
 @Component({
-  components: { Navbar, HotTable, HotColumn },
+  components: { HotTable, HotColumn },
   mixins: [vueWindowSizeMixin]
 })
 export default class Invitations extends Vue {

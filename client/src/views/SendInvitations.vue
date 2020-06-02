@@ -1,6 +1,5 @@
 <template>
   <div class="send-invitations">
-    <navbar />
     <b-container>
       <b-row class="justify-content-end align-items-center mb-3">
         <b-col>
@@ -107,7 +106,6 @@
 <script lang="ts">
 import { Component, Vue, Watch } from "vue-property-decorator";
 import ApiService from "@/services/api";
-import Navbar from "@/components/Navbar.vue";
 import { HotTable, HotColumn } from "@handsontable/vue";
 import XLSX from "xlsx";
 import _ from "lodash";
@@ -125,7 +123,7 @@ Handsontable.validators.registerValidator(
   }
 );
 
-@Component({ components: { Navbar, HotTable, HotColumn } })
+@Component({ components: { HotTable, HotColumn } })
 export default class SendInvitations extends Vue {
   hotSettings = {
     width: "100%",
