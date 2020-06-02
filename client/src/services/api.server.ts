@@ -1,4 +1,11 @@
-import { Invitation, InvitationInsert, Room, RoomInsert, User } from "@/models";
+import {
+  Invitation,
+  InvitationInsert,
+  Room,
+  RoomInsert,
+  User,
+  UserSignUp
+} from "@/models";
 import axios, { AxiosRequestConfig } from "axios";
 import _ from "lodash";
 
@@ -142,17 +149,6 @@ class ApiService {
       return {};
     }
   }
-}
-
-export interface UserSignUp {
-  invitationCode: string;
-  user: {
-    emailAddress: string;
-    password: string;
-    fullName: string;
-    displayName: string;
-    affiliation: string;
-  };
 }
 
 const accessToken = localStorage.getItem("accessToken");

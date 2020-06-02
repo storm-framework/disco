@@ -48,7 +48,9 @@ import           Binah.Templates
 import           Binah.Frankie
 
 import           Controllers
-import           Controllers.User               ( UserData(..) )
+import           Controllers.User               ( extractUserData
+                                                , UserData
+                                                )
 import           Model
 import           JSON
 import           Crypto
@@ -65,15 +67,7 @@ signIn = do
   user                              <- authUser emailAddress password
   userId                            <- project userId' user
   token                             <- genJwt userId
-  userData                          <-
-    UserData
-    <$> project userId'           user
-    <*> project userEmailAddress' user
-    <*> project userFullName'     user
-    <*> project userDisplayName'  user
-    <*> project userAffiliation'  user
-    <*> project userLevel'        user
-    <*> project userRoom'         user
+  userData                          <- extractUserData user
 
   respondJSON status200 $ SignInRes (unpackLazy8 token) userData
 

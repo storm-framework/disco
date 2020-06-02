@@ -1,13 +1,28 @@
-export interface Invitation {
-  id: string;
+export interface InvitationInsert {
   emailAddress: string;
-  fullName: string;
+  firstName: string;
+  lastName: string;
+  institution: string;
+  country: string;
+  degree: string;
+}
+
+export interface Invitation extends InvitationInsert {
+  id: string;
   accepted: boolean;
 }
 
-export interface InvitationInsert {
-  emailAddress: string;
-  fullName: string;
+export interface UserSignUp {
+  invitationCode: string;
+  user: {
+    emailAddress: string;
+    password: string;
+    firstName: string;
+    displayName: string;
+    institution: string;
+    country: string;
+    degree: string;
+  };
 }
 
 export interface User {

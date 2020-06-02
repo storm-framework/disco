@@ -1,7 +1,11 @@
 Invitation
   code Text
-  fullName Text
   emailAddress Text
+  firstName Text
+  lastName Text
+  institution Text
+  country Text
+  degree Text
   accepted Bool
   emailStatus String
   emailError String Maybe
@@ -24,9 +28,12 @@ Invitation
 User
   emailAddress Text
   password Text
-  fullName Text
+  firstName Text
+  lastName Text
   displayName Text
-  affiliation Text
+  institution Text
+  country Text
+  degree Text
   level String
   visibility String
   room RoomId Maybe

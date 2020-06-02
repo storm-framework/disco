@@ -19,6 +19,12 @@ import ApiService from "@/services/api";
 import "handsontable/dist/handsontable.full.css";
 import { vueWindowSizeMixin } from "vue-window-size";
 import Handsontable from "handsontable";
+import _ from "lodash";
+
+import { dom, library } from "@fortawesome/fontawesome-svg-core";
+import { faCheckSquare } from "@fortawesome/free-solid-svg-icons";
+library.add(faCheckSquare);
+dom.watch();
 
 @Component({
   components: { HotTable, HotColumn },
@@ -44,7 +50,6 @@ export default class Invitations extends Vue {
           prop: any,
           value: boolean
         ) {
-          console.log(value);
           Handsontable.dom.empty(td);
           if (value) {
             const icon = document.createElement("i");
@@ -63,7 +68,11 @@ export default class Invitations extends Vue {
 
   mounted() {
     ApiService.getInvitations().then(d => {
-      this.invitations = d.map(r => [r.emailAddress, r.fullName, r.accepted]);
+      this.invitations = d.map(r => [
+        r.emailAddress,
+        _([r.firstName, r.lastName]).join(" "),
+        r.accepted
+      ]);
     });
   }
 }

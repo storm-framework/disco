@@ -33,13 +33,22 @@ import           JSON
 -- | User Put
 -------------------------------------------------------------------------------
 
+
 {-@ userPut :: TaggedT<{\_ -> False}, {\_ -> True}> _ _ @-}
 userPut :: Controller ()
 userPut = do
-  _ <- requireAuthUser
   (PutReq (InvitationCode id code) UserCreate {..}) <- decodeBody
-  let user =
-        mkUser emailAddress password fullName displayName affiliation "attendee" "public" Nothing
+  let user = mkUser emailAddress
+                    password
+                    firstName
+                    lastName
+                    displayName
+                    institution
+                    country
+                    degree
+                    "attendee"
+                    "public"
+                    Nothing
   _ <- selectFirstOr
     (errorResponse status403 (Just "invalid invitation"))
     (   (invitationId' ==. id)
@@ -60,17 +69,32 @@ userGet :: Controller ()
 userGet = do
   _     <- requireAuthUser
   users <- selectList trueF
-  users <- forMC users $ \u -> do
-    id           <- project userId' u
-    emailAddress <- project userEmailAddress' u
-    fullName     <- project userFullName' u
-    displayName  <- project userDisplayName' u
-    affiliation  <- project userAffiliation' u
-    level        <- project userLevel' u
-    visibility   <- project userVisibility' u
-    room         <- if visibility == "public" then project userRoom' u else return Nothing
-    return $ UserData id emailAddress fullName displayName affiliation level room
+  users <- mapMC extractUserData users
   respondJSON status200 users
+
+extractUserData :: Entity User -> Controller UserData
+extractUserData u = do
+  id           <- project userId' u
+  emailAddress <- project userEmailAddress' u
+  firstName    <- project userFirstName' u
+  lastName     <- project userLastName' u
+  displayName  <- project userDisplayName' u
+  institution  <- project userInstitution' u
+  country      <- project userCountry' u
+  degree       <- project userDegree' u
+  level        <- project userLevel' u
+  visibility   <- project userVisibility' u
+  room         <- if visibility == "public" then project userRoom' u else return Nothing
+  return $ UserData id
+                    emailAddress
+                    firstName
+                    lastName
+                    displayName
+                    institution
+                    country
+                    degree
+                    level
+                    room
 
 data PutReq = PutReq
   { putReqInvitationCode :: InvitationCode
@@ -84,9 +108,12 @@ instance FromJSON PutReq where
 data UserCreate = UserCreate
   { emailAddress :: Text
   , password :: Text
-  , fullName :: Text
+  , firstName :: Text
+  , lastName :: Text
   , displayName :: Text
-  , affiliation :: Text
+  , institution :: Text
+  , country :: Text
+  , degree :: Text
   }
   deriving Generic
 
@@ -96,9 +123,12 @@ instance FromJSON UserCreate where
 data UserData = UserData
   { userId :: UserId
   , userEmailAddress :: Text
-  , userFullName :: Text
+  , userFirstName :: Text
+  , userLastName :: Text
   , userDisplayName :: Text
-  , userAffiliation :: Text
+  , userInstitution :: Text
+  , userCountry :: Text
+  , userDegree :: Text
   , userLevel :: String
   , userRoom :: Maybe RoomId
   }

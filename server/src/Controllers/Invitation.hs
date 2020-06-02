@@ -1,3 +1,4 @@
+{-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE DeriveGeneric #-}
 
@@ -47,9 +48,20 @@ invitationPut = do
   _                <- requireOrganizer viewer
   (PutReq reqData) <- decodeBody
   codes            <- genRandomCodes (length reqData)
-  let invitations = map
-        (\((InvitationInsert f e), code) -> mkInvitation code f e False "not_sent" Nothing)
-        (zip reqData codes)
+  let invitations = zipWith
+        (\InvitationInsert {..} code -> mkInvitation code
+                                                     insertEmailAddress
+                                                     insertFirstName
+                                                     insertLastName
+                                                     insertInstitution
+                                                     insertCountry
+                                                     insertDegree
+                                                     False
+                                                     "not_sent"
+                                                     Nothing
+        )
+        reqData
+        codes
   ids <- insertMany invitations
   _   <- runWorker (sendEmails ids)
   respondJSON status201 (object ["keys" .= map fromSqlKey ids])
@@ -62,15 +74,17 @@ sendEmails ids = do
     id           <- project invitationId' invitation
     emailAddress <- project invitationEmailAddress' invitation
     code         <- project invitationCode' invitation
-    fullName     <- project invitationFullName' invitation
-    let from = mkPublicAddress (Just "Binah Team") ("binah@goto.binah.com")
-    let to   = mkPublicAddress (Just fullName) emailAddress
-    let body = "To join please visit the following link\n" ++ invitationLink id code
-    let mail = simpleMail' to from "Invitation" (LT.pack body)
+    firstName    <- project invitationFirstName' invitation
+    lastName     <- project invitationLastName' invitation
+    let fullName = firstName `T.append` " " `T.append` lastName
+    let from     = mkPublicAddress (Just "Binah Team") "binah@goto.binah.com"
+    let to       = mkPublicAddress (Just fullName) emailAddress
+    let body     = "To join please visit the following link\n" ++ invitationLink id code
+    let mail     = simpleMail' to from "Invitation" (LT.pack body)
     res <- tryT $ renderAndSend conn mail
     case res of
       Left (SomeException e) -> do
-        let up1 = (invitationEmailError' `assign` (Just (show e)))
+        let up1 = invitationEmailError' `assign` Just (show e)
         let up2 = invitationEmailStatus' `assign` "error"
         updateWhere (invitationId' ==. id) (up1 `combine` up2)
       Right _ -> updateWhere (invitationId' ==. id) (invitationEmailStatus' `assign` "sent")
@@ -78,7 +92,7 @@ sendEmails ids = do
 
 
 invitationLink :: InvitationId -> Text -> String
-invitationLink id code = "http://localhost:8000/invitation?code=" ++ sid ++ "." ++ (T.unpack code)
+invitationLink id code = "http://localhost:8000/invitation?code=" ++ sid ++ "." ++ T.unpack code
   where sid = show (fromSqlKey id)
 
 
@@ -103,12 +117,7 @@ invitationGet iid = do
       invitation <- selectFirstOr
         notFoundJSON
         (invitationCode' ==. code &&: invitationId' ==. id &&: invitationAccepted' ==. False)
-      res <-
-        InvitationData
-        <$> project invitationId'           invitation
-        <*> project invitationFullName'     invitation
-        <*> project invitationEmailAddress' invitation
-        <*> project invitationAccepted'     invitation
+      res <- extractInvitationData invitation
       respondJSON status200 res
 
 --------------------------------------------------------------------------------
@@ -121,13 +130,7 @@ invitationIndex = do
   viewer      <- requireAuthUser
   _           <- requireOrganizer viewer
   invitations <- selectList trueF
-  res         <- forMC invitations $ \invitation ->
-    do
-        InvitationData
-      <$> project invitationId'           invitation
-      <*> project invitationFullName'     invitation
-      <*> project invitationEmailAddress' invitation
-      <*> project invitationAccepted'     invitation
+  res         <- mapMC extractInvitationData invitations
   respondJSON status200 res
 
 --------------------------------------------------------------------------------
@@ -135,8 +138,12 @@ invitationIndex = do
 --------------------------------------------------------------------------------
 
 data InvitationInsert = InvitationInsert
-  { insertFullName     :: Text
-  , insertEmailAddress :: Text
+  { insertEmailAddress :: Text
+  , insertFirstName    :: Text
+  , insertLastName     :: Text
+  , insertInstitution  :: Text
+  , insertCountry      :: Text
+  , insertDegree       :: Text
   }
   deriving Generic
 
@@ -144,12 +151,28 @@ instance FromJSON InvitationInsert where
   parseJSON = genericParseJSON (stripPrefix "insert")
 
 data InvitationData = InvitationData
-  { invitationId :: InvitationId
-  , invitationFullName :: Text
+  { invitationId           :: InvitationId
   , invitationEmailAddress :: Text
-  , invitationAccepted :: Bool
+  , invitationFirstName    :: Text
+  , invitationLastName     :: Text
+  , invitationInstitution  :: Text
+  , invitationCountry      :: Text
+  , invitationDegree       :: Text
+  , invitationAccepted     :: Bool
   }
   deriving Generic
+
+extractInvitationData :: Entity Invitation -> Controller InvitationData
+extractInvitationData invitation =
+  InvitationData
+    <$> project invitationId'           invitation
+    <*> project invitationEmailAddress' invitation
+    <*> project invitationFirstName'    invitation
+    <*> project invitationLastName'     invitation
+    <*> project invitationInstitution'  invitation
+    <*> project invitationCountry'      invitation
+    <*> project invitationDegree'       invitation
+    <*> project invitationAccepted'     invitation
 
 instance ToJSON InvitationData where
   toEncoding = genericToEncoding (stripPrefix "invitation")

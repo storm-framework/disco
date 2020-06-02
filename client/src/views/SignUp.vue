@@ -32,41 +32,68 @@
         ></b-form-input>
       </b-form-group>
 
-      <b-form-group label="Full name" label-for="full-name">
+      <b-form-group label="First name" label-for="full-name">
         <b-form-input
-          id="full-name"
+          id="first-name"
           type="text"
-          v-model="form.fullName"
+          v-model="form.firstName"
           required
-          placeholder="Full name"
+          placeholder="First name"
           :disabled="fatalError"
         ></b-form-input>
       </b-form-group>
 
-      <b-form-group label="Display name" label-for="display-name">
+      <b-form-group label="Last name" label-for="full-name">
+        <b-form-input
+          id="last-name"
+          type="text"
+          v-model="form.lastName"
+          required
+          placeholder="Last name"
+          :disabled="fatalError"
+        ></b-form-input>
+      </b-form-group>
+
+      <b-form-group label="Badge name" label-for="display-name">
         <b-form-input
           id="display-name"
           type="text"
           v-model="form.displayName"
           required
-          placeholder="Display name"
+          placeholder="Badge name"
           :disabled="fatalError"
         ></b-form-input>
       </b-form-group>
 
-      <b-form-group label="Affiliation" label-for="affiliation">
+      <b-form-group label="Institution" label-for="institution">
         <b-form-input
-          id="affiliation"
+          id="institution"
           type="text"
-          v-model="form.affiliation"
-          placeholder="Affiliation"
+          v-model="form.institution"
+          placeholder="Institution"
           :disabled="fatalError"
         ></b-form-input>
       </b-form-group>
 
-      <!-- <b-form-invalid-feedback :state="isValid">
-      Incorrect email address or password.
-    </b-form-invalid-feedback> -->
+      <b-form-group label="Country" label-for="country">
+        <b-form-input
+          id="country"
+          type="text"
+          v-model="form.institution"
+          placeholder="Country"
+          :disabled="fatalError"
+        ></b-form-input>
+      </b-form-group>
+
+      <b-form-group label="Degree" label-for="degree">
+        <b-form-input
+          id="degree"
+          type="text"
+          v-model="form.institution"
+          placeholder="Degree"
+          :disabled="fatalError"
+        ></b-form-input>
+      </b-form-group>
 
       <b-button
         :disabled="fatalError"
@@ -85,15 +112,19 @@
 <script lang="ts">
 import { Component, Vue } from "vue-property-decorator";
 import ApiService from "../services/api";
+import _ from "lodash";
 
 @Component
 export default class SignIn extends Vue {
   form = {
     password: "",
     emailAddress: "",
-    fullName: "",
+    firstName: "",
+    lastName: "",
     displayName: "",
-    affiliation: ""
+    institution: "",
+    country: "",
+    degree: ""
   };
   loading = false;
   fatalError = false;
@@ -105,8 +136,10 @@ export default class SignIn extends Vue {
       this.loading = true;
       ApiService.getInvitation(code)
         .then(invitation => {
-          this.form.emailAddress = invitation.emailAddress;
-          this.form.fullName = invitation.fullName;
+          const displayName = _([invitation.firstName, invitation.lastName])
+            .filter()
+            .join(" ");
+          this.form = { password: "", displayName, ...invitation };
           this.loading = false;
         })
         .catch(error => {
