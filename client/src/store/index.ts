@@ -48,6 +48,11 @@ export default new Vuex.Store({
     },
     removeSessionUser(state) {
       state.sessionUserId = null;
+    },
+    leaveRoom({ users, sessionUserId }) {
+      if (sessionUserId) {
+        users[sessionUserId].room = null;
+      }
     }
   },
   actions: {
@@ -71,7 +76,9 @@ export default new Vuex.Store({
       const zoomLink = await ApiService.joinRoom(roomId);
       commit("swithToRoom", roomId);
       return zoomLink;
-    }
+    },
+    leaveRoom: ({ commit }) =>
+      ApiService.leaveRoom().then(() => commit("leaveRoom"))
   },
   getters: {
     loggedIn: ({ sessionUserId }) => !!sessionUserId,

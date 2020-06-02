@@ -8,19 +8,14 @@ interface ApiService {
   // Auth
 
   signIn(emailAddress: string, password: string): Promise<User>;
-
   signUp(data: UserSignUp): Promise<{ id: string }>;
-
   signedIn(): boolean;
-
   signOut(): Promise<void>;
 
   // Invitations
 
   getInvitation(param: string): Promise<Invitation>;
-
   sendInvitations(invitations: InvitationInsert[]): Promise<string[]>;
-
   getInvitations(): Promise<Invitation[]>;
 
   // Users
@@ -30,15 +25,13 @@ interface ApiService {
   // Rooms
 
   rooms(): Promise<Room[]>;
-
   updateRooms(updates: Room[], inserts: RoomInsert[]): Promise<string[]>;
-
   joinRoom(roomId: string): Promise<string>;
+  leaveRoom(): Promise<void>;
 }
 
 let module: ApiService;
 if (process.env.VUE_APP_MOCK_SERVICE == "true") {
-  console.log("here");
   module = Mock;
 } else {
   module = Server;

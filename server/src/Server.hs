@@ -71,6 +71,7 @@ runServer h p = runNoLoggingT $ do
             get "/api/user" userGet
             get "/api/room" roomGet
             post "/api/room"          roomPost
+            post "/api/room/leave"    leaveRoom
             post "/api/room/:id/join" joinRoom
 
             fallback (sendFromDirectory "static" "index.html")

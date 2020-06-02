@@ -94,6 +94,10 @@ class ApiService {
     return this.post(`/room/${roomId}/join`);
   }
 
+  leaveRoom(): Promise<void> {
+    return this.post(`/room/leave`);
+  }
+
   // Request
 
   async post(

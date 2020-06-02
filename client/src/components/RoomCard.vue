@@ -98,7 +98,7 @@ export default class RoomCard extends Mixins(HeadingContext) {
   }
 
   get isCurrentRoom() {
-    return this.$store.getters.currentRoom.id === this.room.id;
+    return this.$store.getters.currentRoom?.id === this.room.id;
   }
 
   joinRoom() {
@@ -106,7 +106,7 @@ export default class RoomCard extends Mixins(HeadingContext) {
   }
 
   leaveRoom() {
-    console.log("unimplemented");
+    this.$store.dispatch("leaveRoom");
   }
 }
 </script>

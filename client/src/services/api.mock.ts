@@ -15,19 +15,19 @@ const ROOMS: { [id: string]: Room } = {
     id: "1",
     name: "Green Room",
     capacity: 8,
-    zoomLink: "https://meet.jitsi.com/109283740293847"
+    zoomLink: "https://meet.jitsi.si/109283740293847"
   },
   2: {
     id: "2",
     name: "Red Room",
     capacity: 5,
-    zoomLink: "https://meet.jitsi.com/018471092384710"
+    zoomLink: "https://meet.jitsi.si/018471092384710"
   },
   3: {
     id: "3",
     name: "Pink Room",
     capacity: 10,
-    zoomLink: "https://meet.jitsi.com/102389471203487"
+    zoomLink: "https://meet.jitsi.si/102389471203487"
   }
 };
 
@@ -144,6 +144,10 @@ class ApiService {
   joinRoom(roomId: string): Promise<string> {
     return Promise.resolve(ROOMS[roomId].zoomLink);
   }
+
+  leaveRoom(): Promise<void> {
+    return Promise.reject("Not implemented");
+  }
 }
 
 export interface UserSignUp {
@@ -157,6 +161,4 @@ export interface UserSignUp {
   };
 }
 
-const accessToken = localStorage.getItem("accessToken");
-
-export default new ApiService(accessToken);
+export default new ApiService("accessToken");

@@ -80,6 +80,18 @@ joinRoom rid = do
 -- | Room Get
 -------------------------------------------------------------------------------
 
+{-@ leaveRoom :: TaggedT<{\_ -> False}, {\_ -> True}> _ _ @-}
+leaveRoom :: Controller ()
+leaveRoom = do
+  viewer   <- requireAuthUser
+  viewerId <- project userId' viewer
+  _        <- updateWhere (userId' ==. viewerId) (userRoom' `assign` Nothing)
+  respondJSON status200 (object [])
+
+-------------------------------------------------------------------------------
+-- | Room Get
+-------------------------------------------------------------------------------
+
 {-@ roomGet :: TaggedT<{\_ -> False}, {\_ -> True}> _ _ @-}
 roomGet :: Controller ()
 roomGet = do
