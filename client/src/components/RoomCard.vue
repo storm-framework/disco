@@ -55,7 +55,11 @@ import HeadingContext from "@/mixins/HeadingContext";
 import Heading from "@/components/Heading";
 
 import { library } from "@fortawesome/fontawesome-svg-core";
-import { faDoorOpen, faComments, faExternalLinkAlt } from "@fortawesome/free-solid-svg-icons";
+import {
+  faDoorOpen,
+  faComments,
+  faExternalLinkAlt
+} from "@fortawesome/free-solid-svg-icons";
 
 library.add(faDoorOpen, faComments, faExternalLinkAlt);
 
@@ -108,22 +112,22 @@ export default class RoomCard extends Mixins(HeadingContext) {
 </script>
 
 <style lang="scss" scoped>
-  .card {
-    overflow: hidden;
-    border-top-width: 1rem;
-  }
+.card {
+  overflow: hidden;
+  border-top-width: 1rem;
+}
 
-  .btn {
-    font-weight: bold;
-  }
+.btn {
+  font-weight: bold;
+}
 
-  .btn-icon {
-    height: 1em;
-    margin-right: .25em;
-  }
+.btn-icon {
+  height: 1em;
+  margin-right: 0.25em;
+}
 
-  .badge {
-    overflow: hidden;
-    vertical-align: -0.25em;
-  }
+.badge {
+  overflow: hidden;
+  vertical-align: -0.25em;
+}
 </style>

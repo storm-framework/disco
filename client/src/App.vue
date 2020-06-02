@@ -9,7 +9,7 @@
 
 <script lang="ts">
 import { Vue, Component } from "vue-property-decorator";
-import Navbar from "@/components/Navbar.vue"
+import Navbar from "@/components/Navbar.vue";
 import router from "@/router";
 import store from "@/store";
 
@@ -39,8 +39,8 @@ body {
 body {
   background-color: #f5f5f5;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-  "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji",
-  "Segoe UI Emoji", "Segoe UI Symbol" !important;
+    "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji",
+    "Segoe UI Emoji", "Segoe UI Symbol" !important;
   // font: 1rem/1.5 var(--font-family-sans-serif) !important;
 }
 

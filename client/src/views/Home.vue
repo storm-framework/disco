@@ -3,9 +3,17 @@
     <h1 class="sr-only">Overview</h1>
     <h2 class="sr-only">Your status</h2>
     <section v-if="sessionUser" class="row">
-      <b-media tag="section" vertical-align="center" class="col-7 align-items-center">
+      <b-media
+        tag="section"
+        vertical-align="center"
+        class="col-7 align-items-center"
+      >
         <template v-slot:aside>
-          <b-img src="https://placekitten.com/300/300" fluid-grow rounded="circle" />
+          <b-img
+            src="https://placekitten.com/300/300"
+            fluid-grow
+            rounded="circle"
+          />
         </template>
 
         <h3>{{ sessionUser.fullName }}</h3>
@@ -16,7 +24,12 @@
         </dl>
       </b-media>
 
-      <room-card v-if="currentRoom" :room="currentRoom" :h-context="4" class="col-5" />
+      <room-card
+        v-if="currentRoom"
+        :room="currentRoom"
+        :h-context="4"
+        class="col-5"
+      />
       <p v-else>You have not joined a room</p>
     </section>
     <section v-if="roomsAreAvailable">
@@ -79,7 +92,7 @@ export default class Home extends Vue {
 </script>
 
 <style lang="scss" scoped>
-  .available-room {
-    height: 100%;
-  }
+.available-room {
+  height: 100%;
+}
 </style>
