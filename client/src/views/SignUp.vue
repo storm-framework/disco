@@ -165,8 +165,9 @@ export default class SignIn extends Vue {
     if (typeof code !== "string") {
       return;
     }
-    ApiService.signUp({ invitationCode: code, user: this.form })
-      .then(console.log)
+    this.$store
+      .dispatch("signUp", { invitationCode: code, user: this.form })
+      .then(() => this.$router.replace({ name: "Home" }))
       .catch(error => {
         if (error.response?.status == 403) {
           this.setFatalError("Invalid invitation code");

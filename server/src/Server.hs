@@ -64,12 +64,12 @@ runServer h p = runNoLoggingT $ do
             initWith $ initFromPool pool
         dispatch $ do
             post "/api/signin" signIn
+            post "/api/signup" signUp
             put "/api/invitation" invitationPut
             get "/api/invitation/:id" invitationGet
             get "/api/invitation"     invitationIndex
-            put "/api/user" userPut
-            get "/api/user" userGet
-            get "/api/room" roomGet
+            get "/api/user"           userGet
+            get "/api/room"           roomGet
             post "/api/room"          roomPost
             post "/api/room/leave"    leaveRoom
             post "/api/room/:id/join" joinRoom

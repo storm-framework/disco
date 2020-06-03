@@ -1,4 +1,5 @@
 {-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE LambdaCase #-}
 
@@ -16,6 +17,7 @@ import           Control.Lens.Operators         ( (?~)
                                                 , (<&>)
                                                 )
 import           Control.Lens.Combinators
+                                         hiding ( assign )
 import           Control.Lens.Lens              ( (&) )
 import           Control.Lens.Internal.ByteString
                                                 ( unpackLazy8 )
@@ -51,13 +53,14 @@ import           Controllers
 import           Controllers.User               ( extractUserData
                                                 , UserData
                                                 )
+import           Controllers.Invitation         ( InvitationCode(..) )
 import           Model
 import           JSON
 import           Crypto
 
 
 --------------------------------------------------------------------------------
--- | SignIn Controller
+-- | SignIn
 --------------------------------------------------------------------------------
 
 {-@ ignore signIn @-}
@@ -69,7 +72,7 @@ signIn = do
   token                             <- genJwt userId
   userData                          <- extractUserData user
 
-  respondJSON status200 $ SignInRes (unpackLazy8 token) userData
+  respondJSON status200 $ AuthRes (unpackLazy8 token) userData
 
 {-@ ignore authUser @-}
 authUser :: Text -> Text -> Controller (Entity User)
@@ -78,18 +81,6 @@ authUser emailAddress password = do
   case maybeUser of
     Nothing   -> respondError status401 (Just "incorrect login")
     Just user -> return user
-
-{-@ ignore genJwt @-}
-genJwt :: UserId -> Controller L.ByteString
-genJwt userId = do
-  claims <- liftTIO $ mkClaims userId
-  jwt    <- liftTIO $ doJwtSign claims
-  case jwt of
-    Right jwt                         -> return (encodeCompact jwt)
-    Left  (JWSError                e) -> respondError status500 (Just (show e))
-    Left  (JWTClaimsSetDecodeError s) -> respondError status400 (Just s)
-    Left  JWTExpired                  -> respondError status401 (Just "expired token")
-    Left  _                           -> respondError status401 Nothing
 
 data SignInReq = SignInReq
   { signInReqEmailAddress :: Text
@@ -100,15 +91,76 @@ data SignInReq = SignInReq
 instance FromJSON SignInReq where
   parseJSON = genericParseJSON (stripPrefix "signInReq")
 
-data SignInRes = SignInRes
-  { signInResAccessToken :: String
-  , signInResUser :: UserData
+data AuthRes = AuthRes
+  { authResAccessToken :: String
+  , authResUser :: UserData
   }
   deriving Generic
 
-instance ToJSON SignInRes where
-  toEncoding = genericToEncoding (stripPrefix "signInRes")
+instance ToJSON AuthRes where
+  toEncoding = genericToEncoding (stripPrefix "authRes")
 
+-------------------------------------------------------------------------------
+-- | SignUp
+-------------------------------------------------------------------------------
+
+{-@ ignore signUp @-}
+signUp :: Controller ()
+signUp = do
+  liftTIO $ TIO $ print "1"
+  (SignUpReq (InvitationCode id code) UserCreate {..}) <- decodeBody
+  liftTIO $ TIO $ print "2"
+  let user = mkUser emailAddress
+                    password
+                    firstName
+                    lastName
+                    displayName
+                    institution
+                    country
+                    degree
+                    "attendee"
+                    "public"
+                    Nothing
+  liftTIO $ TIO $ print "3"
+  _ <- selectFirstOr
+    (errorResponse status403 (Just "invalid invitation"))
+    (   (invitationId' ==. id)
+    &&: (invitationCode' ==. code)
+    &&: (invitationEmailAddress' ==. emailAddress)
+    &&: (invitationAccepted' ==. False)
+    )
+  userId <- insert user
+  _      <- updateWhere (invitationId' ==. id) (invitationAccepted' `assign` True)
+  user   <- selectFirstOr notFoundJSON (userId' ==. userId)
+  liftTIO $ TIO $ print "4"
+  token    <- genJwt userId
+  userData <- extractUserData user
+  liftTIO $ TIO $ print "5"
+  respondJSON status201 $ AuthRes (unpackLazy8 token) userData
+
+data SignUpReq = SignUpReq
+  { signUpReqInvitationCode :: InvitationCode
+  , signUpReqUser :: UserCreate
+  }
+  deriving Generic
+
+instance FromJSON SignUpReq where
+  parseJSON = genericParseJSON (stripPrefix "signUpReq")
+
+data UserCreate = UserCreate
+  { emailAddress :: Text
+  , password :: Text
+  , firstName :: Text
+  , lastName :: Text
+  , displayName :: Text
+  , institution :: Text
+  , country :: Text
+  , degree :: Text
+  }
+  deriving Generic
+
+instance FromJSON UserCreate where
+  parseJSON = genericParseJSON defaultOptions
 
 -------------------------------------------------------------------------------
 -- | Auth method
@@ -140,6 +192,18 @@ checkIfAuth = do
 -------------------------------------------------------------------------------
 -- | JWT
 -------------------------------------------------------------------------------
+
+{-@ ignore genJwt @-}
+genJwt :: UserId -> Controller L.ByteString
+genJwt userId = do
+  claims <- liftTIO $ mkClaims userId
+  jwt    <- liftTIO $ doJwtSign claims
+  case jwt of
+    Right jwt                         -> return (encodeCompact jwt)
+    Left  (JWSError                e) -> respondError status500 (Just (show e))
+    Left  (JWTClaimsSetDecodeError s) -> respondError status400 (Just s)
+    Left  JWTExpired                  -> respondError status401 (Just "expired token")
+    Left  _                           -> respondError status401 Nothing
 
 mkClaims :: UserId -> TIO ClaimsSet
 mkClaims userId = do

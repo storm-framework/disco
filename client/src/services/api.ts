@@ -1,6 +1,13 @@
-import { Invitation, InvitationInsert, Room, RoomInsert, User } from "@/models";
+import {
+  Invitation,
+  InvitationInsert,
+  Room,
+  RoomInsert,
+  User,
+  UserSignUp
+} from "@/models";
 import Mock from "./api.mock";
-import Server, { UserSignUp } from "./api.server";
+import Server from "./api.server";
 
 interface ApiService {
   sessionUserId: string | null;
@@ -8,7 +15,7 @@ interface ApiService {
   // Auth
 
   signIn(emailAddress: string, password: string): Promise<User>;
-  signUp(data: UserSignUp): Promise<{ id: string }>;
+  signUp(data: UserSignUp): Promise<User>;
   signedIn(): boolean;
   signOut(): Promise<void>;
 
@@ -31,7 +38,7 @@ interface ApiService {
 }
 
 let module: ApiService;
-if (process.env.VUE_APP_MOCK_SERVICE == "true") {
+if (process.env.VUE_APP_MOCK_API_SERVICE == "true") {
   module = Mock;
 } else {
   module = Server;

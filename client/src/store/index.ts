@@ -60,6 +60,10 @@ export default new Vuex.Store({
       ApiService.signIn(emailAddress, password).then(user => {
         commit("setSessionUser", user);
       }),
+    signUp: ({ commit }, data) =>
+      ApiService.signUp(data).then(user => {
+        commit("setSessionUser", user);
+      }),
     signOut: ({ commit }) =>
       ApiService.signOut().then(() => commit("removeSessionUser")),
     sync: ({ commit }) =>

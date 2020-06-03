@@ -32,7 +32,7 @@ class ApiService {
 
   // Auth
 
-  async signIn(emailAddress: string, password: string) {
+  async signIn(emailAddress: string, password: string): Promise<User> {
     await delay();
     const response = await axios.post(`${API_URL}/signin`, {
       emailAddress: emailAddress,
@@ -46,10 +46,14 @@ class ApiService {
     return response.data.user;
   }
 
-  async signUp(data: UserSignUp) {
+  async signUp(data: UserSignUp): Promise<User> {
     await delay();
-    const response = await axios.put(`${API_URL}/user`, data);
-    return response.data;
+    const response = await axios.post(`${API_URL}/signup`, data);
+    if (response.data.accessToken) {
+      localStorage.setItem("accessToken", response.data.accessToken);
+      this.accessToken = response.data.accessToken;
+    }
+    return response.data.user;
   }
 
   signedIn() {
