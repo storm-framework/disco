@@ -97,15 +97,15 @@ class ApiService {
 
   // Auth
 
-  async signIn(emailAddress: string, password: string) {
+  async signIn(emailAddress: string, password: string): Promise<User> {
     await delay();
     this.accessToken = "accessToken";
     return USERS[SESSION_USER_ID];
   }
 
-  async signUp(data: UserSignUp): Promise<{ id: string }> {
+  async signUp(data: UserSignUp): Promise<User> {
     await delay();
-    return { id: SESSION_USER_ID };
+    return USERS[SESSION_USER_ID];
   }
 
   signedIn() {

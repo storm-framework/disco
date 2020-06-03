@@ -9,6 +9,7 @@ module Controllers.Invitation where
 import           Data.Text                      ( Text )
 import qualified Data.Text                     as T
 import qualified Data.Text.Lazy                as LT
+import qualified Data.Text.Lazy.Encoding       as LT
 import           Data.Int                       ( Int64 )
 import           Data.Maybe
 import           Data.Aeson.Types
@@ -16,6 +17,10 @@ import           Database.Persist.Sql           ( fromSqlKey
                                                 , toSqlKey
                                                 )
 import           GHC.Generics
+import           Text.Mustache                  ( (~>) )
+import qualified Text.Mustache.Types           as Mustache
+import qualified Network.Mail.Mime             as M
+
 
 import           Binah.Core
 import           Binah.Actions
@@ -32,7 +37,6 @@ import           Model
 import           JSON
 import           Crypto                         ( genRandomCodes )
 import           Text.Read                      ( readMaybe )
-import           Worker
 import           SMTP
 import           Exception
 import           System.IO.Unsafe               ( unsafePerformIO )
@@ -66,22 +70,42 @@ invitationPut = do
   _   <- runWorker (sendEmails ids)
   respondJSON status201 (object ["keys" .= map fromSqlKey ids])
 
+data EmailData = EmailData
+  { emailDataInvitationId :: InvitationId
+  , emailDataInvitationCode :: Text
+  , emailDataFirstName :: Text
+  , emailDataLastName :: Text
+  , emailDataFullName :: Text
+  }
+
+instance TemplateData EmailData where
+  templateFile = "invitation.json.mustache"
+  toMustache (EmailData id code firstName lastName fullName) = Mustache.object
+    [ "invitationId" ~> id
+    , "invitationCode" ~> code
+    , "firstName" ~> firstName
+    , "lastName" ~> lastName
+    , "fullName" ~> fullName
+    ]
+
+data EmailRender = EmailRender
+  { emailRenderBodyHtml :: LT.Text
+  , emailRenderBodyPlain :: LT.Text
+  , emailRenderSubject :: Text
+  , emailRenderFrom :: Text
+  }
+  deriving (Generic, Show)
+
+instance FromJSON EmailRender where
+  parseJSON = genericParseJSON (stripPrefix "emailRender")
+
 sendEmails :: [InvitationId] -> Worker ()
 sendEmails ids = do
   invitations <- selectList (invitationId' <-. ids)
-  conn        <- connectSMTP "localhost"
   forMC invitations $ \invitation -> do
-    id           <- project invitationId' invitation
-    emailAddress <- project invitationEmailAddress' invitation
-    code         <- project invitationCode' invitation
-    firstName    <- project invitationFirstName' invitation
-    lastName     <- project invitationLastName' invitation
-    let fullName = firstName `T.append` " " `T.append` lastName
-    let from     = mkPublicAddress (Just "Binah Team") "binah@goto.binah.com"
-    let to       = mkPublicAddress (Just fullName) emailAddress
-    let body     = "To join please visit the following link\n" ++ invitationLink id code
-    let mail     = simpleMail' to from "Invitation" (LT.pack body)
-    res <- tryT $ renderAndSend conn mail
+    id   <- project invitationId' invitation
+    mail <- renderEmail invitation
+    res  <- tryT $ renderSendMail mail
     case res of
       Left (SomeException e) -> do
         let up1 = invitationEmailError' `assign` Just (show e)
@@ -91,10 +115,24 @@ sendEmails ids = do
   return ()
 
 
-invitationLink :: InvitationId -> Text -> String
-invitationLink id code = "http://localhost:8000/invitation?code=" ++ sid ++ "." ++ T.unpack code
-  where sid = show (fromSqlKey id)
-
+renderEmail :: Entity Invitation -> Worker Mail
+renderEmail invitation = do
+  id           <- project invitationId' invitation
+  emailAddress <- project invitationEmailAddress' invitation
+  code         <- project invitationCode' invitation
+  firstName    <- project invitationFirstName' invitation
+  lastName     <- project invitationLastName' invitation
+  let fullName = T.strip $ firstName `T.append` " " `T.append` lastName
+  raw <- renderTemplate (EmailData id code firstName lastName fullName)
+  let EmailRender {..} = fromJust $ decode (LT.encodeUtf8 (LT.fromStrict raw))
+  let to               = mkPublicAddress (Just fullName) emailAddress
+  let from             = mkPublicAddress Nothing emailRenderFrom
+  return $ simpleMail from
+                      [to]
+                      []
+                      []
+                      emailRenderSubject
+                      [M.htmlPart emailRenderBodyHtml, M.plainPart emailRenderBodyPlain]
 
 newtype PutReq = PutReq [InvitationInsert]
   deriving Generic

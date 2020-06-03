@@ -36,6 +36,9 @@ import           Control.Monad.Trans.Control    ( MonadBaseControl(..)
                                                 )
 import           Control.Monad.Trans.Class      ( lift )
 import           Control.Monad.Logger           ( runNoLoggingT )
+import qualified Control.Concurrent.MVar       as MVar
+import qualified Text.Mustache.Types           as Mustache
+
 
 import           Binah.Core
 import           Binah.Frankie
@@ -56,12 +59,13 @@ import           Auth
 {-@ ignore runServer @-}
 runServer :: HostPreference -> Port -> IO ()
 runServer h p = runNoLoggingT $ do
-    pool <- createSqlitePool "db.sqlite" 1
+    templateCache <- liftIO $ MVar.newMVar mempty
+    pool          <- createSqlitePool "db.sqlite" 1
     liftIO . runFrankieServer "dev" $ do
         mode "dev" $ do
             host h
             port p
-            initWith $ initFromPool pool
+            initWith $ initFromPool templateCache pool
         dispatch $ do
             post "/api/signin" signIn
             post "/api/signup" signUp
@@ -100,9 +104,10 @@ sendFile path = do
 
 -- TODO find a way to provide this without exposing the instance of MonadBaseControl
 
-initFromPool :: Pool SqlBackend -> Controller () -> ControllerT TIO ()
-initFromPool pool controller = Pool.withResource pool $ \sqlBackend ->
-    configure (Config sqlBackend authMethod) . reading backend . unTag $ controller
+initFromPool
+    :: MVar.MVar Mustache.TemplateCache -> Pool SqlBackend -> Controller () -> ControllerT TIO ()
+initFromPool cache pool controller = Pool.withResource pool $ \sqlBackend ->
+    configure (Config sqlBackend authMethod cache) . reading backend . unTag $ controller
 
 instance MonadBase IO TIO where
     liftBase = TIO

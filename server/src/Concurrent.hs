@@ -1,5 +1,5 @@
 {-# LANGUAGE FlexibleContexts #-}
-module Worker where
+module Concurrent where
 
 
 import           Control.Monad.Reader           ( MonadReader(..)
@@ -11,11 +11,6 @@ import qualified Control.Concurrent            as C
 
 import           Binah.Infrastructure
 
-type Worker = TaggedT (ReaderT SqlBackend TIO)
-
 -- TODO: Figure out the types
-runWorker :: (MonadTIO m, MonadReader SqlBackend m) => Worker () -> TaggedT m ()
-runWorker worker = do
-  backend <- ask
-  liftTIO $ TIO $ C.forkIO $ runTIO $ runReaderT (unTag worker) backend
-  return ()
+forkTIO :: TaggedT TIO () -> TaggedT TIO C.ThreadId
+forkTIO = TaggedT . TIO . C.forkIO . runTIO . unTag
