@@ -91,6 +91,7 @@ export default new Vuex.Store({
     rooms: ({ rooms, users }) => {
       const usersByRoom = _(users)
         .values()
+        .filter(u => u.room !== null)
         .groupBy(u => u.room)
         .value();
       return _({})
