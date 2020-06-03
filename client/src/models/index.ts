@@ -20,6 +20,7 @@ export interface User {
 export interface RoomInsert {
   name: string;
   capacity: number;
+  color: string;
   zoomLink: string;
 }
 

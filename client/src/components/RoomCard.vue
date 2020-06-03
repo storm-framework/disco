@@ -63,30 +63,12 @@ import {
 
 library.add(faDoorOpen, faComments, faExternalLinkAlt);
 
-const GOLDEN_RATIO: number = (1 + Math.sqrt(5)) / 2;
-
 @Component({ components: { Heading } })
 export default class RoomCard extends Mixins(HeadingContext) {
   @Prop() readonly room!: Room;
 
-  static color(id: number) {
-    // Using the golden ratio means that colors get evenly spread out and never overlap.
-    const hue: number = id * GOLDEN_RATIO;
-    return `hsl(${hue}turn, 85%, 60%)`;
-  }
-
-  static hashId(id: string) {
-    let hash = 0;
-    for (let i = 0; i < id.length; i++) {
-      hash = (hash << 5) - hash + id.charCodeAt(i);
-      hash |= 0;
-    }
-    return hash;
-  }
-
   get color() {
-    const id = parseInt(this.room.id, 10) || RoomCard.hashId(this.room.id);
-    return RoomCard.color(id);
+    return this.room.color;
   }
 
   get empty() {

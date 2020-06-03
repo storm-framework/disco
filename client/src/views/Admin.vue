@@ -8,6 +8,9 @@
             <span class="font-weight-bold">Name</span>
           </b-col>
           <b-col sm>
+            <span class="font-weight-bold">Color</span>
+          </b-col>
+          <b-col sm>
             <span class="font-weight-bold">Capacity</span>
           </b-col>
           <b-col sm>
@@ -27,6 +30,14 @@
               required
               :disabled="fatalError"
             ></b-form-input>
+          </b-col>
+          <b-col sm>
+            <b-form-input
+              type="text"
+              v-model="item.color"
+              required
+              :disabled="fatalError"
+            />
           </b-col>
           <b-col sm>
             <b-form-input
@@ -60,6 +71,14 @@
               required
               :disabled="fatalError"
             ></b-form-input>
+          </b-col>
+          <b-col sm>
+            <b-form-input
+              type="text"
+              v-model="item.color"
+              required
+              :disabled="fatalError"
+            />
           </b-col>
           <b-col sm>
             <b-form-input
@@ -112,12 +131,14 @@ import ApiService from "@/services/api";
 interface OldRoom {
   id: string;
   name: string;
+  color: string;
   capacity: string;
   zoomLink: string;
 }
 
 interface NewRoom {
   name: string;
+  color: string;
   capacity: string;
   zoomLink: string;
 }
@@ -125,6 +146,7 @@ interface NewRoom {
 function parseNewRoom(row: NewRoom): RoomInsert {
   return {
     name: row.name,
+    color: row.color,
     capacity: parseInt(row.capacity) || 0,
     zoomLink: row.zoomLink
   };
@@ -155,6 +177,7 @@ export default class SignIn extends Vue {
           return {
             id: r.id,
             name: r.name,
+            color: r.color,
             capacity: r.capacity.toString(),
             zoomLink: r.zoomLink
           };
@@ -167,7 +190,12 @@ export default class SignIn extends Vue {
   }
 
   add() {
-    this.newRooms.push({ name: "Room #1", capacity: "10", zoomLink: "" });
+    this.newRooms.push({
+      name: "Room #1",
+      color: "red",
+      capacity: "10",
+      zoomLink: ""
+    });
   }
 
   onSubmit(evt: Event) {

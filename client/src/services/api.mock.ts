@@ -15,18 +15,21 @@ const ROOMS: { [id: string]: Room } = {
     id: "1",
     name: "Green Room",
     capacity: 8,
+    color: "green",
     zoomLink: "https://meet.jitsi.com/109283740293847"
   },
   2: {
     id: "2",
     name: "Red Room",
     capacity: 5,
+    color: "red",
     zoomLink: "https://meet.jitsi.com/018471092384710"
   },
   3: {
     id: "3",
     name: "Pink Room",
     capacity: 10,
+    color: "pink",
     zoomLink: "https://meet.jitsi.com/102389471203487"
   }
 };
