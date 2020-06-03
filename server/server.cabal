@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: c4c2522fd69458aa49e7d5930b2318f079c609f446b9b8106b59966210438fad
+-- hash: cd1d51169ab6ef9381e160a1069cbb93a0b611a223d2a5079ad300a9090d182c
 
 name:           server
 version:        0.1.0.0
@@ -28,6 +28,7 @@ source-repository head
 library
   exposed-modules:
       Auth
+      AWS
       Binah.Actions
       Binah.Core
       Binah.Filters
@@ -55,6 +56,8 @@ library
       src
   build-depends:
       aeson
+    , amazonka
+    , amazonka-s3
     , base >=4.7 && <5
     , base64-bytestring
     , bytestring
@@ -78,6 +81,7 @@ library
     , resource-pool
     , smtp-mail
     , text
+    , time
     , transformers
     , transformers-base
     , unordered-containers
@@ -95,6 +99,8 @@ executable covideo
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       aeson
+    , amazonka
+    , amazonka-s3
     , base >=4.7 && <5
     , base64-bytestring
     , bytestring
@@ -119,6 +125,7 @@ executable covideo
     , server
     , smtp-mail
     , text
+    , time
     , transformers
     , transformers-base
     , unordered-containers
@@ -137,6 +144,8 @@ test-suite server-test
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       aeson
+    , amazonka
+    , amazonka-s3
     , base >=4.7 && <5
     , base64-bytestring
     , bytestring
@@ -161,6 +170,7 @@ test-suite server-test
     , server
     , smtp-mail
     , text
+    , time
     , transformers
     , transformers-base
     , unordered-containers

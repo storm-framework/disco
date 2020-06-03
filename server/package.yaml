@@ -50,6 +50,9 @@ dependencies:
   - filepath
   - directory
   - cmdargs
+  - amazonka
+  - time
+  - amazonka-s3
 
 library:
   source-dirs: src

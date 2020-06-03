@@ -40,6 +40,8 @@ import           Text.Read                      ( readMaybe )
 import           SMTP
 import           Exception
 import           System.IO.Unsafe               ( unsafePerformIO )
+import           AWS
+import           Network.AWS.S3
 
 --------------------------------------------------------------------------------
 -- | Invitation Put (create invitations)

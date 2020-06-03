@@ -7,6 +7,7 @@
 
 module Auth where
 
+import           Data.Aeson
 import           Control.Monad.Trans.Class      ( lift )
 import           Control.Monad.Time             ( MonadTime(..) )
 import           Control.Monad.Except           ( runExceptT )
@@ -38,6 +39,8 @@ import           Database.Persist.Sql           ( toSqlKey
                                                 )
 import           GHC.Generics
 import           Text.Read                      ( readMaybe )
+import           Text.Printf                    ( printf )
+import           Frankie.Config
 
 import           Binah.Core
 import           Binah.Actions
@@ -57,6 +60,8 @@ import           Controllers.Invitation         ( InvitationCode(..) )
 import           Model
 import           JSON
 import           Crypto
+import           AWS
+import           Network.AWS.S3
 
 
 --------------------------------------------------------------------------------
@@ -107,9 +112,7 @@ instance ToJSON AuthRes where
 {-@ ignore signUp @-}
 signUp :: Controller ()
 signUp = do
-  liftTIO $ TIO $ print "1"
   (SignUpReq (InvitationCode id code) UserCreate {..}) <- decodeBody
-  liftTIO $ TIO $ print "2"
   let user = mkUser emailAddress
                     password
                     firstName
@@ -121,7 +124,6 @@ signUp = do
                     "attendee"
                     "public"
                     Nothing
-  liftTIO $ TIO $ print "3"
   _ <- selectFirstOr
     (errorResponse status403 (Just "invalid invitation"))
     (   (invitationId' ==. id)
@@ -129,13 +131,11 @@ signUp = do
     &&: (invitationEmailAddress' ==. emailAddress)
     &&: (invitationAccepted' ==. False)
     )
-  userId <- insert user
-  _      <- updateWhere (invitationId' ==. id) (invitationAccepted' `assign` True)
-  user   <- selectFirstOr notFoundJSON (userId' ==. userId)
-  liftTIO $ TIO $ print "4"
+  userId   <- insert user
+  _        <- updateWhere (invitationId' ==. id) (invitationAccepted' `assign` True)
+  user     <- selectFirstOr notFoundJSON (userId' ==. userId)
   token    <- genJwt userId
   userData <- extractUserData user
-  liftTIO $ TIO $ print "5"
   respondJSON status201 $ AuthRes (unpackLazy8 token) userData
 
 data SignUpReq = SignUpReq
@@ -161,6 +161,21 @@ data UserCreate = UserCreate
 
 instance FromJSON UserCreate where
   parseJSON = genericParseJSON defaultOptions
+
+--------------------------------------------------------------------------------
+-- | SignIn
+--------------------------------------------------------------------------------
+
+s3SignedURL :: Controller ()
+s3SignedURL = do
+  t              <- liftTIO currentTime
+  AWSConfig {..} <- configAWS <$> getConfig
+  objectKey      <- genRandomCode
+  let request = putObject awsBucket (ObjectKey objectKey) ""
+  signedUrl <- presignURL awsAuth awsRegion t 900 request
+  let objectURL =
+        printf "https://%s.%s.amazonaws.com/%s" (show awsBucket) (show awsRegion) objectKey :: String
+  respondJSON status200 $ object ["signedURL" .= T.decodeUtf8 signedUrl, "objectURL" .= objectURL]
 
 -------------------------------------------------------------------------------
 -- | Auth method
