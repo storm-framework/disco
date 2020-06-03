@@ -41,13 +41,16 @@ roomPost = do
   _                         <- requireOrganizer viewer
   (PostReq inserts updates) <- decodeBody
 
-  let rooms = map (\RoomInsert {..} -> mkRoom insertName insertCapacity insertZoomLink) inserts
+  let rooms = map
+        (\RoomInsert {..} -> mkRoom insertColor insertName insertCapacity insertZoomLink)
+        inserts
   ids <- insertMany rooms
   _   <- forMC updates $ \RoomData {..} -> do
-    let up1 = roomName' `assign` roomName
-    let up2 = roomCapacity' `assign` roomCapacity
-    let up3 = roomZoomLink' `assign` roomZoomLink
-    let up  = up1 `combine` up2 `combine` up3
+    let up1 = roomColor' `assign` roomColor
+    let up2 = roomName' `assign` roomName
+    let up3 = roomCapacity' `assign` roomCapacity
+    let up4 = roomZoomLink' `assign` roomZoomLink
+    let up  = up1 `combine` up2 `combine` up3 `combine` up4
     updateWhere (roomId' ==. roomId) up
 
   respondJSON status200 ids
@@ -101,6 +104,7 @@ roomGet = do
     do
         RoomData
       <$> project roomId'       r
+      <*> project roomColor'    r
       <*> project roomName'     r
       <*> project roomCapacity' r
       <*> project roomZoomLink' r
@@ -109,7 +113,8 @@ roomGet = do
 -- | RoomInsert
 
 data RoomInsert = RoomInsert
-  { insertName :: Text
+  { insertColor :: Text
+  , insertName :: Text
   , insertCapacity :: Int
   , insertZoomLink :: Text
   }
@@ -125,6 +130,7 @@ instance ToJSON RoomInsert where
 
 data RoomData = RoomData
   { roomId :: RoomId
+  , roomColor :: Text
   , roomName :: Text
   , roomCapacity :: Int
   , roomZoomLink :: Text

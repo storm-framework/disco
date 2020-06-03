@@ -48,6 +48,7 @@ User
   update [ room ] {\old _ viewer -> IsSelf old viewer}
 
 Room
+  color Text
   name Text
   capacity Int
   zoomLink Text

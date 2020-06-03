@@ -43,6 +43,7 @@ module Model
   , userVisibility'
   , userRoom'
   , roomId'
+  , roomColor'
   , roomName'
   , roomCapacity'
   , roomZoomLink'
@@ -92,6 +93,7 @@ User
   room RoomId Maybe
 
 Room
+  color Text
   name Text
   capacity Int
   zoomLink Text
@@ -534,15 +536,16 @@ userRoom' = EntityFieldWrapper UserRoom
 -- * Room
 {-@ mkRoom ::
      x_0: Text
-  -> x_1: Int
-  -> x_2: Text
+  -> x_1: Text
+  -> x_2: Int
+  -> x_3: Text
   -> BinahRecord <
-       {\row -> roomName (entityVal row) == x_0 && roomCapacity (entityVal row) == x_1 && roomZoomLink (entityVal row) == x_2}
+       {\row -> roomColor (entityVal row) == x_0 && roomName (entityVal row) == x_1 && roomCapacity (entityVal row) == x_2 && roomZoomLink (entityVal row) == x_3}
      , {\_ viewer -> IsOrganizer viewer}
      , {\x_0 x_1 -> False}
      > Room
 @-}
-mkRoom x_0 x_1 x_2 = BinahRecord (Room x_0 x_1 x_2)
+mkRoom x_0 x_1 x_2 x_3 = BinahRecord (Room x_0 x_1 x_2 x_3)
 
 {-@ invariant {v: Entity Room | v == getJust (entityKey v)} @-}
 
@@ -558,6 +561,21 @@ mkRoom x_0 x_1 x_2 = BinahRecord (Room x_0 x_1 x_2)
 @-}
 roomId' :: EntityFieldWrapper Room RoomId
 roomId' = EntityFieldWrapper RoomId
+
+{-@ measure roomColor :: Room -> Text @-}
+
+{-@ measure roomColorCap :: Entity Room -> Bool @-}
+
+{-@ assume roomColor' :: EntityFieldWrapper <
+    {\_ _ -> True}
+  , {\row field  -> field == roomColor (entityVal row)}
+  , {\field row  -> field == roomColor (entityVal row)}
+  , {\old -> roomColorCap old}
+  , {\old _ _ -> roomColorCap old}
+  > _ _
+@-}
+roomColor' :: EntityFieldWrapper Room Text
+roomColor' = EntityFieldWrapper RoomColor
 
 {-@ measure roomName :: Room -> Text @-}
 

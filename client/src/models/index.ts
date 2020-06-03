@@ -8,7 +8,7 @@ export interface InvitationInsert {
 }
 
 export interface Invitation extends InvitationInsert {
-  id: string;
+  id: number;
   accepted: boolean;
 }
 
@@ -26,18 +26,19 @@ export interface UserSignUp {
 }
 
 export interface User {
-  id: string;
+  id: number;
   displayName: string;
   level: string;
   room: string | null;
 }
 
 export interface RoomInsert {
+  color: string;
   name: string;
   capacity: number;
   zoomLink: string;
 }
 
 export interface Room extends RoomInsert {
-  id: string;
+  id: number;
 }

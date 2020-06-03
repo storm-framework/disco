@@ -32,7 +32,7 @@ interface ApiService {
   // Rooms
 
   rooms(): Promise<Room[]>;
-  updateRooms(updates: Room[], inserts: RoomInsert[]): Promise<string[]>;
+  updateRooms(updates: Room[], inserts: RoomInsert[]): Promise<number[]>;
   joinRoom(roomId: string): Promise<string>;
   leaveRoom(): Promise<void>;
 }

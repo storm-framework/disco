@@ -92,4 +92,7 @@ export default class SignIn extends Vue {
   border-top-left-radius: 0;
   border-top-right-radius: 0;
 }
+.form-signin .form-control {
+  height: auto;
+}
 </style>

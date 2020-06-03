@@ -1,15 +1,18 @@
 <template>
   <div class="admin">
-    <b-form class="form-send-invitations text-center mt-5" @submit="onSubmit">
+    <b-form
+      class="form-send-invitations text-center mt-5"
+      @submit.prevent="onSubmit"
+    >
       <b-container v-if="!loading">
         <b-alert :show="fatalError" variant="danger">{{ errorMsg }}</b-alert>
         <b-row class="mb-3">
           <b-col sm>
             <span class="font-weight-bold">Name</span>
           </b-col>
-          <b-col sm>
+          <!-- <b-col sm>
             <span class="font-weight-bold">Capacity</span>
-          </b-col>
+          </b-col> -->
           <b-col sm>
             <span class="font-weight-bold">URL</span>
           </b-col>
@@ -20,6 +23,13 @@
           v-bind:key="'old:' + item.id"
           class="mb-3"
         >
+          <b-col sm="1">
+            <b-form-input
+              type="color"
+              v-model="item.color"
+              :disabled="fatalError"
+            ></b-form-input>
+          </b-col>
           <b-col sm>
             <b-form-input
               type="text"
@@ -28,14 +38,14 @@
               :disabled="fatalError"
             ></b-form-input>
           </b-col>
-          <b-col sm>
+          <!-- <b-col sm>
             <b-form-input
               type="number"
               v-model="item.capacity"
               required
               :disabled="fatalError"
             ></b-form-input>
-          </b-col>
+          </b-col> -->
           <b-col sm>
             <b-form-input
               type="url"
@@ -53,6 +63,13 @@
           v-bind:key="'new:' + index"
           class="mb-3"
         >
+          <b-col sm="1">
+            <b-form-input
+              type="color"
+              v-model="item.color"
+              :disabled="fatalError"
+            ></b-form-input>
+          </b-col>
           <b-col sm>
             <b-form-input
               type="text"
@@ -61,14 +78,14 @@
               :disabled="fatalError"
             ></b-form-input>
           </b-col>
-          <b-col sm>
+          <!-- <b-col sm>
             <b-form-input
               type="number"
               v-model="item.capacity"
               required
               :disabled="fatalError"
             ></b-form-input>
-          </b-col>
+          </b-col> -->
           <b-col sm>
             <b-form-input
               type="url"
@@ -110,23 +127,24 @@ import { Room, RoomInsert } from "@/models";
 import ApiService from "@/services/api";
 
 interface OldRoom {
-  id: string;
+  id: number;
   name: string;
-  capacity: string;
   zoomLink: string;
+  color: string;
 }
 
 interface NewRoom {
   name: string;
-  capacity: string;
   zoomLink: string;
+  color: string;
 }
 
 function parseNewRoom(row: NewRoom): RoomInsert {
   return {
     name: row.name,
-    capacity: parseInt(row.capacity) || 0,
-    zoomLink: row.zoomLink
+    capacity: 10,
+    zoomLink: row.zoomLink,
+    color: row.color
   };
 }
 
@@ -135,6 +153,51 @@ function parseOldRoom(row: OldRoom): Room {
     id: row.id,
     ...parseNewRoom(row)
   };
+}
+
+const GOLDEN_RATIO: number = (1 + Math.sqrt(5)) / 2;
+
+function hue2rgb(p: number, q: number, t: number) {
+  if (t < 0) t += 1;
+  if (t > 1) t -= 1;
+  if (t < 1 / 6) return p + (q - p) * 6 * t;
+  if (t < 1 / 2) return q;
+  if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
+  return p;
+}
+function hslToRgb(h: number, s: number, l: number) {
+  let r, g, b;
+
+  if (s == 0) {
+    r = g = b = l; // achromatic
+  } else {
+    const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+    const p = 2 * l - q;
+
+    r = hue2rgb(p, q, h + 1 / 3);
+    g = hue2rgb(p, q, h);
+    b = hue2rgb(p, q, h - 1 / 3);
+  }
+
+  return [r * 255, g * 255, b * 255];
+}
+
+function rgbToHex(r: number, g: number, b: number) {
+  r = Math.floor(r);
+  g = Math.floor(g);
+  b = Math.floor(b);
+  return `#${r.toString(16)}${g.toString(16)}${b.toString(16)}`;
+}
+
+function randomString() {
+  return Math.random()
+    .toString(36)
+    .substring(2, 15);
+}
+
+function randomJitsiLink() {
+  const r = randomString() + randomString();
+  return `https://meet.jitsi.si/${r}`;
 }
 
 @Component
@@ -155,7 +218,7 @@ export default class SignIn extends Vue {
           return {
             id: r.id,
             name: r.name,
-            capacity: r.capacity.toString(),
+            color: r.color,
             zoomLink: r.zoomLink
           };
         });
@@ -167,10 +230,17 @@ export default class SignIn extends Vue {
   }
 
   add() {
-    this.newRooms.push({ name: "Room #1", capacity: "10", zoomLink: "" });
+    const n = this.oldRooms.length + this.newRooms.length;
+    const hue = (n * GOLDEN_RATIO) % 1;
+    const [r, g, b] = hslToRgb(hue, 0.8, 0.6);
+    this.newRooms.push({
+      name: `Room #${n + 1}`,
+      zoomLink: randomJitsiLink(),
+      color: rgbToHex(r, g, b)
+    });
   }
 
-  onSubmit(evt: Event) {
+  onSubmit() {
     if (this.saving) {
       return;
     }
@@ -188,7 +258,6 @@ export default class SignIn extends Vue {
       .catch(() => {
         this.saving = false;
       });
-    evt.preventDefault();
   }
 
   setFatalError(msg: string) {

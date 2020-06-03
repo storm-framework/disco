@@ -94,7 +94,7 @@ class ApiService {
     return this.get("/room");
   }
 
-  updateRooms(updates: Room[], inserts: RoomInsert[]): Promise<string[]> {
+  updateRooms(updates: Room[], inserts: RoomInsert[]): Promise<number[]> {
     return this.post("/room", {
       inserts: inserts,
       updates: updates
