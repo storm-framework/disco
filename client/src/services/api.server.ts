@@ -1,6 +1,7 @@
 import {
   Invitation,
   InvitationInsert,
+  PresignedURL,
   Room,
   RoomInsert,
   User,
@@ -109,7 +110,13 @@ class ApiService {
     return this.post(`/room/leave`);
   }
 
-  // Request
+  // Photos
+
+  preSignURL(code: string): Promise<PresignedURL> {
+    return this.get(`/signurl?code=${code}`);
+  }
+
+  // Raw Requests
 
   async post(
     path: string,

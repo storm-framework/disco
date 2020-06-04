@@ -18,6 +18,8 @@ export interface UserSignUp {
     emailAddress: string;
     password: string;
     firstName: string;
+    lastName: string;
+    photoURL: string | null;
     displayName: string;
     institution: string;
     country: string;
@@ -41,4 +43,9 @@ export interface RoomInsert {
 
 export interface Room extends RoomInsert {
   id: number;
+}
+
+export interface PresignedURL {
+  signedURL: string;
+  objectURL: string;
 }

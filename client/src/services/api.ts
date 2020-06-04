@@ -1,6 +1,7 @@
 import {
   Invitation,
   InvitationInsert,
+  PresignedURL,
   Room,
   RoomInsert,
   User,
@@ -35,6 +36,10 @@ interface ApiService {
   updateRooms(updates: Room[], inserts: RoomInsert[]): Promise<number[]>;
   joinRoom(roomId: string): Promise<string>;
   leaveRoom(): Promise<void>;
+
+  //  Photos
+
+  preSignURL(code: string): Promise<PresignedURL>;
 }
 
 let module: ApiService;

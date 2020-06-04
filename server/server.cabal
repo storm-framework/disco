@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: cd1d51169ab6ef9381e160a1069cbb93a0b611a223d2a5079ad300a9090d182c
+-- hash: 89236cddd26f5c722e8483966b82064233527998a93edf2562b7d027676ae7cd
 
 name:           server
 version:        0.1.0.0
@@ -57,6 +57,7 @@ library
   build-depends:
       aeson
     , amazonka
+    , amazonka-core
     , amazonka-s3
     , base >=4.7 && <5
     , base64-bytestring
@@ -100,6 +101,7 @@ executable covideo
   build-depends:
       aeson
     , amazonka
+    , amazonka-core
     , amazonka-s3
     , base >=4.7 && <5
     , base64-bytestring
@@ -145,6 +147,7 @@ test-suite server-test
   build-depends:
       aeson
     , amazonka
+    , amazonka-core
     , amazonka-s3
     , base >=4.7 && <5
     , base64-bytestring

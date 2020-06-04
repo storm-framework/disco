@@ -30,37 +30,6 @@ import           Model
 import           JSON
 
 -------------------------------------------------------------------------------
--- | User Put
--------------------------------------------------------------------------------
-
-
-{-@ userPut :: TaggedT<{\_ -> False}, {\_ -> True}> _ _ @-}
-userPut :: Controller ()
-userPut = do
-  (PutReq (InvitationCode id code) UserCreate {..}) <- decodeBody
-  let user = mkUser emailAddress
-                    password
-                    firstName
-                    lastName
-                    displayName
-                    institution
-                    country
-                    degree
-                    "attendee"
-                    "public"
-                    Nothing
-  _ <- selectFirstOr
-    (errorResponse status403 (Just "invalid invitation"))
-    (   (invitationId' ==. id)
-    &&: (invitationCode' ==. code)
-    &&: (invitationEmailAddress' ==. emailAddress)
-    &&: (invitationAccepted' ==. False)
-    )
-  userId <- insert user
-  _      <- updateWhere (invitationId' ==. id) (invitationAccepted' `assign` True)
-  respondJSON status201 (object ["id" .= userId])
-
--------------------------------------------------------------------------------
 -- | User Get
 -------------------------------------------------------------------------------
 
@@ -76,6 +45,7 @@ extractUserData :: Entity User -> Controller UserData
 extractUserData u = do
   id           <- project userId' u
   emailAddress <- project userEmailAddress' u
+  photoURL     <- project userPhotoURL' u
   firstName    <- project userFirstName' u
   lastName     <- project userLastName' u
   displayName  <- project userDisplayName' u
@@ -87,6 +57,7 @@ extractUserData u = do
   room         <- if visibility == "public" then project userRoom' u else return Nothing
   return $ UserData id
                     emailAddress
+                    photoURL
                     firstName
                     lastName
                     displayName
@@ -96,33 +67,10 @@ extractUserData u = do
                     level
                     room
 
-data PutReq = PutReq
-  { putReqInvitationCode :: InvitationCode
-  , putReqUser :: UserCreate
-  }
-  deriving Generic
-
-instance FromJSON PutReq where
-  parseJSON = genericParseJSON (stripPrefix "putReq")
-
-data UserCreate = UserCreate
-  { emailAddress :: Text
-  , password :: Text
-  , firstName :: Text
-  , lastName :: Text
-  , displayName :: Text
-  , institution :: Text
-  , country :: Text
-  , degree :: Text
-  }
-  deriving Generic
-
-instance FromJSON UserCreate where
-  parseJSON = genericParseJSON defaultOptions
-
 data UserData = UserData
   { userId :: UserId
   , userEmailAddress :: Text
+  , userPhotoURL :: Maybe Text
   , userFirstName :: Text
   , userLastName :: Text
   , userDisplayName :: Text

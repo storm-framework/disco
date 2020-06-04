@@ -28,6 +28,7 @@ Invitation
 User
   emailAddress Text
   password Text
+  photoURL Text Maybe
   firstName Text
   lastName Text
   displayName Text

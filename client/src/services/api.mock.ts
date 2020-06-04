@@ -1,6 +1,7 @@
 import {
   Invitation,
   InvitationInsert,
+  PresignedURL,
   Room,
   RoomInsert,
   User,
@@ -156,6 +157,12 @@ class ApiService {
   }
 
   leaveRoom(): Promise<void> {
+    return Promise.reject("Not implemented");
+  }
+
+  // Photos
+
+  preSignURL(code: string): Promise<PresignedURL> {
     return Promise.reject("Not implemented");
   }
 }

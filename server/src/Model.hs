@@ -33,6 +33,7 @@ module Model
   , userId'
   , userEmailAddress'
   , userPassword'
+  , userPhotoURL'
   , userFirstName'
   , userLastName'
   , userDisplayName'
@@ -82,6 +83,7 @@ Invitation
 User
   emailAddress Text
   password Text
+  photoURL Text Maybe
   firstName Text
   lastName Text
   displayName Text
@@ -336,22 +338,23 @@ invitationEmailError' = EntityFieldWrapper InvitationEmailError
 {-@ mkUser ::
      x_0: Text
   -> x_1: Text
-  -> x_2: Text
+  -> x_2: (Maybe Text)
   -> x_3: Text
   -> x_4: Text
   -> x_5: Text
   -> x_6: Text
   -> x_7: Text
-  -> x_8: String
+  -> x_8: Text
   -> x_9: String
-  -> x_10: (Maybe RoomId)
+  -> x_10: String
+  -> x_11: (Maybe RoomId)
   -> BinahRecord <
-       {\row -> userEmailAddress (entityVal row) == x_0 && userPassword (entityVal row) == x_1 && userFirstName (entityVal row) == x_2 && userLastName (entityVal row) == x_3 && userDisplayName (entityVal row) == x_4 && userInstitution (entityVal row) == x_5 && userCountry (entityVal row) == x_6 && userDegree (entityVal row) == x_7 && userLevel (entityVal row) == x_8 && userVisibility (entityVal row) == x_9 && userRoom (entityVal row) == x_10}
+       {\row -> userEmailAddress (entityVal row) == x_0 && userPassword (entityVal row) == x_1 && userPhotoURL (entityVal row) == x_2 && userFirstName (entityVal row) == x_3 && userLastName (entityVal row) == x_4 && userDisplayName (entityVal row) == x_5 && userInstitution (entityVal row) == x_6 && userCountry (entityVal row) == x_7 && userDegree (entityVal row) == x_8 && userLevel (entityVal row) == x_9 && userVisibility (entityVal row) == x_10 && userRoom (entityVal row) == x_11}
      , {\new viewer -> IsOrganizer viewer || userLevel (entityVal new) == "attendee"}
      , {\x_0 x_1 -> (userVisibility (entityVal x_0) == "public" || IsSelf x_0 x_1) || (x_0 == x_1)}
      > User
 @-}
-mkUser x_0 x_1 x_2 x_3 x_4 x_5 x_6 x_7 x_8 x_9 x_10 = BinahRecord (User x_0 x_1 x_2 x_3 x_4 x_5 x_6 x_7 x_8 x_9 x_10)
+mkUser x_0 x_1 x_2 x_3 x_4 x_5 x_6 x_7 x_8 x_9 x_10 x_11 = BinahRecord (User x_0 x_1 x_2 x_3 x_4 x_5 x_6 x_7 x_8 x_9 x_10 x_11)
 
 {-@ invariant {v: Entity User | v == getJust (entityKey v)} @-}
 
@@ -397,6 +400,21 @@ userEmailAddress' = EntityFieldWrapper UserEmailAddress
 @-}
 userPassword' :: EntityFieldWrapper User Text
 userPassword' = EntityFieldWrapper UserPassword
+
+{-@ measure userPhotoURL :: User -> (Maybe Text) @-}
+
+{-@ measure userPhotoURLCap :: Entity User -> Bool @-}
+
+{-@ assume userPhotoURL' :: EntityFieldWrapper <
+    {\_ _ -> True}
+  , {\row field  -> field == userPhotoURL (entityVal row)}
+  , {\field row  -> field == userPhotoURL (entityVal row)}
+  , {\old -> userPhotoURLCap old}
+  , {\old _ _ -> userPhotoURLCap old}
+  > _ _
+@-}
+userPhotoURL' :: EntityFieldWrapper User (Maybe Text)
+userPhotoURL' = EntityFieldWrapper UserPhotoURL
 
 {-@ measure userFirstName :: User -> Text @-}
 

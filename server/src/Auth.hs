@@ -62,6 +62,7 @@ import           JSON
 import           Crypto
 import           AWS
 import           Network.AWS.S3
+import           Network.AWS.Data.Text          ( toText )
 
 
 --------------------------------------------------------------------------------
@@ -115,6 +116,7 @@ signUp = do
   (SignUpReq (InvitationCode id code) UserCreate {..}) <- decodeBody
   let user = mkUser emailAddress
                     password
+                    photoURL
                     firstName
                     lastName
                     displayName
@@ -150,6 +152,7 @@ instance FromJSON SignUpReq where
 data UserCreate = UserCreate
   { emailAddress :: Text
   , password :: Text
+  , photoURL :: Maybe Text
   , firstName :: Text
   , lastName :: Text
   , displayName :: Text
@@ -174,7 +177,7 @@ s3SignedURL = do
   let request = putObject awsBucket (ObjectKey objectKey) ""
   signedUrl <- presignURL awsAuth awsRegion t 900 request
   let objectURL =
-        printf "https://%s.%s.amazonaws.com/%s" (show awsBucket) (show awsRegion) objectKey :: String
+        printf "https://%s.s3-%s.amazonaws.com/%s" (toText awsBucket) (toText awsRegion) objectKey :: String
   respondJSON status200 $ object ["signedURL" .= T.decodeUtf8 signedUrl, "objectURL" .= objectURL]
 
 -------------------------------------------------------------------------------
