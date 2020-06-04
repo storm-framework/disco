@@ -45,43 +45,71 @@ const ROOMS: { [id: string]: Room } = {
 const USERS: { [id: string]: User } = {
   1: {
     id: 1,
-    displayName: "Charlie Papazian",
+    photoURL: null,
+    firstName: "Charlie",
+    lastName: "Papazian",
+    displayName: "Charlie",
+    institution: "Homebrewers",
     level: "organizer",
     room: "1"
   },
   2: {
     id: 2,
-    displayName: "Michael Jackson",
+    firstName: "Michael",
+    lastName: "Jackson",
+    photoURL: null,
+    displayName: "Beerhunter",
+    institution: "Beer",
     level: "atendee",
     room: "1"
   },
   3: {
     id: 3,
-    displayName: "Natalie Cilurzo",
+    firstName: "Natalie",
+    lastName: "Cilurzo",
+    photoURL: null,
+    displayName: "Natalie",
+    institution: "Russian River",
     level: "attendee",
     room: "2"
   },
   4: {
     id: 4,
-    displayName: "Vinnie Cilurzo",
+    photoURL: null,
+    firstName: "Vinnie",
+    lastName: "Cilurzo",
+    displayName: "Vinnie",
+    institution: "Russina River",
     level: "atendee",
     room: "2"
   },
   5: {
     id: 5,
+    photoURL: null,
+    firstName: "Greg",
+    lastName: "Koch",
     displayName: "Greg Koch",
+    institution: "Stone Brewing",
     level: "atendee",
     room: "3"
   },
   6: {
     id: 6,
-    displayName: "Dominic Engels",
+    photoURL: null,
+    firstName: "Dominic",
+    lastName: "Brewing",
+    displayName: "Dominic",
+    institution: "Stone Brewing",
     level: "atendee",
     room: "3"
   },
   7: {
     id: 7,
-    displayName: "Steve Wagner",
+    photoURL: null,
+    firstName: "Steve",
+    lastName: "Wagner",
+    displayName: "Steve",
+    institution: "Stone Brewing",
     level: "atendee",
     room: "3"
   }

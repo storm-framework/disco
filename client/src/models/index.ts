@@ -27,7 +27,7 @@ export interface UserSignUp {
 
 export interface User {
   id: number;
-  photoURL: string;
+  photoURL: string | null;
   firstName: string;
   lastName: string;
   displayName: string;
