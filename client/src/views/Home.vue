@@ -9,17 +9,13 @@
         class="col-7 align-items-center"
       >
         <template v-slot:aside>
-          <b-img
-            src="https://placekitten.com/300/300"
-            fluid-grow
-            rounded="circle"
-          />
+          <b-avatar :src="sessionUser.photoURL" :text="initials" size="300" />
         </template>
 
-        <h3>{{ sessionUser.fullName }}</h3>
+        <h3>{{ fullName }}</h3>
 
         <dl>
-          <dt>Display name</dt>
+          <dt>Badge name</dt>
           <dd>{{ sessionUser.displayName }}</dd>
         </dl>
       </b-media>
@@ -30,12 +26,12 @@
         :h-context="4"
         class="col-5"
       />
-      <p v-else>You have not joined a room</p>
+      <p v-else class="h5 align-self-center ml-5">You have not joined a room</p>
     </section>
     <section v-if="roomsAreAvailable">
-      <h2 v-if="currentRoom">Other Rooms</h2>
-      <h2 v-else>All Rooms</h2>
-      <ul class="row list-unstyled">
+      <h2 v-if="currentRoom" class="mt-5">Other Rooms</h2>
+      <h2 v-else class="mt-5">All Rooms</h2>
+      <ul class="row list-unstyled mt-4">
         <li class="mb-4 col-4" v-for="room in availableRooms" :key="room.id">
           <room-card :room="room" :h-context="3" class="available-room" />
         </li>
@@ -63,6 +59,18 @@ export default class Home extends Vue {
 
   get roomsAreAvailable() {
     return this.availableRooms.length !== 0;
+  }
+
+  get fullName() {
+    const sessionUser = this.$store.getters.sessionUser;
+    return _.trim(_.join([sessionUser?.firstName, sessionUser?.lastName], " "));
+  }
+
+  get initials() {
+    const sessionUser = this.$store.getters.sessionUser;
+    const fn = sessionUser?.firstName[0] || "";
+    const ln = sessionUser?.lastName[0] || "";
+    return _.trim(fn + ln);
   }
 
   get availableRooms() {

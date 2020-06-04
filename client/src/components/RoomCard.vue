@@ -23,7 +23,7 @@
           In this room
         </heading>
 
-        <ul>
+        <ul class="user-list">
           <li v-for="user in users" :key="user.id">
             {{ user.displayName }}
           </li>
@@ -107,5 +107,9 @@ export default class RoomCard extends Mixins(HeadingContext) {
 .badge {
   overflow: hidden;
   vertical-align: -0.25em;
+}
+
+.card .user-list {
+  margin-bottom: 1rem;
 }
 </style>

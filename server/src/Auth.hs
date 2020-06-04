@@ -121,8 +121,6 @@ signUp = do
                     lastName
                     displayName
                     institution
-                    country
-                    degree
                     "attendee"
                     "public"
                     Nothing
@@ -157,8 +155,6 @@ data UserCreate = UserCreate
   , lastName :: Text
   , displayName :: Text
   , institution :: Text
-  , country :: Text
-  , degree :: Text
   }
   deriving Generic
 

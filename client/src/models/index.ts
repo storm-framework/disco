@@ -22,8 +22,6 @@ export interface UserSignUp {
     photoURL: string | null;
     displayName: string;
     institution: string;
-    country: string;
-    degree: string;
   };
 }
 

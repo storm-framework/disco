@@ -40,8 +40,6 @@ import           Text.Read                      ( readMaybe )
 import           SMTP
 import           Exception
 import           System.IO.Unsafe               ( unsafePerformIO )
-import           AWS
-import           Network.AWS.S3
 
 --------------------------------------------------------------------------------
 -- | Invitation Put (create invitations)
@@ -60,8 +58,6 @@ invitationPut = do
                                                      insertFirstName
                                                      insertLastName
                                                      insertInstitution
-                                                     insertCountry
-                                                     insertDegree
                                                      False
                                                      "not_sent"
                                                      Nothing
@@ -136,6 +132,7 @@ renderEmail invitation = do
                       emailRenderSubject
                       [M.htmlPart emailRenderBodyHtml, M.plainPart emailRenderBodyPlain]
 
+
 newtype PutReq = PutReq [InvitationInsert]
   deriving Generic
 
@@ -182,8 +179,6 @@ data InvitationInsert = InvitationInsert
   , insertFirstName    :: Text
   , insertLastName     :: Text
   , insertInstitution  :: Text
-  , insertCountry      :: Text
-  , insertDegree       :: Text
   }
   deriving Generic
 
@@ -196,8 +191,6 @@ data InvitationData = InvitationData
   , invitationFirstName    :: Text
   , invitationLastName     :: Text
   , invitationInstitution  :: Text
-  , invitationCountry      :: Text
-  , invitationDegree       :: Text
   , invitationAccepted     :: Bool
   }
   deriving Generic
@@ -210,8 +203,6 @@ extractInvitationData invitation =
     <*> project invitationFirstName'    invitation
     <*> project invitationLastName'     invitation
     <*> project invitationInstitution'  invitation
-    <*> project invitationCountry'      invitation
-    <*> project invitationDegree'       invitation
     <*> project invitationAccepted'     invitation
 
 instance ToJSON InvitationData where

@@ -4,8 +4,6 @@ Invitation
   firstName Text
   lastName Text
   institution Text
-  country Text
-  degree Text
   accepted Bool
   emailStatus String
   emailError String Maybe
@@ -33,8 +31,6 @@ User
   lastName Text
   displayName Text
   institution Text
-  country Text
-  degree Text
   level String
   visibility String
   room RoomId Maybe

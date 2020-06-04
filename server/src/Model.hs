@@ -25,8 +25,6 @@ module Model
   , invitationFirstName'
   , invitationLastName'
   , invitationInstitution'
-  , invitationCountry'
-  , invitationDegree'
   , invitationAccepted'
   , invitationEmailStatus'
   , invitationEmailError'
@@ -38,8 +36,6 @@ module Model
   , userLastName'
   , userDisplayName'
   , userInstitution'
-  , userCountry'
-  , userDegree'
   , userLevel'
   , userVisibility'
   , userRoom'
@@ -74,8 +70,6 @@ Invitation
   firstName Text
   lastName Text
   institution Text
-  country Text
-  degree Text
   accepted Bool
   emailStatus String
   emailError String Maybe
@@ -88,8 +82,6 @@ User
   lastName Text
   displayName Text
   institution Text
-  country Text
-  degree Text
   level String
   visibility String
   room RoomId Maybe
@@ -156,18 +148,16 @@ persistentRecord (BinahRecord record) = record
   -> x_2: Text
   -> x_3: Text
   -> x_4: Text
-  -> x_5: Text
-  -> x_6: Text
-  -> x_7: Bool
-  -> x_8: String
-  -> x_9: (Maybe String)
+  -> x_5: Bool
+  -> x_6: String
+  -> x_7: (Maybe String)
   -> BinahRecord <
-       {\row -> invitationCode (entityVal row) == x_0 && invitationEmailAddress (entityVal row) == x_1 && invitationFirstName (entityVal row) == x_2 && invitationLastName (entityVal row) == x_3 && invitationInstitution (entityVal row) == x_4 && invitationCountry (entityVal row) == x_5 && invitationDegree (entityVal row) == x_6 && invitationAccepted (entityVal row) == x_7 && invitationEmailStatus (entityVal row) == x_8 && invitationEmailError (entityVal row) == x_9}
+       {\row -> invitationCode (entityVal row) == x_0 && invitationEmailAddress (entityVal row) == x_1 && invitationFirstName (entityVal row) == x_2 && invitationLastName (entityVal row) == x_3 && invitationInstitution (entityVal row) == x_4 && invitationAccepted (entityVal row) == x_5 && invitationEmailStatus (entityVal row) == x_6 && invitationEmailError (entityVal row) == x_7}
      , {\invitation viewer -> not (invitationAccepted (entityVal invitation)) && IsOrganizer viewer && emailStatus invitation == "not_sent"}
      , {\x_0 x_1 -> False}
      > Invitation
 @-}
-mkInvitation x_0 x_1 x_2 x_3 x_4 x_5 x_6 x_7 x_8 x_9 = BinahRecord (Invitation x_0 x_1 x_2 x_3 x_4 x_5 x_6 x_7 x_8 x_9)
+mkInvitation x_0 x_1 x_2 x_3 x_4 x_5 x_6 x_7 = BinahRecord (Invitation x_0 x_1 x_2 x_3 x_4 x_5 x_6 x_7)
 
 {-@ invariant {v: Entity Invitation | v == getJust (entityKey v)} @-}
 
@@ -259,36 +249,6 @@ invitationLastName' = EntityFieldWrapper InvitationLastName
 invitationInstitution' :: EntityFieldWrapper Invitation Text
 invitationInstitution' = EntityFieldWrapper InvitationInstitution
 
-{-@ measure invitationCountry :: Invitation -> Text @-}
-
-{-@ measure invitationCountryCap :: Entity Invitation -> Bool @-}
-
-{-@ assume invitationCountry' :: EntityFieldWrapper <
-    {\_ _ -> True}
-  , {\row field  -> field == invitationCountry (entityVal row)}
-  , {\field row  -> field == invitationCountry (entityVal row)}
-  , {\old -> invitationCountryCap old}
-  , {\old _ _ -> invitationCountryCap old}
-  > _ _
-@-}
-invitationCountry' :: EntityFieldWrapper Invitation Text
-invitationCountry' = EntityFieldWrapper InvitationCountry
-
-{-@ measure invitationDegree :: Invitation -> Text @-}
-
-{-@ measure invitationDegreeCap :: Entity Invitation -> Bool @-}
-
-{-@ assume invitationDegree' :: EntityFieldWrapper <
-    {\_ _ -> True}
-  , {\row field  -> field == invitationDegree (entityVal row)}
-  , {\field row  -> field == invitationDegree (entityVal row)}
-  , {\old -> invitationDegreeCap old}
-  , {\old _ _ -> invitationDegreeCap old}
-  > _ _
-@-}
-invitationDegree' :: EntityFieldWrapper Invitation Text
-invitationDegree' = EntityFieldWrapper InvitationDegree
-
 {-@ measure invitationAccepted :: Invitation -> Bool @-}
 
 {-@ measure invitationAcceptedCap :: Entity Invitation -> Bool @-}
@@ -343,18 +303,16 @@ invitationEmailError' = EntityFieldWrapper InvitationEmailError
   -> x_4: Text
   -> x_5: Text
   -> x_6: Text
-  -> x_7: Text
-  -> x_8: Text
-  -> x_9: String
-  -> x_10: String
-  -> x_11: (Maybe RoomId)
+  -> x_7: String
+  -> x_8: String
+  -> x_9: (Maybe RoomId)
   -> BinahRecord <
-       {\row -> userEmailAddress (entityVal row) == x_0 && userPassword (entityVal row) == x_1 && userPhotoURL (entityVal row) == x_2 && userFirstName (entityVal row) == x_3 && userLastName (entityVal row) == x_4 && userDisplayName (entityVal row) == x_5 && userInstitution (entityVal row) == x_6 && userCountry (entityVal row) == x_7 && userDegree (entityVal row) == x_8 && userLevel (entityVal row) == x_9 && userVisibility (entityVal row) == x_10 && userRoom (entityVal row) == x_11}
+       {\row -> userEmailAddress (entityVal row) == x_0 && userPassword (entityVal row) == x_1 && userPhotoURL (entityVal row) == x_2 && userFirstName (entityVal row) == x_3 && userLastName (entityVal row) == x_4 && userDisplayName (entityVal row) == x_5 && userInstitution (entityVal row) == x_6 && userLevel (entityVal row) == x_7 && userVisibility (entityVal row) == x_8 && userRoom (entityVal row) == x_9}
      , {\new viewer -> IsOrganizer viewer || userLevel (entityVal new) == "attendee"}
      , {\x_0 x_1 -> (userVisibility (entityVal x_0) == "public" || IsSelf x_0 x_1) || (x_0 == x_1)}
      > User
 @-}
-mkUser x_0 x_1 x_2 x_3 x_4 x_5 x_6 x_7 x_8 x_9 x_10 x_11 = BinahRecord (User x_0 x_1 x_2 x_3 x_4 x_5 x_6 x_7 x_8 x_9 x_10 x_11)
+mkUser x_0 x_1 x_2 x_3 x_4 x_5 x_6 x_7 x_8 x_9 = BinahRecord (User x_0 x_1 x_2 x_3 x_4 x_5 x_6 x_7 x_8 x_9)
 
 {-@ invariant {v: Entity User | v == getJust (entityKey v)} @-}
 
@@ -475,36 +433,6 @@ userDisplayName' = EntityFieldWrapper UserDisplayName
 @-}
 userInstitution' :: EntityFieldWrapper User Text
 userInstitution' = EntityFieldWrapper UserInstitution
-
-{-@ measure userCountry :: User -> Text @-}
-
-{-@ measure userCountryCap :: Entity User -> Bool @-}
-
-{-@ assume userCountry' :: EntityFieldWrapper <
-    {\_ _ -> True}
-  , {\row field  -> field == userCountry (entityVal row)}
-  , {\field row  -> field == userCountry (entityVal row)}
-  , {\old -> userCountryCap old}
-  , {\old _ _ -> userCountryCap old}
-  > _ _
-@-}
-userCountry' :: EntityFieldWrapper User Text
-userCountry' = EntityFieldWrapper UserCountry
-
-{-@ measure userDegree :: User -> Text @-}
-
-{-@ measure userDegreeCap :: Entity User -> Bool @-}
-
-{-@ assume userDegree' :: EntityFieldWrapper <
-    {\_ _ -> True}
-  , {\row field  -> field == userDegree (entityVal row)}
-  , {\field row  -> field == userDegree (entityVal row)}
-  , {\old -> userDegreeCap old}
-  , {\old _ _ -> userDegreeCap old}
-  > _ _
-@-}
-userDegree' :: EntityFieldWrapper User Text
-userDegree' = EntityFieldWrapper UserDegree
 
 {-@ measure userLevel :: User -> String @-}
 

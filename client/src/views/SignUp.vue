@@ -8,113 +8,119 @@
     class="form-signup"
     bg-color="#f5f5f5"
   >
-    <b-alert :show="fatalError" variant="danger">{{ errorMsg }}</b-alert>
-    <b-form class="text-center" @submit.prevent="onSubmit">
-      <h3 class="mb-4">Sign up</h3>
-      <b-form-group label="Email address" label-for="email-address">
-        <b-form-input
-          id="email-address"
-          type="email"
-          v-model="form.emailAddress"
-          required
-          disabled
-        ></b-form-input>
-      </b-form-group>
+    <b-container>
+      <b-alert :show="fatalError" variant="danger">{{ errorMsg }}</b-alert>
+      <b-form @submit.prevent="onSubmit">
+        <b-form-group
+          label-cols-lg="3"
+          label="Sign In"
+          label-size="lg"
+          label-class="font-weight-bold pt-0"
+          class="mb-5"
+        >
+          <b-form-group label="Email address:" label-for="email-address">
+            <b-form-input
+              id="email-address"
+              type="email"
+              v-model="form.emailAddress"
+              required
+              disabled
+            ></b-form-input>
+          </b-form-group>
 
-      <b-form-group label="Password" label-for="password">
-        <b-form-input
-          id="password"
-          type="password"
-          v-model="form.password"
-          required
-          placeholder="Password"
-          :disabled="fatalError"
-        ></b-form-input>
-      </b-form-group>
+          <b-form-group
+            label="Password:"
+            label-for="password"
+            description="Choose an easy password. This is just a demo and your account will be deleted afterwards."
+          >
+            <b-form-input
+              id="password"
+              type="password"
+              v-model="form.password"
+              required
+              placeholder="Password"
+              :disabled="fatalError"
+            ></b-form-input>
+          </b-form-group>
+        </b-form-group>
 
-      <b-form-group label="Photo" label-for="photo">
-        <b-form-file
-          placeholder="Choose a file or drop it here"
-          drop-placeholder="Drop file here..."
-          v-model="form.photo"
-          accept="image/*"
-        ></b-form-file>
-      </b-form-group>
+        <b-form-group
+          label-cols-lg="3"
+          label="Profile"
+          label-size="lg"
+          label-class="font-weight-bold pt-0"
+          class="mb-0"
+        >
+          <b-form-group label="First name:" label-for="full-name">
+            <b-form-input
+              id="first-name"
+              type="text"
+              v-model="form.firstName"
+              required
+              placeholder="First name"
+              :disabled="fatalError"
+            ></b-form-input>
+          </b-form-group>
 
-      <b-form-group label="First name" label-for="full-name">
-        <b-form-input
-          id="first-name"
-          type="text"
-          v-model="form.firstName"
-          required
-          placeholder="First name"
-          :disabled="fatalError"
-        ></b-form-input>
-      </b-form-group>
+          <b-form-group label="Last name:" label-for="full-name">
+            <b-form-input
+              id="last-name"
+              type="text"
+              v-model="form.lastName"
+              required
+              placeholder="Last name"
+              :disabled="fatalError"
+            ></b-form-input>
+          </b-form-group>
 
-      <b-form-group label="Last name" label-for="full-name">
-        <b-form-input
-          id="last-name"
-          type="text"
-          v-model="form.lastName"
-          required
-          placeholder="Last name"
-          :disabled="fatalError"
-        ></b-form-input>
-      </b-form-group>
+          <b-form-group
+            label="Badge name:"
+            label-for="display-name"
+            description="People will use your badge name to identify you in the app."
+          >
+            <b-form-input
+              id="display-name"
+              type="text"
+              v-model="form.displayName"
+              required
+              placeholder="Badge name"
+              :disabled="fatalError"
+            ></b-form-input>
+          </b-form-group>
 
-      <b-form-group label="Badge name" label-for="display-name">
-        <b-form-input
-          id="display-name"
-          type="text"
-          v-model="form.displayName"
-          required
-          placeholder="Badge name"
-          :disabled="fatalError"
-        ></b-form-input>
-      </b-form-group>
+          <b-form-group label="Institution" label-for="institution">
+            <b-form-input
+              id="institution"
+              type="text"
+              v-model="form.institution"
+              placeholder="Institution"
+              :disabled="fatalError"
+            ></b-form-input>
+          </b-form-group>
 
-      <b-form-group label="Institution" label-for="institution">
-        <b-form-input
-          id="institution"
-          type="text"
-          v-model="form.institution"
-          placeholder="Institution"
-          :disabled="fatalError"
-        ></b-form-input>
-      </b-form-group>
+          <b-form-group label="Photo:" label-for="photo">
+            <b-form-file
+              placeholder="Choose a file or drop it here"
+              drop-placeholder="Drop file here..."
+              v-model="form.photo"
+              accept="image/*"
+            ></b-form-file>
+          </b-form-group>
+        </b-form-group>
 
-      <b-form-group label="Country" label-for="country">
-        <b-form-input
-          id="country"
-          type="text"
-          v-model="form.institution"
-          placeholder="Country"
-          :disabled="fatalError"
-        ></b-form-input>
-      </b-form-group>
-
-      <b-form-group label="Degree" label-for="degree">
-        <b-form-input
-          id="degree"
-          type="text"
-          v-model="form.institution"
-          placeholder="Degree"
-          :disabled="fatalError"
-        ></b-form-input>
-      </b-form-group>
-
-      <b-button
-        :disabled="fatalError"
-        variant="primary"
-        block
-        size="lg"
-        type="submit"
-        class="mt-4"
-      >
-        Sign Up
-      </b-button>
-    </b-form>
+        <b-form-group label-cols-lg="3">
+          <b-button
+            :disabled="fatalError"
+            variant="primary"
+            size="lg"
+            type="submit"
+            class="mt-4"
+          >
+            Sign up
+          </b-button>
+        </b-form-group>
+      </b-form>
+    </b-container>
   </b-overlay>
 </template>
 
@@ -132,8 +138,6 @@ interface Form {
   lastName: string;
   displayName: string;
   institution: string;
-  country: string;
-  degree: string;
   photo: File | null;
 }
 
@@ -146,8 +150,6 @@ export default class SignIn extends Vue {
     lastName: "",
     displayName: "",
     institution: "",
-    country: "",
-    degree: "",
     photo: null
   };
   loading = false;
@@ -226,7 +228,6 @@ export default class SignIn extends Vue {
 <style lang="scss">
 .form-signup {
   width: 100%;
-  max-width: 350px;
   padding: 15px;
   margin: 0 auto;
 }

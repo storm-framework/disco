@@ -8,7 +8,7 @@
           Invitations
         </b-dropdown-item>
         <b-dropdown-item :to="{ name: 'SendInvitations' }">
-          SendInvitations
+          Send Invitations
         </b-dropdown-item>
       </b-nav-item-dropdown>
       <b-nav-item v-if="loggedIn" @click="signOut">Sign out</b-nav-item>

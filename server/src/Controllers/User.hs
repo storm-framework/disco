@@ -50,22 +50,10 @@ extractUserData u = do
   lastName     <- project userLastName' u
   displayName  <- project userDisplayName' u
   institution  <- project userInstitution' u
-  country      <- project userCountry' u
-  degree       <- project userDegree' u
   level        <- project userLevel' u
   visibility   <- project userVisibility' u
   room         <- if visibility == "public" then project userRoom' u else return Nothing
-  return $ UserData id
-                    emailAddress
-                    photoURL
-                    firstName
-                    lastName
-                    displayName
-                    institution
-                    country
-                    degree
-                    level
-                    room
+  return $ UserData id emailAddress photoURL firstName lastName displayName institution level room
 
 data UserData = UserData
   { userId :: UserId
@@ -75,8 +63,6 @@ data UserData = UserData
   , userLastName :: Text
   , userDisplayName :: Text
   , userInstitution :: Text
-  , userCountry :: Text
-  , userDegree :: Text
   , userLevel :: String
   , userRoom :: Maybe RoomId
   }
