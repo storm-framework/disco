@@ -27,7 +27,11 @@ export interface UserSignUp {
 
 export interface User {
   id: number;
+  photoURL: string;
+  firstName: string;
+  lastName: string;
   displayName: string;
+  institution: string;
   level: string;
   room: string | null;
 }
