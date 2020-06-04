@@ -125,6 +125,7 @@
 import { Component, Vue } from "vue-property-decorator";
 import { Room, RoomInsert } from "@/models";
 import ApiService from "@/services/api";
+import NTC from "@/vendor/ntc";
 
 interface OldRoom {
   id: number;
@@ -233,10 +234,12 @@ export default class SignIn extends Vue {
     const n = this.oldRooms.length + this.newRooms.length;
     const hue = (n * GOLDEN_RATIO) % 1;
     const [r, g, b] = hslToRgb(hue, 0.8, 0.6);
+    const color = rgbToHex(r, g, b);
+    const name = NTC.name(color)[1];
     this.newRooms.push({
-      name: `Room #${n + 1}`,
+      name: `${name} Room`,
       zoomLink: randomJitsiLink(),
-      color: rgbToHex(r, g, b)
+      color: color
     });
   }
 
