@@ -18,7 +18,7 @@
           label-class="font-weight-bold pt-0"
           class="mb-5"
         >
-          <b-form-group label="Email address:" label-for="email-address">
+          <b-form-group label="Email address*" label-for="email-address">
             <b-form-input
               id="email-address"
               type="email"
@@ -29,7 +29,7 @@
           </b-form-group>
 
           <b-form-group
-            label="Password:"
+            label="Password*"
             label-for="password"
             description="Choose an easy password. This is just a demo and your account will be deleted afterwards."
           >
@@ -51,7 +51,7 @@
           label-class="font-weight-bold pt-0"
           class="mb-0"
         >
-          <b-form-group label="First name:" label-for="full-name">
+          <b-form-group label="First name*" label-for="full-name">
             <b-form-input
               id="first-name"
               type="text"
@@ -62,7 +62,7 @@
             ></b-form-input>
           </b-form-group>
 
-          <b-form-group label="Last name:" label-for="full-name">
+          <b-form-group label="Last name*" label-for="full-name">
             <b-form-input
               id="last-name"
               type="text"
@@ -74,7 +74,7 @@
           </b-form-group>
 
           <b-form-group
-            label="Badge name:"
+            label="Badge name*"
             label-for="display-name"
             description="People will use your badge name to identify you in the app."
           >
@@ -98,19 +98,20 @@
             ></b-form-input>
           </b-form-group>
 
-          <b-form-group label="Photo:" label-for="photo">
+          <b-form-group label="Photo" label-for="photo">
             <b-form-file
               placeholder="Choose a file or drop it here"
               drop-placeholder="Drop file here..."
               v-model="form.photo"
               accept="image/*"
+              :disabled="fatalError"
             ></b-form-file>
           </b-form-group>
         </b-form-group>
 
         <b-form-group label-cols-lg="3">
           <b-button
-            :disabled="fatalError"
+            :disabled="fatalError || sending"
             variant="primary"
             size="lg"
             type="submit"
@@ -155,6 +156,7 @@ export default class SignIn extends Vue {
   loading = false;
   fatalError = false;
   errorMsg = "";
+  sending = false;
 
   mounted() {
     const code = this.$route.query?.code;
@@ -187,10 +189,14 @@ export default class SignIn extends Vue {
   }
 
   onSubmit() {
+    if (this.sending) {
+      return;
+    }
     const code = this.$route.query?.code;
     if (typeof code !== "string") {
       return;
     }
+    this.sending = true;
     ApiService.preSignURL(code)
       .then(data => this.uploadPhotoToS3(data))
       .then(url => {
@@ -198,17 +204,20 @@ export default class SignIn extends Vue {
           invitationCode: code,
           user: { photoURL: url, ...this.form }
         };
-        this.$store
-          .dispatch("signUp", data)
-          .then(() => this.$router.replace({ name: "Home" }))
-          .catch(error => {
-            if (error.response?.status == 403) {
-              this.setFatalError("Invalid invitation code");
-            } else {
-              this.setFatalError("Internal server error");
-            }
-            this.loading = false;
-          });
+        return this.$store.dispatch("signUp", data);
+      })
+      .then(() => {
+        this.sending = false;
+        this.$router.replace({ name: "Home" });
+      })
+      .catch(error => {
+        this.sending = false;
+        if (error.response?.status == 403) {
+          this.setFatalError("Invalid invitation code");
+        } else {
+          this.setFatalError("Internal server error");
+        }
+        this.loading = false;
       });
   }
 
