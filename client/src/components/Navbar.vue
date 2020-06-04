@@ -2,9 +2,15 @@
   <b-navbar toggleable="lg" type="dark" variant="info">
     <b-navbar-brand to="/">Community Video</b-navbar-brand>
     <b-navbar-nav class="ml-auto">
-      <b-nav-item v-if="isOrganizer" :to="{ name: 'Admin' }">
-        Admin
-      </b-nav-item>
+      <b-nav-item-dropdown text="Admin" right v-if="isOrganizer">
+        <b-dropdown-item :to="{ name: 'Admin' }">Rooms</b-dropdown-item>
+        <b-dropdown-item :to="{ name: 'Invitations' }">
+          Invitations
+        </b-dropdown-item>
+        <b-dropdown-item :to="{ name: 'SendInvitations' }">
+          SendInvitations
+        </b-dropdown-item>
+      </b-nav-item-dropdown>
       <b-nav-item v-if="loggedIn" @click="signOut">Sign out</b-nav-item>
     </b-navbar-nav>
   </b-navbar>
