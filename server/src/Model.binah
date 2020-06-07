@@ -1,7 +1,9 @@
 Invitation
   code Text
-  fullName Text
   emailAddress Text
+  firstName Text
+  lastName Text
+  institution Text
   accepted Bool
   emailStatus String
   emailError String Maybe
@@ -24,9 +26,11 @@ Invitation
 User
   emailAddress Text
   password Text
-  fullName Text
+  photoURL Text Maybe
+  firstName Text
+  lastName Text
   displayName Text
-  affiliation Text
+  institution Text
   level String
   visibility String
   room RoomId Maybe
@@ -41,6 +45,7 @@ User
   update [ room ] {\old _ viewer -> IsSelf old viewer}
 
 Room
+  color Text
   name Text
   capacity Int
   zoomLink Text

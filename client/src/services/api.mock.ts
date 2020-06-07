@@ -1,4 +1,12 @@
-import { Invitation, InvitationInsert, Room, RoomInsert, User } from "@/models";
+import {
+  Invitation,
+  InvitationInsert,
+  PresignedURL,
+  Room,
+  RoomInsert,
+  User,
+  UserSignUp
+} from "@/models";
 
 const API_URL = "/api";
 
@@ -12,68 +20,96 @@ function delay(ms = 1000) {
 
 const ROOMS: { [id: string]: Room } = {
   1: {
-    id: "1",
+    id: 1,
     name: "Green Room",
     capacity: 8,
-    color: "green",
-    zoomLink: "https://meet.jitsi.com/109283740293847"
+    zoomLink: "https://meet.jitsi.si/109283740293847",
+    color: "#ff0000"
   },
   2: {
-    id: "2",
+    id: 2,
     name: "Red Room",
     capacity: 5,
-    color: "red",
-    zoomLink: "https://meet.jitsi.com/018471092384710"
+    zoomLink: "https://meet.jitsi.si/018471092384710",
+    color: "#00ff00"
   },
   3: {
-    id: "3",
+    id: 3,
     name: "Pink Room",
     capacity: 10,
-    color: "pink",
-    zoomLink: "https://meet.jitsi.com/102389471203487"
+    zoomLink: "https://meet.jitsi.si/102389471203487",
+    color: "#0000ff"
   }
 };
 
 const USERS: { [id: string]: User } = {
   1: {
-    id: "1",
-    displayName: "Charlie Papazian",
+    id: 1,
+    photoURL: null,
+    firstName: "Charlie",
+    lastName: "Papazian",
+    displayName: "Charlie",
+    institution: "Homebrewers",
     level: "organizer",
     room: "1"
   },
   2: {
-    id: "2",
-    displayName: "Michael Jackson",
+    id: 2,
+    firstName: "Michael",
+    lastName: "Jackson",
+    photoURL: null,
+    displayName: "Beerhunter",
+    institution: "Beer",
     level: "atendee",
     room: "1"
   },
   3: {
-    id: "3",
-    displayName: "Natalie Cilurzo",
+    id: 3,
+    firstName: "Natalie",
+    lastName: "Cilurzo",
+    photoURL: null,
+    displayName: "Natalie",
+    institution: "Russian River",
     level: "attendee",
     room: "2"
   },
   4: {
-    id: "4",
-    displayName: "Vinnie Cilurzo",
+    id: 4,
+    photoURL: null,
+    firstName: "Vinnie",
+    lastName: "Cilurzo",
+    displayName: "Vinnie",
+    institution: "Russina River",
     level: "atendee",
     room: "2"
   },
   5: {
-    id: "5",
+    id: 5,
+    photoURL: null,
+    firstName: "Greg",
+    lastName: "Koch",
     displayName: "Greg Koch",
+    institution: "Stone Brewing",
     level: "atendee",
     room: "3"
   },
   6: {
-    id: "6",
-    displayName: "Dominic Engels",
+    id: 6,
+    photoURL: null,
+    firstName: "Dominic",
+    lastName: "Brewing",
+    displayName: "Dominic",
+    institution: "Stone Brewing",
     level: "atendee",
     room: "3"
   },
   7: {
-    id: "7",
-    displayName: "Steve Wagner",
+    id: 7,
+    photoURL: null,
+    firstName: "Steve",
+    lastName: "Wagner",
+    displayName: "Steve",
+    institution: "Stone Brewing",
     level: "atendee",
     room: "3"
   }
@@ -93,15 +129,15 @@ class ApiService {
 
   // Auth
 
-  async signIn(emailAddress: string, password: string) {
+  async signIn(emailAddress: string, password: string): Promise<User> {
     await delay();
     this.accessToken = "accessToken";
     return USERS[SESSION_USER_ID];
   }
 
-  async signUp(data: UserSignUp): Promise<{ id: string }> {
+  async signUp(data: UserSignUp): Promise<User> {
     await delay();
-    return { id: SESSION_USER_ID };
+    return USERS[SESSION_USER_ID];
   }
 
   signedIn() {
@@ -140,26 +176,23 @@ class ApiService {
     return Promise.resolve(Object.values(ROOMS));
   }
 
-  updateRooms(updates: Room[], inserts: RoomInsert[]): Promise<string[]> {
+  updateRooms(updates: Room[], inserts: RoomInsert[]): Promise<number[]> {
     return Promise.reject("Not implemented");
   }
 
   joinRoom(roomId: string): Promise<string> {
     return Promise.resolve(ROOMS[roomId].zoomLink);
   }
+
+  leaveRoom(): Promise<void> {
+    return Promise.reject("Not implemented");
+  }
+
+  // Photos
+
+  preSignURL(code: string): Promise<PresignedURL> {
+    return Promise.reject("Not implemented");
+  }
 }
 
-export interface UserSignUp {
-  invitationCode: string;
-  user: {
-    emailAddress: string;
-    password: string;
-    fullName: string;
-    displayName: string;
-    affiliation: string;
-  };
-}
-
-const accessToken = localStorage.getItem("accessToken");
-
-export default new ApiService(accessToken);
+export default new ApiService("accessToken");

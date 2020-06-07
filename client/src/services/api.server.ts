@@ -1,4 +1,12 @@
-import { Invitation, InvitationInsert, Room, RoomInsert, User } from "@/models";
+import {
+  Invitation,
+  InvitationInsert,
+  PresignedURL,
+  Room,
+  RoomInsert,
+  User,
+  UserSignUp
+} from "@/models";
 import axios, { AxiosRequestConfig } from "axios";
 import _ from "lodash";
 
@@ -25,7 +33,7 @@ class ApiService {
 
   // Auth
 
-  async signIn(emailAddress: string, password: string) {
+  async signIn(emailAddress: string, password: string): Promise<User> {
     await delay();
     const response = await axios.post(`${API_URL}/signin`, {
       emailAddress: emailAddress,
@@ -39,10 +47,14 @@ class ApiService {
     return response.data.user;
   }
 
-  async signUp(data: UserSignUp) {
+  async signUp(data: UserSignUp): Promise<User> {
     await delay();
-    const response = await axios.put(`${API_URL}/user`, data);
-    return response.data;
+    const response = await axios.post(`${API_URL}/signup`, data);
+    if (response.data.accessToken) {
+      localStorage.setItem("accessToken", response.data.accessToken);
+      this.accessToken = response.data.accessToken;
+    }
+    return response.data.user;
   }
 
   signedIn() {
@@ -83,7 +95,7 @@ class ApiService {
     return this.get("/room");
   }
 
-  updateRooms(updates: Room[], inserts: RoomInsert[]): Promise<string[]> {
+  updateRooms(updates: Room[], inserts: RoomInsert[]): Promise<number[]> {
     return this.post("/room", {
       inserts: inserts,
       updates: updates
@@ -94,7 +106,17 @@ class ApiService {
     return this.post(`/room/${roomId}/join`);
   }
 
-  // Request
+  leaveRoom(): Promise<void> {
+    return this.post(`/room/leave`);
+  }
+
+  // Photos
+
+  preSignURL(code: string): Promise<PresignedURL> {
+    return this.get(`/signurl?code=${code}`);
+  }
+
+  // Raw Requests
 
   async post(
     path: string,
@@ -138,17 +160,6 @@ class ApiService {
       return {};
     }
   }
-}
-
-export interface UserSignUp {
-  invitationCode: string;
-  user: {
-    emailAddress: string;
-    password: string;
-    fullName: string;
-    displayName: string;
-    affiliation: string;
-  };
 }
 
 const accessToken = localStorage.getItem("accessToken");

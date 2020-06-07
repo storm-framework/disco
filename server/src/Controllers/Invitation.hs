@@ -1,3 +1,4 @@
+{-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE DeriveGeneric #-}
 
@@ -8,6 +9,7 @@ module Controllers.Invitation where
 import           Data.Text                      ( Text )
 import qualified Data.Text                     as T
 import qualified Data.Text.Lazy                as LT
+import qualified Data.Text.Lazy.Encoding       as LT
 import           Data.Int                       ( Int64 )
 import           Data.Maybe
 import           Data.Aeson.Types
@@ -15,6 +17,10 @@ import           Database.Persist.Sql           ( fromSqlKey
                                                 , toSqlKey
                                                 )
 import           GHC.Generics
+import           Text.Mustache                  ( (~>) )
+import qualified Text.Mustache.Types           as Mustache
+import qualified Network.Mail.Mime             as M
+
 
 import           Binah.Core
 import           Binah.Actions
@@ -31,7 +37,6 @@ import           Model
 import           JSON
 import           Crypto                         ( genRandomCodes )
 import           Text.Read                      ( readMaybe )
-import           Worker
 import           SMTP
 import           Exception
 import           System.IO.Unsafe               ( unsafePerformIO )
@@ -47,39 +52,85 @@ invitationPut = do
   _                <- requireOrganizer viewer
   (PutReq reqData) <- decodeBody
   codes            <- genRandomCodes (length reqData)
-  let invitations = map
-        (\((InvitationInsert f e), code) -> mkInvitation code f e False "not_sent" Nothing)
-        (zip reqData codes)
+  let invitations = zipWith
+        (\InvitationInsert {..} code -> mkInvitation code
+                                                     insertEmailAddress
+                                                     insertFirstName
+                                                     insertLastName
+                                                     insertInstitution
+                                                     False
+                                                     "not_sent"
+                                                     Nothing
+        )
+        reqData
+        codes
   ids <- insertMany invitations
   _   <- runWorker (sendEmails ids)
   respondJSON status201 (object ["keys" .= map fromSqlKey ids])
 
+data EmailData = EmailData
+  { emailDataInvitationId :: InvitationId
+  , emailDataInvitationCode :: Text
+  , emailDataFirstName :: Text
+  , emailDataLastName :: Text
+  , emailDataFullName :: Text
+  }
+
+instance TemplateData EmailData where
+  templateFile = "invitation.json.mustache"
+  toMustache (EmailData id code firstName lastName fullName) = Mustache.object
+    [ "invitationId" ~> id
+    , "invitationCode" ~> code
+    , "firstName" ~> firstName
+    , "lastName" ~> lastName
+    , "fullName" ~> fullName
+    ]
+
+data EmailRender = EmailRender
+  { emailRenderBodyHtml :: LT.Text
+  , emailRenderBodyPlain :: LT.Text
+  , emailRenderSubject :: Text
+  , emailRenderFrom :: Text
+  }
+  deriving (Generic, Show)
+
+instance FromJSON EmailRender where
+  parseJSON = genericParseJSON (stripPrefix "emailRender")
+
 sendEmails :: [InvitationId] -> Worker ()
 sendEmails ids = do
   invitations <- selectList (invitationId' <-. ids)
-  conn        <- connectSMTP "localhost"
   forMC invitations $ \invitation -> do
-    id           <- project invitationId' invitation
-    emailAddress <- project invitationEmailAddress' invitation
-    code         <- project invitationCode' invitation
-    fullName     <- project invitationFullName' invitation
-    let from = mkPublicAddress (Just "Binah Team") ("binah@goto.binah.com")
-    let to   = mkPublicAddress (Just fullName) emailAddress
-    let body = "To join please visit the following link\n" ++ invitationLink id code
-    let mail = simpleMail' to from "Invitation" (LT.pack body)
-    res <- tryT $ renderAndSend conn mail
+    id   <- project invitationId' invitation
+    mail <- renderEmail invitation
+    res  <- tryT $ renderSendMail mail
     case res of
       Left (SomeException e) -> do
-        let up1 = (invitationEmailError' `assign` (Just (show e)))
+        let up1 = invitationEmailError' `assign` Just (show e)
         let up2 = invitationEmailStatus' `assign` "error"
         updateWhere (invitationId' ==. id) (up1 `combine` up2)
       Right _ -> updateWhere (invitationId' ==. id) (invitationEmailStatus' `assign` "sent")
   return ()
 
 
-invitationLink :: InvitationId -> Text -> String
-invitationLink id code = "http://localhost:8000/invitation?code=" ++ sid ++ "." ++ (T.unpack code)
-  where sid = show (fromSqlKey id)
+renderEmail :: Entity Invitation -> Worker Mail
+renderEmail invitation = do
+  id           <- project invitationId' invitation
+  emailAddress <- project invitationEmailAddress' invitation
+  code         <- project invitationCode' invitation
+  firstName    <- project invitationFirstName' invitation
+  lastName     <- project invitationLastName' invitation
+  let fullName = T.strip $ firstName `T.append` " " `T.append` lastName
+  raw <- renderTemplate (EmailData id code firstName lastName fullName)
+  let EmailRender {..} = fromJust $ decode (LT.encodeUtf8 (LT.fromStrict raw))
+  let to               = mkPublicAddress (Just fullName) emailAddress
+  let from             = mkPublicAddress Nothing emailRenderFrom
+  return $ simpleMail from
+                      [to]
+                      []
+                      []
+                      emailRenderSubject
+                      [M.htmlPart emailRenderBodyHtml, M.plainPart emailRenderBodyPlain]
 
 
 newtype PutReq = PutReq [InvitationInsert]
@@ -103,12 +154,7 @@ invitationGet iid = do
       invitation <- selectFirstOr
         notFoundJSON
         (invitationCode' ==. code &&: invitationId' ==. id &&: invitationAccepted' ==. False)
-      res <-
-        InvitationData
-        <$> project invitationId'           invitation
-        <*> project invitationFullName'     invitation
-        <*> project invitationEmailAddress' invitation
-        <*> project invitationAccepted'     invitation
+      res <- extractInvitationData invitation
       respondJSON status200 res
 
 --------------------------------------------------------------------------------
@@ -121,13 +167,7 @@ invitationIndex = do
   viewer      <- requireAuthUser
   _           <- requireOrganizer viewer
   invitations <- selectList trueF
-  res         <- forMC invitations $ \invitation ->
-    do
-        InvitationData
-      <$> project invitationId'           invitation
-      <*> project invitationFullName'     invitation
-      <*> project invitationEmailAddress' invitation
-      <*> project invitationAccepted'     invitation
+  res         <- mapMC extractInvitationData invitations
   respondJSON status200 res
 
 --------------------------------------------------------------------------------
@@ -135,8 +175,10 @@ invitationIndex = do
 --------------------------------------------------------------------------------
 
 data InvitationInsert = InvitationInsert
-  { insertFullName     :: Text
-  , insertEmailAddress :: Text
+  { insertEmailAddress :: Text
+  , insertFirstName    :: Text
+  , insertLastName     :: Text
+  , insertInstitution  :: Text
   }
   deriving Generic
 
@@ -144,12 +186,24 @@ instance FromJSON InvitationInsert where
   parseJSON = genericParseJSON (stripPrefix "insert")
 
 data InvitationData = InvitationData
-  { invitationId :: InvitationId
-  , invitationFullName :: Text
+  { invitationId           :: InvitationId
   , invitationEmailAddress :: Text
-  , invitationAccepted :: Bool
+  , invitationFirstName    :: Text
+  , invitationLastName     :: Text
+  , invitationInstitution  :: Text
+  , invitationAccepted     :: Bool
   }
   deriving Generic
+
+extractInvitationData :: Entity Invitation -> Controller InvitationData
+extractInvitationData invitation =
+  InvitationData
+    <$> project invitationId'           invitation
+    <*> project invitationEmailAddress' invitation
+    <*> project invitationFirstName'    invitation
+    <*> project invitationLastName'     invitation
+    <*> project invitationInstitution'  invitation
+    <*> project invitationAccepted'     invitation
 
 instance ToJSON InvitationData where
   toEncoding = genericToEncoding (stripPrefix "invitation")

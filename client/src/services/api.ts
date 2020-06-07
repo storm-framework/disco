@@ -1,6 +1,14 @@
-import { Invitation, InvitationInsert, Room, RoomInsert, User } from "@/models";
+import {
+  Invitation,
+  InvitationInsert,
+  PresignedURL,
+  Room,
+  RoomInsert,
+  User,
+  UserSignUp
+} from "@/models";
 import Mock from "./api.mock";
-import Server, { UserSignUp } from "./api.server";
+import Server from "./api.server";
 
 interface ApiService {
   sessionUserId: string | null;
@@ -8,19 +16,14 @@ interface ApiService {
   // Auth
 
   signIn(emailAddress: string, password: string): Promise<User>;
-
-  signUp(data: UserSignUp): Promise<{ id: string }>;
-
+  signUp(data: UserSignUp): Promise<User>;
   signedIn(): boolean;
-
   signOut(): Promise<void>;
 
   // Invitations
 
   getInvitation(param: string): Promise<Invitation>;
-
   sendInvitations(invitations: InvitationInsert[]): Promise<string[]>;
-
   getInvitations(): Promise<Invitation[]>;
 
   // Users
@@ -30,15 +33,17 @@ interface ApiService {
   // Rooms
 
   rooms(): Promise<Room[]>;
-
-  updateRooms(updates: Room[], inserts: RoomInsert[]): Promise<string[]>;
-
+  updateRooms(updates: Room[], inserts: RoomInsert[]): Promise<number[]>;
   joinRoom(roomId: string): Promise<string>;
+  leaveRoom(): Promise<void>;
+
+  //  Photos
+
+  preSignURL(code: string): Promise<PresignedURL>;
 }
 
 let module: ApiService;
-if (process.env.VUE_APP_MOCK_SERVICE == "true") {
-  console.log("here");
+if (process.env.VUE_APP_MOCK_API_SERVICE == "true") {
   module = Mock;
 } else {
   module = Server;

@@ -49,12 +49,17 @@ dependencies:
   - mime-types
   - filepath
   - directory
+  - cmdargs
+  - amazonka
+  - time
+  - amazonka-s3
+  - amazonka-core
 
 library:
   source-dirs: src
 
 executables:
-  server-exe:
+  covideo:
     main: Main.hs
     source-dirs: app
     ghc-options:

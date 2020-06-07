@@ -1,23 +1,43 @@
-export interface Invitation {
-  id: string;
+export interface InvitationInsert {
   emailAddress: string;
-  fullName: string;
+  firstName: string;
+  lastName: string;
+  institution: string;
+  country: string;
+  degree: string;
+}
+
+export interface Invitation extends InvitationInsert {
+  id: number;
   accepted: boolean;
 }
 
-export interface InvitationInsert {
-  emailAddress: string;
-  fullName: string;
+export interface UserSignUp {
+  invitationCode: string;
+  user: {
+    emailAddress: string;
+    password: string;
+    firstName: string;
+    lastName: string;
+    photoURL: string | null;
+    displayName: string;
+    institution: string;
+  };
 }
 
 export interface User {
-  id: string;
+  id: number;
+  photoURL: string | null;
+  firstName: string;
+  lastName: string;
   displayName: string;
+  institution: string;
   level: string;
   room: string | null;
 }
 
 export interface RoomInsert {
+  color: string;
   name: string;
   capacity: number;
   color: string;
@@ -25,5 +45,10 @@ export interface RoomInsert {
 }
 
 export interface Room extends RoomInsert {
-  id: string;
+  id: number;
+}
+
+export interface PresignedURL {
+  signedURL: string;
+  objectURL: string;
 }

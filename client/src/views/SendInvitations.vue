@@ -14,10 +14,10 @@
             v-b-modal.import-file-modal
             variant="outline-primary"
           >
-            <i class="fa fa-file-import" /> Import
+            <font-awesome-icon icon="file-import" /> Import
           </b-button>
           <b-button size="sm" v-on:click="onSend" variant="primary">
-            <i class="fa fa-paper-plane" /> Send
+            <font-awesome-icon icon="paper-plane" /> Send
           </b-button>
         </b-col>
       </b-row>
@@ -27,11 +27,6 @@
         :settings="hotSettings"
         height="calc(100vh - 150px)"
       >
-        <hot-column
-          title="Email address"
-          validator="email-address"
-        ></hot-column>
-        <hot-column title="Full name"></hot-column>
       </hot-table>
     </b-container>
 
@@ -66,19 +61,10 @@
           </b-col>
         </b-form-row>
         <b-form-row v-if="importFileRows" class="mb-2">
-          <b-col>
-            <b-form-group label="Email address">
+          <b-col sm="4" v-for="(col, idx) in columns" :key="idx">
+            <b-form-group :label="col.title">
               <b-form-select
-                v-model="importFileEmailAddressIdx"
-                :options="importFileHeaders"
-              >
-              </b-form-select>
-            </b-form-group>
-          </b-col>
-          <b-col>
-            <b-form-group label="Full name">
-              <b-form-select
-                v-model="importFileFullNameIdx"
+                v-model="importFileHeaderIdxs[idx]"
                 :options="importFileHeaders"
               >
               </b-form-select>
@@ -86,16 +72,14 @@
           </b-col>
         </b-form-row>
         <div v-show="importFileShowPreview">
-          <span
-            ><i class="fa fa-search preview-icon" font-scale="0.8" />
-            Preview</span
-          >
+          <span>
+            <font-awesome-icon icon="search" class="preview-icon" />
+            Preview
+          </span>
           <hot-table
             :data="importFilePreviewData"
             :settings="importFileHotSettings"
           >
-            <hot-column title="Email address"></hot-column>
-            <hot-column title="Full name"></hot-column>
           </hot-table>
         </div>
       </b-container>
@@ -112,6 +96,15 @@ import _ from "lodash";
 import { BvModalEvent } from "bootstrap-vue";
 import Handsontable from "handsontable";
 
+import { library } from "@fortawesome/fontawesome-svg-core";
+import {
+  faFileImport,
+  faPaperPlane,
+  faSearch
+} from "@fortawesome/free-solid-svg-icons";
+import { InvitationInsert } from "@/models";
+library.add(faFileImport, faPaperPlane, faSearch);
+
 const PREVIEW_SIZE = 3;
 
 const EMAIL_ADDRESS_RE = /^(([^<>()[\].,;:\s@"]+(\.[^<>()[\].,;:\s@"]+)*)|(".+"))@(([^<>()[\].,;:\s@"]+\.)+[^<>()[\].,;:\s@"]{2,})$/i;
@@ -125,6 +118,14 @@ Handsontable.validators.registerValidator(
 
 @Component({ components: { HotTable, HotColumn } })
 export default class SendInvitations extends Vue {
+  // key should correspond to "@/models/InvitationInsert"
+  columns = [
+    { title: "Email address", validator: "email-address", key: "emailAddress" },
+    { title: "First name", key: "firstName" },
+    { title: "Last name", key: "lastName" },
+    { title: "Institution", key: "institution" }
+  ];
+
   hotSettings = {
     width: "100%",
     licenseKey: "non-commercial-and-evaluation",
@@ -143,27 +144,25 @@ export default class SendInvitations extends Vue {
         ["row_above"]: {},
         ["remove_row"]: {}
       }
-    }
+    },
+    columns: this.columns,
+    colHeaders: _.map(this.columns, c => c.title)
   };
   hasErrors = false;
-  rows: [string, string][] = [];
+  rows: string[][] = [];
 
   onSend() {
     this.hotInstance?.validateCells(isValid => {
       this.hasErrors = !isValid;
       if (isValid) {
-        const invitations = this.rows.map(r => ({
-          emailAddress: r[0],
-          fullName: r[1]
-        }));
-        // Sanity check before removing the spare row at the end
-        const n = invitations.length;
-        if (
-          _.isEmpty(invitations[n - 1].emailAddress) &&
-          _.isEmpty(invitations[n - 1].fullName)
-        ) {
-          invitations.pop();
-        }
+        const invitations: InvitationInsert[] = this.rows.map(
+          r =>
+            Object.fromEntries(
+              this.columns.map((c, i) => [c.key, r[i] || ""])
+            ) as any
+        );
+        // Pop the empty row
+        invitations.pop();
         if (!_.isEmpty(invitations)) {
           ApiService.sendInvitations(invitations).then(() =>
             this.$router.push({ name: "Invitations" })
@@ -181,21 +180,21 @@ export default class SendInvitations extends Vue {
 
   importFileRows: string[][] | null = null;
   importFileHasHeaders = true;
-  importFileEmailAddressIdx = -1;
-  importFileFullNameIdx = -1;
+  importFileHeaderIdxs = _.fill(Array(this.columns.length), -1);
   importFileHotSettings = {
     licenseKey: "non-commercial-and-evaluation",
     rowHeaders: true,
     stretchH: "all",
     width: "100%",
     height: (PREVIEW_SIZE + 1) * 25 + 20,
-    readOnly: true
+    readOnly: true,
+    columns: this.columns,
+    colHeaders: _.map(this.columns, c => c.title)
   };
 
   @Watch("importFileHeaders")
   onHeadersChange() {
-    this.importFileEmailAddressIdx = -1;
-    this.importFileFullNameIdx = -1;
+    _.fill(this.importFileHeaderIdxs, -1);
   }
 
   get importFileHeaders(): { value: number; text: string }[] {
@@ -214,25 +213,13 @@ export default class SendInvitations extends Vue {
     return headers;
   }
 
-  emailAddressHeaderInRange() {
+  someHeaderInRange() {
     const ncols: number = _.get(this.importFileRows, "0.length") || 0;
-    return _.inRange(this.importFileEmailAddressIdx, 0, ncols);
-  }
-
-  fullNameHeaderInRange() {
-    const ncols: number = _.get(this.importFileRows, "0.length") || 0;
-    return _.inRange(this.importFileFullNameIdx, 0, ncols);
-  }
-
-  headersInRange() {
-    return this.emailAddressHeaderInRange && this.fullNameHeaderInRange;
+    return _.some(this.importFileHeaderIdxs, idx => _.inRange(idx, 0, ncols));
   }
 
   get importFileShowPreview(): boolean {
-    return (
-      this.importFileRows !== null &&
-      (this.emailAddressHeaderInRange() || this.fullNameHeaderInRange())
-    );
+    return this.importFileRows !== null && this.someHeaderInRange();
   }
 
   get importFilePreviewData(): string[][] {
@@ -250,7 +237,7 @@ export default class SendInvitations extends Vue {
     this.importFileRows = null;
   }
 
-  extractDataFromImportedFile(nrows?: number): [string, string][] {
+  extractDataFromImportedFile(nrows?: number): string[][] {
     let rows = this.importFileRows;
     if (rows === null) {
       return [];
@@ -260,10 +247,7 @@ export default class SendInvitations extends Vue {
     } else {
       rows = rows.slice(0, nrows);
     }
-    return rows.map(r => [
-      r[this.importFileEmailAddressIdx] || "",
-      r[this.importFileFullNameIdx] || ""
-    ]);
+    return rows.map(r => _.map(this.importFileHeaderIdxs, idx => r[idx] || ""));
   }
 
   onFileChange(file: File) {

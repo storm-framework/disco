@@ -1,5 +1,5 @@
 <template>
-  <article :style="{ borderTopColor: color }" class="card">
+  <article :style="{ borderTopColor: room.color }" class="card">
     <b-card-body>
       <heading :level="1" :context="headingContext" class="card-title h4">
         {{ room.name }}
@@ -23,9 +23,11 @@
           In this room
         </heading>
 
-        <ul>
+        <ul class="user-list">
           <li v-for="user in users" :key="user.id">
-            {{ user.displayName }}
+            <span v-b-tooltip.hover.html="userTip(user)">
+              {{ user.displayName }}
+            </span>
           </li>
         </ul>
       </template>
@@ -50,9 +52,10 @@
 
 <script lang="ts">
 import { Component, Prop, Mixins } from "vue-property-decorator";
-import { Room } from "@/models";
+import { Room, User } from "@/models";
 import HeadingContext from "@/mixins/HeadingContext";
 import Heading from "@/components/Heading";
+import _ from "lodash";
 
 import { library } from "@fortawesome/fontawesome-svg-core";
 import {
@@ -67,10 +70,6 @@ library.add(faDoorOpen, faComments, faExternalLinkAlt);
 export default class RoomCard extends Mixins(HeadingContext) {
   @Prop() readonly room!: Room;
 
-  get color() {
-    return this.room.color;
-  }
-
   get empty() {
     return this.users.length === 0;
   }
@@ -80,7 +79,7 @@ export default class RoomCard extends Mixins(HeadingContext) {
   }
 
   get isCurrentRoom() {
-    return this.$store.getters.currentRoom.id === this.room.id;
+    return this.$store.getters.currentRoom?.id === this.room.id;
   }
 
   joinRoom() {
@@ -88,7 +87,17 @@ export default class RoomCard extends Mixins(HeadingContext) {
   }
 
   leaveRoom() {
-    console.log("unimplemented");
+    this.$store.dispatch("leaveRoom");
+  }
+
+  userTip(user: User) {
+    const fullName = _.trim(_.join([user.firstName, user.lastName], " "));
+    const institution = _.trim(user.institution);
+    let html = `<strong>${fullName}</strong>`;
+    if (!_.isEmpty(institution)) {
+      html += `<br><span class="font-italic">${institution}</span>`;
+    }
+    return html;
   }
 }
 </script>
@@ -111,5 +120,14 @@ export default class RoomCard extends Mixins(HeadingContext) {
 .badge {
   overflow: hidden;
   vertical-align: -0.25em;
+}
+
+.card .user-list {
+  margin-bottom: 1rem;
+}
+
+.user-list span {
+  cursor: default;
+  text-decoration: underline dotted;
 }
 </style>

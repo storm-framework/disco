@@ -7,10 +7,14 @@
 module Controllers where
 
 import           Data.Aeson
+import           Data.ByteString                ( ByteString )
 import           Control.Monad.Reader           ( MonadReader(..)
                                                 , ReaderT(..)
+                                                , runReaderT
                                                 )
 import           Database.Persist.Sqlite        ( SqlBackend )
+import qualified Control.Concurrent.MVar       as MVar
+import qualified Text.Mustache.Types           as Mustache
 import           Frankie.Auth
 import           Frankie.Config
 
@@ -19,12 +23,24 @@ import           Binah.Frankie
 import           Binah.Core
 import           Binah.Infrastructure
 import           Binah.Filters
+import           Binah.Templates
+import           Concurrent
+import qualified Network.AWS                   as AWS
+import qualified Network.AWS.S3                as S3
 
 import           Model
 
 data Config = Config
   { configBackend :: SqlBackend
   , configAuthMethod :: !(AuthMethod (Entity User) Controller)
+  , configTemplateCache :: !(MVar.MVar Mustache.TemplateCache)
+  , configAWS :: AWSConfig
+  }
+
+data AWSConfig = AWSConfig
+  { awsAuth :: AWS.Auth
+  , awsRegion:: AWS.Region
+  , awsBucket :: S3.BucketName
   }
 
 type Controller = TaggedT (ReaderT SqlBackend (ConfigT Config (ControllerT TIO)))
@@ -34,6 +50,21 @@ instance Frankie.Auth.HasAuthMethod (Entity User) Controller Config where
 
 instance HasSqlBackend Config where
   getSqlBackend = configBackend
+
+instance HasTemplateCache Config where
+  getTemplateCache = configTemplateCache
+
+type Worker = TaggedT (ReaderT SqlBackend (ConfigT Config TIO))
+
+runWorker :: Worker () -> Controller ()
+runWorker worker = do
+  b      <- backend
+  config <- getConfig
+  let w = mapTaggedT (\w -> runReaderT (unConfigT (runReaderT w b)) config) worker
+  flip mapTaggedT (forkTIO w) $ \m -> do
+    liftTIO m
+    return ()
+
 
 --------------------------------------------------------------------------------
 -- | Responses
