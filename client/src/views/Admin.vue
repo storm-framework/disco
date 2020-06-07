@@ -10,9 +10,6 @@
           <b-col sm>
             <span class="font-weight-bold">Name</span>
           </b-col>
-          <!-- <b-col sm>
-            <span class="font-weight-bold">Capacity</span>
-          </b-col> -->
           <b-col sm>
             <span class="font-weight-bold">URL</span>
           </b-col>
@@ -28,7 +25,7 @@
               type="color"
               v-model="item.color"
               :disabled="fatalError"
-            ></b-form-input>
+            />
           </b-col>
           <b-col sm>
             <b-form-input
@@ -36,23 +33,15 @@
               v-model="item.name"
               required
               :disabled="fatalError"
-            ></b-form-input>
+            />
           </b-col>
-          <!-- <b-col sm>
-            <b-form-input
-              type="number"
-              v-model="item.capacity"
-              required
-              :disabled="fatalError"
-            ></b-form-input>
-          </b-col> -->
           <b-col sm>
             <b-form-input
               type="url"
               v-model="item.zoomLink"
               required
               :disabled="fatalError"
-            ></b-form-input>
+            />
           </b-col>
         </b-row>
 
@@ -68,7 +57,7 @@
               type="color"
               v-model="item.color"
               :disabled="fatalError"
-            ></b-form-input>
+            />
           </b-col>
           <b-col sm>
             <b-form-input
@@ -76,23 +65,15 @@
               v-model="item.name"
               required
               :disabled="fatalError"
-            ></b-form-input>
+            />
           </b-col>
-          <!-- <b-col sm>
-            <b-form-input
-              type="number"
-              v-model="item.capacity"
-              required
-              :disabled="fatalError"
-            ></b-form-input>
-          </b-col> -->
           <b-col sm>
             <b-form-input
               type="url"
               v-model="item.zoomLink"
               required
               :disabled="fatalError"
-            ></b-form-input>
+            />
           </b-col>
         </b-row>
         <div clas="d-flex">
@@ -257,9 +238,8 @@ export default class SignIn extends Vue {
           this.oldRooms.push({ id: ids[i], ...this.newRooms[i] });
         }
         this.newRooms = [];
-        this.saving = false;
       })
-      .catch(() => {
+      .finally(() => {
         this.saving = false;
       });
   }
