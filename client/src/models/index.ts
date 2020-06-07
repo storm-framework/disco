@@ -37,7 +37,6 @@ export interface User {
 }
 
 export interface RoomInsert {
-  color: string;
   name: string;
   capacity: number;
   color: string;
