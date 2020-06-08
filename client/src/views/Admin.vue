@@ -1,105 +1,71 @@
 <template>
-  <div class="admin">
-    <b-form
-      class="form-send-invitations text-center mt-5"
-      @submit.prevent="onSubmit"
+<main>
+  <h1>Manage rooms</h1>
+  <b-form
+    class="form-send-invitations"
+    @submit.prevent="onSubmit"
     >
-      <b-container v-if="!loading">
-        <b-alert :show="fatalError" variant="danger">{{ errorMsg }}</b-alert>
-        <b-row class="mb-3">
-          <b-col sm>
-            <span class="font-weight-bold">Name</span>
-          </b-col>
-          <b-col sm>
-            <span class="font-weight-bold">URL</span>
-          </b-col>
-        </b-row>
-
-        <b-row
-          v-for="item in oldRooms"
-          v-bind:key="'old:' + item.id"
-          class="mb-3"
-        >
-          <b-col sm="1">
-            <b-form-input
-              type="color"
-              v-model="item.color"
-              :disabled="fatalError"
-            />
-          </b-col>
-          <b-col sm>
-            <b-form-input
-              type="text"
-              v-model="item.name"
-              required
-              :disabled="fatalError"
-            />
-          </b-col>
-          <b-col sm>
-            <b-form-input
-              type="url"
-              v-model="item.zoomLink"
-              required
-              :disabled="fatalError"
-            />
-          </b-col>
-        </b-row>
-
-        <hr />
-
-        <b-row
-          v-for="(item, index) in newRooms"
-          v-bind:key="'new:' + index"
-          class="mb-3"
-        >
-          <b-col sm="1">
-            <b-form-input
-              type="color"
-              v-model="item.color"
-              :disabled="fatalError"
-            />
-          </b-col>
-          <b-col sm>
-            <b-form-input
-              type="text"
-              v-model="item.name"
-              required
-              :disabled="fatalError"
-            />
-          </b-col>
-          <b-col sm>
-            <b-form-input
-              type="url"
-              v-model="item.zoomLink"
-              required
-              :disabled="fatalError"
-            />
-          </b-col>
-        </b-row>
-        <div clas="d-flex">
-          <b-button
-            :disabled="fatalError"
-            size="lg"
-            variant="light"
-            class="btn-plus"
-            v-on:click="add"
-          >
-            <b-icon-plus-circle />
-          </b-button>
-        </div>
-
+    <b-alert :show="fatalError" variant="danger">{{ errorMsg }}</b-alert>
+    <fieldset v-if="!loading" :disabled="fatalError">
+      <table class="rooms-table">
+        <thead>
+          <tr>
+            <th class="room-color sr-only">Color</th>
+            <th class="room-name">Name</th>
+            <th class="room-url">URL</th>
+          </tr>
+        </thead>
+        <tbody v-for="group in roomGroups" :key="group">
+          <tr
+            v-for="(room, index) in groupRooms(group)"
+            :key="keyFor(group, index)"
+            >
+            <td class="room-color">
+              <b-form-input
+                type="color"
+                v-model="room.color"
+                />
+            </td>
+            <td class="room-name">
+              <b-form-input
+                type="text"
+                v-model="room.name"
+                required
+                />
+            </td>
+            <td class="room-url">
+              <b-form-input
+                type="url"
+                v-model="room.zoomLink"
+                required
+                />
+            </td>
+          </tr>
+          <tr
+            v-if="group === 'new'">
+            <td colspan="3" class="new-row">
+              <icon-button
+                icon="plus"
+                class="add-room"
+                @click="add"
+                >
+                Add Room
+              </icon-button>
+             </td>
+          </tr>
+        </tbody>
+      </table>
         <b-button
-          variant="primary"
-          size="lg"
           type="submit"
+          variant="primary"
+          class="save"
           :disabled="saving"
-          class="mt-3"
-        >
+          >
           Save
-        </b-button>
-      </b-container>
-    </b-form>
-  </div>
+      </b-button>
+    </fieldset>
+  </b-form>
+</main>
 </template>
 
 <script lang="ts">
@@ -107,6 +73,11 @@ import { Component, Vue } from "vue-property-decorator";
 import { Room, RoomInsert } from "@/models";
 import ApiService from "@/services/api";
 import NTC from "@/vendor/ntc";
+
+import { library } from "@fortawesome/fontawesome-svg-core";
+import { faPlus } from "@fortawesome/free-solid-svg-icons";
+library.add(faPlus);
+
 
 interface OldRoom {
   id: number;
@@ -182,6 +153,9 @@ function randomJitsiLink() {
   return `https://meet.jit.si/${r}`;
 }
 
+type AnyRoom = OldRoom | NewRoom;
+type RoomGroup = "old" | "new";
+
 @Component
 export default class SignIn extends Vue {
   loading = false;
@@ -190,6 +164,23 @@ export default class SignIn extends Vue {
   newRooms: NewRoom[] = [];
   fatalError = false;
   errorMsg = "";
+  readonly roomGroups = ["old", "new"];
+
+  groupRooms(group: RoomGroup): AnyRoom[] {
+    const groups = {
+      old: this.oldRooms,
+      new: this.newRooms
+    };
+    return groups[group];
+  }
+
+  keyFor(group: RoomGroup, index: number) {
+    const key = {
+      old: this.oldRooms[index].id,
+      new: index
+    };
+    return `${group}:${key[group]}`;
+  }
 
   mounted() {
     this.loading = true;
@@ -251,9 +242,52 @@ export default class SignIn extends Vue {
 }
 </script>
 
-<style lang="scss">
-.btn-plus {
-  background-color: transparent;
-  border-color: transparent;
+<style lang="scss" scoped>
+@import "~bootstrap/scss/bootstrap";
+
+main {
+  @include make-container-max-widths();
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.rooms-table {
+  &, thead, tbody, tfoot, tr, th, td {
+    display: block;
+  }
+
+  tr {
+    @include make-row();
+    margin-bottom: $spacer;
+  }
+
+  th, td {
+    @include make-col-ready();
+  }
+
+  th {
+    font-size: 1.25em;
+  }
+}
+
+.new-row {
+    text-align: center;
+    width: 100%;
+}
+
+.room-color {
+  @include make-col(1);
+}
+
+.room-name {
+  @include make-col(5);
+}
+
+.room-url {
+  @include make-col(6);
+}
+
+.save {
+    float:right;
 }
 </style>

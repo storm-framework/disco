@@ -32,20 +32,24 @@
         </ul>
       </template>
 
-      <b-button v-if="isCurrentRoom" @click="leaveRoom" variant="danger">
-        <font-awesome-icon icon="door-open" class="btn-icon" />
+      <icon-button
+        v-if="isCurrentRoom"
+        icon="door-open"
+        @click="leaveRoom"
+        variant="danger"
+        >
         Leave
-      </b-button>
-      <b-button
+      </icon-button>
+      <icon-button
         v-else
+        icon="external-link-alt"
         variant="primary"
         @click.passive="joinRoom"
         :href="room.zoomLink"
         target="_blank"
       >
-        <font-awesome-icon icon="external-link-alt" class="btn-icon" />
         Join
-      </b-button>
+      </icon-button>
     </b-card-body>
   </article>
 </template>
@@ -106,15 +110,6 @@ export default class RoomCard extends Mixins(HeadingContext) {
 .card {
   overflow: hidden;
   border-top-width: 1rem;
-}
-
-.btn {
-  font-weight: bold;
-}
-
-.btn-icon {
-  height: 1em;
-  margin-right: 0.25em;
 }
 
 .badge {
