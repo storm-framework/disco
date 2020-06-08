@@ -7,7 +7,22 @@ You need to have stack in your `$PATH` for the following to work. If you want to
 ## Build the code
 
 ```
-make build
+$ make build
+```
+
+## Init Database
+
+When you first run the server or whenever you update the models you need to run the migrations:
+
+```
+$ stack ghci
+> initDB
+```
+
+This will create the database if it doesn't exist and then run migrations. Persistent is not very smart out of the box to figure out how to run migrations, so you may need to delete the database and create again.
+
+```
+$ rm db.sqlite
 ```
 
 ## AWS Credentials
@@ -34,7 +49,7 @@ $ stack ghci
 The following will start the server in 127.0.0.0:3000
 
 ```
-make run
+$ make run
 ```
 
 ## Note on editing `Model.binah`
