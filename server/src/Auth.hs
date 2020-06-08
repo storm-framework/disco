@@ -65,6 +65,22 @@ import           Network.AWS.S3
 import           Network.AWS.Data.Text          ( toText )
 
 
+{-@ ignore addOrganizer @-}
+addOrganizer :: UserCreate -> Worker UserId
+addOrganizer UserCreate {..} = do
+  EncryptedPass encrypted <- encryptPassTIO' (Pass (T.encodeUtf8 password))
+  let user = mkUser emailAddress
+                    encrypted
+                    photoURL
+                    firstName
+                    lastName
+                    displayName
+                    institution
+                    "organizer"
+                    "public"
+                    Nothing
+  insert user
+
 --------------------------------------------------------------------------------
 -- | SignIn
 --------------------------------------------------------------------------------
@@ -83,10 +99,12 @@ signIn = do
 {-@ ignore authUser @-}
 authUser :: Text -> Text -> Controller (Entity User)
 authUser emailAddress password = do
-  maybeUser <- selectFirst (userPassword' ==. password &&: userEmailAddress' ==. emailAddress)
-  case maybeUser of
-    Nothing   -> respondError status401 (Just "incorrect login")
-    Just user -> return user
+  user <- selectFirstOr (errorResponse status401 (Just "Incorrect credentials"))
+                        (userEmailAddress' ==. emailAddress)
+  encrypted <- project userPassword' user
+  if verifyPass' (Pass (T.encodeUtf8 password)) (EncryptedPass encrypted)
+    then return user
+    else respondError status401 (Just "Incorrect credentials")
 
 data SignInReq = SignInReq
   { signInReqEmailAddress :: Text
@@ -114,8 +132,9 @@ instance ToJSON AuthRes where
 signUp :: Controller ()
 signUp = do
   (SignUpReq (InvitationCode id code) UserCreate {..}) <- decodeBody
+  EncryptedPass encrypted <- encryptPassTIO' (Pass (T.encodeUtf8 password))
   let user = mkUser emailAddress
-                    password
+                    encrypted
                     photoURL
                     firstName
                     lastName

@@ -1,3 +1,5 @@
+import Data.ByteString (ByteString)
+
 Invitation
   code Text
   emailAddress Text
@@ -25,7 +27,7 @@ Invitation
 
 User
   emailAddress Text
-  password Text
+  password ByteString
   photoURL Text Maybe
   firstName Text
   lastName Text

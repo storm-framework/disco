@@ -6,6 +6,7 @@
 
 module Server
     ( runServer
+    , runWorker'
     , initDB
     )
 where
@@ -71,7 +72,7 @@ runServer h p = runNoLoggingT $ do
         mode "dev" $ do
             host h
             port p
-            initWith $ initFromPool aws templateCache pool
+            initWith $ initFromPool (Config authMethod templateCache aws) pool
         dispatch $ do
             post "/api/signin" signIn
             post "/api/signup" signUp
@@ -86,6 +87,15 @@ runServer h p = runNoLoggingT $ do
             get "/api/signurl" s3SignedURL
 
             fallback (sendFromDirectory "static" "index.html")
+
+runWorker' :: Worker a -> IO a
+runWorker' worker = runSqlite "db.sqlite" $ do
+    templateCache <- liftIO $ MVar.newMVar mempty
+    aws           <- liftIO getAwsConfig
+    backend       <- ask
+    let config = Config authMethod templateCache aws backend
+    liftIO . runTIO $ runReaderT (unConfigT (runReaderT (unTag worker) backend)) config
+
 
 getAwsConfig :: IO AWSConfig
 getAwsConfig = do
@@ -122,14 +132,9 @@ sendFile path = do
 
 -- TODO find a way to provide this without exposing the instance of MonadBaseControl
 
-initFromPool
-    :: AWSConfig
-    -> MVar.MVar Mustache.TemplateCache
-    -> Pool SqlBackend
-    -> Controller ()
-    -> ControllerT TIO ()
-initFromPool aws cache pool controller = Pool.withResource pool $ \sqlBackend ->
-    configure (Config sqlBackend authMethod cache aws) . reading backend . unTag $ controller
+initFromPool :: (SqlBackend -> Config) -> Pool SqlBackend -> Controller () -> ControllerT TIO ()
+initFromPool mkConfig pool controller = Pool.withResource pool
+    $ \sqlBackend -> configure (mkConfig sqlBackend) . reading backend . unTag $ controller
 
 instance MonadBase IO TIO where
     liftBase = TIO

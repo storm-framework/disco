@@ -54,6 +54,7 @@ dependencies:
   - time
   - amazonka-s3
   - amazonka-core
+  - scrypt
 
 library:
   source-dirs: src

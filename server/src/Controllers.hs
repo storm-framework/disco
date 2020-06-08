@@ -31,10 +31,10 @@ import qualified Network.AWS.S3                as S3
 import           Model
 
 data Config = Config
-  { configBackend :: SqlBackend
-  , configAuthMethod :: !(AuthMethod (Entity User) Controller)
+  { configAuthMethod :: !(AuthMethod (Entity User) Controller)
   , configTemplateCache :: !(MVar.MVar Mustache.TemplateCache)
   , configAWS :: AWSConfig
+  , configBackend :: SqlBackend
   }
 
 data AWSConfig = AWSConfig

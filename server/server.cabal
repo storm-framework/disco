@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 89236cddd26f5c722e8483966b82064233527998a93edf2562b7d027676ae7cd
+-- hash: a12557008e04dab0b374f7d690432b8091c8081be48935871ef314b35048c02e
 
 name:           server
 version:        0.1.0.0
@@ -80,6 +80,7 @@ library
     , persistent-sqlite
     , persistent-template
     , resource-pool
+    , scrypt
     , smtp-mail
     , text
     , time
@@ -124,6 +125,7 @@ executable covideo
     , persistent-sqlite
     , persistent-template
     , resource-pool
+    , scrypt
     , server
     , smtp-mail
     , text
@@ -170,6 +172,7 @@ test-suite server-test
     , persistent-sqlite
     , persistent-template
     , resource-pool
+    , scrypt
     , server
     , smtp-mail
     , text

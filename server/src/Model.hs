@@ -48,7 +48,6 @@ module Model
   , UserId
   , RoomId
   )
-
 where
 
 import           Database.Persist               ( Key )
@@ -63,6 +62,8 @@ import qualified Database.Persist              as Persist
 
 import           Binah.Core
 
+import           Data.ByteString                ( ByteString )
+
 share [mkPersist sqlSettings, mkMigrate "migrateAll"] [persistLowerCase|
 Invitation
   code Text
@@ -76,7 +77,7 @@ Invitation
 
 User
   emailAddress Text
-  password Text
+  password ByteString
   photoURL Text Maybe
   firstName Text
   lastName Text
@@ -157,7 +158,8 @@ persistentRecord (BinahRecord record) = record
      , {\x_0 x_1 -> False}
      > Invitation
 @-}
-mkInvitation x_0 x_1 x_2 x_3 x_4 x_5 x_6 x_7 = BinahRecord (Invitation x_0 x_1 x_2 x_3 x_4 x_5 x_6 x_7)
+mkInvitation x_0 x_1 x_2 x_3 x_4 x_5 x_6 x_7 =
+  BinahRecord (Invitation x_0 x_1 x_2 x_3 x_4 x_5 x_6 x_7)
 
 {-@ invariant {v: Entity Invitation | v == getJust (entityKey v)} @-}
 
@@ -297,7 +299,7 @@ invitationEmailError' = EntityFieldWrapper InvitationEmailError
 -- * User
 {-@ mkUser ::
      x_0: Text
-  -> x_1: Text
+  -> x_1: ByteString
   -> x_2: (Maybe Text)
   -> x_3: Text
   -> x_4: Text
@@ -312,7 +314,8 @@ invitationEmailError' = EntityFieldWrapper InvitationEmailError
      , {\x_0 x_1 -> (userVisibility (entityVal x_0) == "public" || IsSelf x_0 x_1) || (x_0 == x_1)}
      > User
 @-}
-mkUser x_0 x_1 x_2 x_3 x_4 x_5 x_6 x_7 x_8 x_9 = BinahRecord (User x_0 x_1 x_2 x_3 x_4 x_5 x_6 x_7 x_8 x_9)
+mkUser x_0 x_1 x_2 x_3 x_4 x_5 x_6 x_7 x_8 x_9 =
+  BinahRecord (User x_0 x_1 x_2 x_3 x_4 x_5 x_6 x_7 x_8 x_9)
 
 {-@ invariant {v: Entity User | v == getJust (entityKey v)} @-}
 
@@ -344,7 +347,7 @@ userId' = EntityFieldWrapper UserId
 userEmailAddress' :: EntityFieldWrapper User Text
 userEmailAddress' = EntityFieldWrapper UserEmailAddress
 
-{-@ measure userPassword :: User -> Text @-}
+{-@ measure userPassword :: User -> ByteString @-}
 
 {-@ measure userPasswordCap :: Entity User -> Bool @-}
 
@@ -356,8 +359,9 @@ userEmailAddress' = EntityFieldWrapper UserEmailAddress
   , {\old _ _ -> userPasswordCap old}
   > _ _
 @-}
-userPassword' :: EntityFieldWrapper User Text
+userPassword' :: EntityFieldWrapper User ByteString
 userPassword' = EntityFieldWrapper UserPassword
+
 
 {-@ measure userPhotoURL :: User -> (Maybe Text) @-}
 
@@ -571,5 +575,3 @@ roomZoomLink' = EntityFieldWrapper RoomZoomLink
 --------------------------------------------------------------------------------
 -- | Inline
 --------------------------------------------------------------------------------
-
-
