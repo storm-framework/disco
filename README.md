@@ -26,7 +26,7 @@ To build just run:
 $ ./build.sh
 ```
 
-This will create a bundle files for the client app and compile the haskell code. It'll then copy everything to `dist/`.
+This will create bundle files for the client app and compile the haskell code. It'll then copy everything to `dist/`.
 
 ### Run the code
 
