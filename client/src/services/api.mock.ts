@@ -33,21 +33,21 @@ const ROOMS: { [id: string]: Room } = {
     id: 1,
     name: "Green Room",
     capacity: 8,
-    zoomLink: "https://meet.jitsi.si/109283740293847",
+    zoomLink: "https://meet.jit.si/109283740293847",
     color: "#00ff00"
   },
   2: {
     id: 2,
     name: "Red Room",
     capacity: 5,
-    zoomLink: "https://meet.jitsi.si/018471092384710",
+    zoomLink: "https://meet.jit.si/018471092384710",
     color: "#ff0000"
   },
   3: {
     id: 3,
     name: "Blue Room",
     capacity: 10,
-    zoomLink: "https://meet.jitsi.si/102389471203487",
+    zoomLink: "https://meet.jit.si/102389471203487",
     color: "#0000ff"
   }
 };
@@ -62,7 +62,8 @@ const USERS: { [id: string]: User } = {
     displayName: "Charlie",
     institution: "Homebrewers",
     level: "organizer",
-    room: "1"
+    // room: "1",
+    room: null
   },
   2: {
     id: 2,

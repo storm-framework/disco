@@ -10,7 +10,7 @@
 
       <b-card-text v-if="isCurrentRoom">
         You are in this room. If you accidentally left the chat,
-        <a :href="room.zoomLink">
+        <a :href="room.zoomLink" target="_blank">
           click here to rejoin. <font-awesome-icon icon="external-link-alt" />
         </a>
       </b-card-text>
@@ -37,7 +37,7 @@
         icon="door-open"
         @click="leaveRoom"
         variant="danger"
-        >
+      >
         Leave
       </icon-button>
       <icon-button

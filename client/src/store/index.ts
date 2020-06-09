@@ -87,9 +87,6 @@ export default new Vuex.Store({
       commit("changeActiveRoom", roomId);
     },
     joinRoom: async ({ commit }, roomId: string) => {
-      if (!roomId) {
-        return Promise.reject();
-      }
       const zoomLink = await ApiService.joinRoom(roomId);
       commit("swithToRoom", roomId);
       return zoomLink;

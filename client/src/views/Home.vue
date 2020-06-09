@@ -6,7 +6,7 @@
       <b-media
         tag="section"
         vertical-align="center"
-        class="col-7 align-items-center"
+        class="col-sm align-items-center"
       >
         <template v-slot:aside>
           <b-avatar :src="sessionUser.photoURL" :text="initials" size="300" />
@@ -26,7 +26,24 @@
         :h-context="4"
         class="col-5"
       />
-      <p v-else class="h5 align-self-center ml-5">You have not joined a room</p>
+      <b-col
+        v-else
+        cols="4"
+        class="align-items-center d-flex flex-column justify-content-center"
+      >
+        <p class="h5">
+          You have not joined a room
+        </p>
+        <icon-button
+          v-if="roomsAreAvailable"
+          icon="external-link-alt"
+          variant="primary"
+          @click="joinRandomRoom"
+          target="_blank"
+        >
+          Random room
+        </icon-button>
+      </b-col>
     </section>
     <section v-if="roomsAreAvailable">
       <h2 v-if="currentRoom" class="mt-5">Other Rooms</h2>
@@ -62,7 +79,7 @@ export default class Home extends Vue {
     return this.availableRooms.length !== 0;
   }
 
-  get availableRooms() {
+  get availableRooms(): Room[] {
     return this.$store.getters.availableRooms;
   }
 
@@ -97,6 +114,14 @@ export default class Home extends Vue {
       this.syncing = false;
       this.syncTimerHandler = setTimeout(this.sync, SYNC_INTERVAL);
     });
+  }
+
+  joinRandomRoom() {
+    const random = _.sample(this.availableRooms);
+    if (random) {
+      window.open(random.zoomLink, "_blank");
+      this.$store.dispatch("joinRoom", random.id);
+    }
   }
 }
 </script>
