@@ -40,9 +40,10 @@ interface ApiService {
   joinRoom(roomId: string): Promise<string>;
   leaveRoom(): Promise<void>;
 
-  //  Photos
+  //  Upload Files
 
   preSignURL(code?: string): Promise<PresignedURL>;
+  uploadFile(file: File, code?: string): Promise<string>;
 }
 
 let module: ApiService;

@@ -55,7 +55,8 @@ const ROOMS: { [id: string]: Room } = {
 const USERS: { [id: string]: User } = {
   1: {
     id: 1,
-    photoURL: null,
+    photoURL:
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/7/77/Avatar_cat.png/120px-Avatar_cat.png",
     firstName: "Charlie",
     lastName: "Papazian",
     displayName: "Charlie",
@@ -219,10 +220,17 @@ class ApiService {
     return Promise.reject("Not implemented");
   }
 
-  // Photos
+  // File
 
   preSignURL(code?: string): Promise<PresignedURL> {
     return Promise.reject("Not implemented");
+  }
+
+  async uploadFile(file: File, code?: string): Promise<string> {
+    await delay();
+    return Promise.resolve(
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/7/77/Avatar_cat.png/120px-Avatar_cat.png"
+    );
   }
 
   // Errors

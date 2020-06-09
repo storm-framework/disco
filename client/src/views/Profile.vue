@@ -49,13 +49,11 @@
       </b-form-group>
 
       <b-form-group label="Photo" label-for="photo">
-        <b-form-file
-          placeholder="Choose a file or drop it here"
-          drop-placeholder="Drop file here..."
-          v-model="form.photo"
-          accept="image/*"
+        <photo-input
           :disabled="fatalError"
-        ></b-form-file>
+          v-model="photoURL"
+          @fileInput="form.photoFile = $event"
+        />
       </b-form-group>
 
       <b-button
@@ -75,61 +73,61 @@
 import { Component, Vue, Watch } from "vue-property-decorator";
 import { mapGetters } from "vuex";
 import { User, UserData } from "@/models";
-import axios from "axios";
 import ApiService from "@/services/api";
+import PhotoInput from "@/components/PhotoInput.vue";
 
 interface Form {
   firstName: string;
   lastName: string;
   displayName: string;
   institution: string;
-  photo: File | null;
+  photoFile: File | null;
 }
 
-@Component({ computed: mapGetters(["sessionUser"]) })
+@Component({
+  computed: mapGetters(["sessionUser"]),
+  components: { PhotoInput }
+})
 export default class Profile extends Vue {
   form: Form = {
     firstName: "",
     lastName: "",
     displayName: "",
     institution: "",
-    photo: null
+    photoFile: null
   };
+  photoURL: string | null = null;
+
   loading = false;
   fatalError = false;
   errorMsg = "";
   sending = false;
 
   onSubmit() {
-    this.uploadPhotoToS3()
-      .then(url => {
-        const data: UserData = {
-          photoURL: url,
-          ...this.form
-        };
-        return this.$store.dispatch("updateUserDataMe", data);
-      })
-      .catch(console.log)
-      .finally(() => (this.sending = false));
-  }
-  // We are relying on the NavBar calling "syncSessionUser"
-  @Watch("sessionUser", { immediate: true })
-  sessionUserUpdated(newVal: User) {
-    this.form = { photo: null, ...newVal };
+    this.sending = true;
+    this.submit().finally(() => (this.sending = false));
   }
 
-  uploadPhotoToS3() {
-    const photo = this.form.photo;
-    if (!photo) {
-      return Promise.resolve(this.$store.getters.sessionUser?.photoURL);
+  async submit() {
+    let photoURL = this.$store.getters.sessionUser?.photoURL;
+    if (this.form.photoFile) {
+      photoURL = await ApiService.uploadFile(this.form.photoFile);
     }
-    return ApiService.preSignURL().then(data =>
-      axios
-        .put(data.signedURL, this.form.photo, {
-          headers: { "Content-Type": photo.type }
-        })
-        .then(() => data.objectURL)
-    );
+    const data: UserData = {
+      ...this.form,
+      photoURL
+    };
+    return this.$store.dispatch("updateUserDataMe", data);
+  }
+
+  // We are relying on NavBar calling "syncSessionUser"
+  @Watch("sessionUser", { immediate: true })
+  sessionUserUpdated(newVal: User | null, oldVal: User | null) {
+    // Only update the first time to avoid overriding the data while we are editing it.
+    if (newVal && !oldVal) {
+      this.photoURL = newVal.photoURL;
+      this.form = { photoFile: null, ...newVal };
+    }
   }
 }
 </script>

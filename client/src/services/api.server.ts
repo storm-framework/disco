@@ -119,10 +119,18 @@ class ApiService {
     return this.post(`/room/leave`);
   }
 
-  // Photos
+  // Files
 
   preSignURL(code?: string): Promise<PresignedURL> {
     return this.get(`/signurl?code=${code}`);
+  }
+
+  async uploadFile(file: File, code?: string): Promise<string> {
+    const presigned = await this.preSignURL(code);
+    await axios.put(presigned.signedURL, file, {
+      headers: { "Content-Type": file.type }
+    });
+    return presigned.objectURL;
   }
 
   // Raw Requests

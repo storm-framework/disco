@@ -99,23 +99,10 @@
           </b-form-group>
 
           <b-form-group label="Photo" label-for="photo">
-            <b-form-row>
-              <b-col>
-                <b-form-file
-                  placeholder="Choose a file or drop it here"
-                  drop-placeholder="Drop file here..."
-                  v-model="form.photo"
-                  accept="image/*"
-                  v-on:input="onPhotoChange"
-                  :disabled="fatalError"
-                >
-                </b-form-file>
-              </b-col>
-              <b-col cols="auto" v-if="photoSrc">
-                <b-avatar :src="photoSrc" />
-              </b-col>
-              <modal-cropper ref="cropper" v-on:ok="onAcceptImage" />
-            </b-form-row>
+            <photo-input
+              @fileInput="form.photoFile = $event"
+              :disabled="fatalError"
+            />
           </b-form-group>
         </b-form-group>
 
@@ -139,9 +126,8 @@
 import { Component, Vue } from "vue-property-decorator";
 import ApiService from "@/services/api";
 import _ from "lodash";
-import axios from "axios";
 import { UserSignUp } from "@/models";
-import ModalCropper from "@/components/ModalCropper.vue";
+import PhotoInput from "@/components/PhotoInput.vue";
 
 interface Form {
   password: string;
@@ -150,9 +136,10 @@ interface Form {
   lastName: string;
   displayName: string;
   institution: string;
+  photoFile: File | null;
 }
 
-@Component({ components: { ModalCropper } })
+@Component({ components: { PhotoInput } })
 export default class SignIn extends Vue {
   form: Form = {
     password: "",
@@ -160,17 +147,16 @@ export default class SignIn extends Vue {
     firstName: "",
     lastName: "",
     displayName: "",
-    institution: ""
+    institution: "",
+    photoFile: null
   };
-  photoFile: File | null = null;
-  photoSrc: string | null = null;
   loading = false;
   fatalError = false;
   errorMsg = "";
   sending = false;
 
   mounted() {
-    const code = this.$route.query?.code;
+    const code = this.code();
     if (typeof code === "string") {
       this.loading = true;
       ApiService.getInvitation(code)
@@ -178,8 +164,12 @@ export default class SignIn extends Vue {
           const displayName = _([invitation.firstName, invitation.lastName])
             .filter()
             .join(" ");
-          this.form = { password: "", displayName, ...invitation };
-          this.loading = false;
+          this.form = {
+            password: "",
+            photoFile: null,
+            displayName,
+            ...invitation
+          };
         })
         .catch(error => {
           if (error.response?.status == 404) {
@@ -187,8 +177,8 @@ export default class SignIn extends Vue {
           } else {
             this.setFatalError("Internal server error");
           }
-          this.loading = false;
-        });
+        })
+        .finally(() => (this.loading = false));
     } else {
       this.setFatalError("Missing invitation code");
     }
@@ -200,25 +190,12 @@ export default class SignIn extends Vue {
   }
 
   onSubmit() {
-    if (this.sending) {
-      return;
-    }
-    const code = this.$route.query?.code;
-    if (typeof code !== "string") {
+    const code = this.code();
+    if (this.sending || !code) {
       return;
     }
     this.sending = true;
-    return this.uploadPhotoToS3(code)
-      .then(url => {
-        const data: UserSignUp = {
-          invitationCode: code,
-          user: { photoURL: url, ...this.form }
-        };
-        return this.$store.dispatch("signUp", data);
-      })
-      .then(() => {
-        this.$router.replace({ name: "Home" });
-      })
+    this.submit(code)
       .catch(error => {
         if (error.response?.status == 403) {
           this.setFatalError("Invalid invitation code");
@@ -231,28 +208,25 @@ export default class SignIn extends Vue {
       });
   }
 
-  uploadPhotoToS3(code: string): Promise<string | null> {
-    const photo = this.photoFile;
-    if (!photo) {
-      return Promise.resolve(null);
+  async submit(code: string) {
+    let photoURL = null;
+    if (this.form.photoFile) {
+      photoURL = await ApiService.uploadFile(this.form.photoFile, code);
     }
-    return ApiService.preSignURL(code).then(data =>
-      axios
-        .put(data.signedURL, photo, {
-          headers: { "Content-Type": photo.type }
-        })
-        .then(() => data.objectURL)
-    );
+    const data: UserSignUp = {
+      invitationCode: code,
+      user: { ...this.form, photoURL }
+    };
+    await this.$store.dispatch("signUp", data);
+    this.$router.replace({ name: "Home" });
   }
 
-  onPhotoChange(file: File) {
-    (this.$refs.cropper as ModalCropper).show(file);
-  }
-
-  onAcceptImage({ blob, type }: { blob: Blob | null; type?: string }) {
-    if (blob) {
-      this.photoFile = new File([blob], "photo", { type });
-      this.photoSrc = window.URL.createObjectURL(blob);
+  code(): string | null {
+    const c = this.$route.query?.code;
+    if (typeof c === "string") {
+      return c;
+    } else {
+      return null;
     }
   }
 }
