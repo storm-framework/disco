@@ -43,8 +43,11 @@ export default new Vuex.Store({
         u.room = roomId;
       }
     },
-    setSessionUser(state, user) {
-      state.sessionUserId = user.id;
+    updateUser(state, user) {
+      Vue.set(state.users, user.id, user);
+    },
+    setSessionUser(state, userId) {
+      state.sessionUserId = userId;
     },
     removeSessionUser(state) {
       state.sessionUserId = null;
@@ -58,12 +61,27 @@ export default new Vuex.Store({
   actions: {
     signIn: ({ commit }, { emailAddress, password }) =>
       ApiService.signIn(emailAddress, password).then(user => {
-        commit("setSessionUser", user);
+        commit("updateUser", user);
+        commit("setSessionUser", user.id);
       }),
     signUp: ({ commit }, data) =>
       ApiService.signUp(data).then(user => {
-        commit("setSessionUser", user);
+        commit("updateUser", user);
+        commit("setSessionUser", user.id);
       }),
+    syncSessionUser: ({ dispatch, state }) => {
+      if (state.sessionUserId !== null) {
+        dispatch("syncUser", state.sessionUserId);
+      } else {
+        return Promise.resolve();
+      }
+    },
+    syncUser: ({ commit }, userId: number) =>
+      ApiService.user(userId).then(user => commit("updateUser", user)),
+    updateUserDataMe: ({ commit }, data) =>
+      ApiService.updateUserDataMe(data).then(user =>
+        commit("updateUser", user)
+      ),
     signOut: ({ commit }) =>
       ApiService.signOut().then(() => commit("removeSessionUser")),
     sync: ({ commit }) =>

@@ -5,6 +5,7 @@ import {
   Room,
   RoomInsert,
   User,
+  UserData,
   UserSignUp
 } from "@/models";
 
@@ -165,9 +166,29 @@ class ApiService {
 
   // Users
 
+  async user(userId: number): Promise<User> {
+    await delay();
+    const user = USERS[SESSION_USER_ID];
+    if (user) {
+      return user;
+    } else {
+      return this.errorResponse(404);
+    }
+  }
+
   async users(): Promise<User[]> {
     await delay();
     return Object.values(USERS);
+  }
+
+  async updateUserDataMe(data: UserData): Promise<User> {
+    await delay();
+    const user = USERS[SESSION_USER_ID];
+    if (user) {
+      return { ...user, ...data };
+    } else {
+      return this.errorResponse(404);
+    }
   }
 
   // Rooms
@@ -190,8 +211,14 @@ class ApiService {
 
   // Photos
 
-  preSignURL(code: string): Promise<PresignedURL> {
+  preSignURL(code?: string): Promise<PresignedURL> {
     return Promise.reject("Not implemented");
+  }
+
+  // Errors
+
+  errorResponse(status: number): Promise<any> {
+    return Promise.reject({ response: { status: status } });
   }
 }
 

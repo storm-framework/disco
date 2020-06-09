@@ -5,6 +5,7 @@ import {
   Room,
   RoomInsert,
   User,
+  UserData,
   UserSignUp
 } from "@/models";
 import axios, { AxiosRequestConfig } from "axios";
@@ -89,6 +90,14 @@ class ApiService {
     return this.get("/user");
   }
 
+  user(userId: number): Promise<User> {
+    return this.get(`/user/${userId}`);
+  }
+
+  updateUserDataMe(data: UserData): Promise<User> {
+    return this.post(`/user/me`, data);
+  }
+
   // Rooms
 
   rooms(): Promise<Room[]> {
@@ -112,7 +121,7 @@ class ApiService {
 
   // Photos
 
-  preSignURL(code: string): Promise<PresignedURL> {
+  preSignURL(code?: string): Promise<PresignedURL> {
     return this.get(`/signurl?code=${code}`);
   }
 

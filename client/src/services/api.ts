@@ -5,6 +5,7 @@ import {
   Room,
   RoomInsert,
   User,
+  UserData,
   UserSignUp
 } from "@/models";
 import Mock from "./api.mock";
@@ -29,6 +30,8 @@ interface ApiService {
   // Users
 
   users(): Promise<User[]>;
+  user(userId: number): Promise<User>;
+  updateUserDataMe(data: UserData): Promise<User>;
 
   // Rooms
 
@@ -39,7 +42,7 @@ interface ApiService {
 
   //  Photos
 
-  preSignURL(code: string): Promise<PresignedURL>;
+  preSignURL(code?: string): Promise<PresignedURL>;
 }
 
 let module: ApiService;

@@ -78,9 +78,11 @@ runServer h p = runNoLoggingT $ do
             post "/api/signup" signUp
             put "/api/invitation" invitationPut
             get "/api/invitation/:id" invitationGet
-            get "/api/invitation"     invitationIndex
-            get "/api/user"           userGet
-            get "/api/room"           roomGet
+            get "/api/invitation"     invitationList
+            get "/api/user"           userList
+            get "/api/user/:id"       userGet
+            post "/api/user/me" userUpdateMe
+            get "/api/room" roomGet
             post "/api/room"          roomPost
             post "/api/room/leave"    leaveRoom
             post "/api/room/:id/join" joinRoom

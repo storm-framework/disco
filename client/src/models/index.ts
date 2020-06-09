@@ -25,13 +25,16 @@ export interface UserSignUp {
   };
 }
 
-export interface User {
-  id: number;
-  photoURL: string | null;
+export interface UserData {
   firstName: string;
   lastName: string;
+  photoURL: string | null;
   displayName: string;
   institution: string;
+}
+
+export interface User extends UserData {
+  id: number;
   level: string;
   room: string | null;
 }

@@ -48,6 +48,7 @@ module Model
   , UserId
   , RoomId
   )
+
 where
 
 import           Database.Persist               ( Key )
@@ -62,7 +63,7 @@ import qualified Database.Persist              as Persist
 
 import           Binah.Core
 
-import           Data.ByteString                ( ByteString )
+import Data.ByteString (ByteString)
 
 share [mkPersist sqlSettings, mkMigrate "migrateAll"] [persistLowerCase|
 Invitation
@@ -158,8 +159,7 @@ persistentRecord (BinahRecord record) = record
      , {\x_0 x_1 -> False}
      > Invitation
 @-}
-mkInvitation x_0 x_1 x_2 x_3 x_4 x_5 x_6 x_7 =
-  BinahRecord (Invitation x_0 x_1 x_2 x_3 x_4 x_5 x_6 x_7)
+mkInvitation x_0 x_1 x_2 x_3 x_4 x_5 x_6 x_7 = BinahRecord (Invitation x_0 x_1 x_2 x_3 x_4 x_5 x_6 x_7)
 
 {-@ invariant {v: Entity Invitation | v == getJust (entityKey v)} @-}
 
@@ -314,8 +314,7 @@ invitationEmailError' = EntityFieldWrapper InvitationEmailError
      , {\x_0 x_1 -> (userVisibility (entityVal x_0) == "public" || IsSelf x_0 x_1) || (x_0 == x_1)}
      > User
 @-}
-mkUser x_0 x_1 x_2 x_3 x_4 x_5 x_6 x_7 x_8 x_9 =
-  BinahRecord (User x_0 x_1 x_2 x_3 x_4 x_5 x_6 x_7 x_8 x_9)
+mkUser x_0 x_1 x_2 x_3 x_4 x_5 x_6 x_7 x_8 x_9 = BinahRecord (User x_0 x_1 x_2 x_3 x_4 x_5 x_6 x_7 x_8 x_9)
 
 {-@ invariant {v: Entity User | v == getJust (entityKey v)} @-}
 
@@ -341,7 +340,7 @@ userId' = EntityFieldWrapper UserId
   , {\row field  -> field == userEmailAddress (entityVal row)}
   , {\field row  -> field == userEmailAddress (entityVal row)}
   , {\old -> userEmailAddressCap old}
-  , {\old _ _ -> userEmailAddressCap old}
+  , {\x_0 x_1 x_2 -> ((False)) => (userEmailAddressCap x_0)}
   > _ _
 @-}
 userEmailAddress' :: EntityFieldWrapper User Text
@@ -356,12 +355,11 @@ userEmailAddress' = EntityFieldWrapper UserEmailAddress
   , {\row field  -> field == userPassword (entityVal row)}
   , {\field row  -> field == userPassword (entityVal row)}
   , {\old -> userPasswordCap old}
-  , {\old _ _ -> userPasswordCap old}
+  , {\x_0 x_1 x_2 -> ((False)) => (userPasswordCap x_0)}
   > _ _
 @-}
 userPassword' :: EntityFieldWrapper User ByteString
 userPassword' = EntityFieldWrapper UserPassword
-
 
 {-@ measure userPhotoURL :: User -> (Maybe Text) @-}
 
@@ -372,7 +370,7 @@ userPassword' = EntityFieldWrapper UserPassword
   , {\row field  -> field == userPhotoURL (entityVal row)}
   , {\field row  -> field == userPhotoURL (entityVal row)}
   , {\old -> userPhotoURLCap old}
-  , {\old _ _ -> userPhotoURLCap old}
+  , {\x_0 x_1 x_2 -> ((IsSelf x_0 x_2)) => (userPhotoURLCap x_0)}
   > _ _
 @-}
 userPhotoURL' :: EntityFieldWrapper User (Maybe Text)
@@ -387,7 +385,7 @@ userPhotoURL' = EntityFieldWrapper UserPhotoURL
   , {\row field  -> field == userFirstName (entityVal row)}
   , {\field row  -> field == userFirstName (entityVal row)}
   , {\old -> userFirstNameCap old}
-  , {\old _ _ -> userFirstNameCap old}
+  , {\x_0 x_1 x_2 -> ((IsSelf x_0 x_2)) => (userFirstNameCap x_0)}
   > _ _
 @-}
 userFirstName' :: EntityFieldWrapper User Text
@@ -402,7 +400,7 @@ userFirstName' = EntityFieldWrapper UserFirstName
   , {\row field  -> field == userLastName (entityVal row)}
   , {\field row  -> field == userLastName (entityVal row)}
   , {\old -> userLastNameCap old}
-  , {\old _ _ -> userLastNameCap old}
+  , {\x_0 x_1 x_2 -> ((IsSelf x_0 x_2)) => (userLastNameCap x_0)}
   > _ _
 @-}
 userLastName' :: EntityFieldWrapper User Text
@@ -417,7 +415,7 @@ userLastName' = EntityFieldWrapper UserLastName
   , {\row field  -> field == userDisplayName (entityVal row)}
   , {\field row  -> field == userDisplayName (entityVal row)}
   , {\old -> userDisplayNameCap old}
-  , {\old _ _ -> userDisplayNameCap old}
+  , {\x_0 x_1 x_2 -> ((IsSelf x_0 x_2)) => (userDisplayNameCap x_0)}
   > _ _
 @-}
 userDisplayName' :: EntityFieldWrapper User Text
@@ -432,7 +430,7 @@ userDisplayName' = EntityFieldWrapper UserDisplayName
   , {\row field  -> field == userInstitution (entityVal row)}
   , {\field row  -> field == userInstitution (entityVal row)}
   , {\old -> userInstitutionCap old}
-  , {\old _ _ -> userInstitutionCap old}
+  , {\x_0 x_1 x_2 -> ((IsSelf x_0 x_2)) => (userInstitutionCap x_0)}
   > _ _
 @-}
 userInstitution' :: EntityFieldWrapper User Text
@@ -447,7 +445,7 @@ userInstitution' = EntityFieldWrapper UserInstitution
   , {\row field  -> field == userLevel (entityVal row)}
   , {\field row  -> field == userLevel (entityVal row)}
   , {\old -> userLevelCap old}
-  , {\old _ _ -> userLevelCap old}
+  , {\x_0 x_1 x_2 -> ((False)) => (userLevelCap x_0)}
   > _ _
 @-}
 userLevel' :: EntityFieldWrapper User String
@@ -575,3 +573,5 @@ roomZoomLink' = EntityFieldWrapper RoomZoomLink
 --------------------------------------------------------------------------------
 -- | Inline
 --------------------------------------------------------------------------------
+
+

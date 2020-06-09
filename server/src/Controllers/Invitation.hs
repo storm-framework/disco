@@ -158,12 +158,12 @@ invitationGet iid = do
       respondJSON status200 res
 
 --------------------------------------------------------------------------------
--- | Invitation Index
+-- | Invitation List
 --------------------------------------------------------------------------------
 
-{-@ invitationIndex :: TaggedT<{\_ -> False}, {\_ -> True}> _ _ @-}
-invitationIndex :: Controller ()
-invitationIndex = do
+{-@ invitationList :: TaggedT<{\_ -> False}, {\_ -> True}> _ _ @-}
+invitationList :: Controller ()
+invitationList = do
   viewer      <- requireAuthUser
   _           <- requireOrganizer viewer
   invitations <- selectList trueF

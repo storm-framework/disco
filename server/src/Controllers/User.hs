@@ -29,13 +29,13 @@ import           Controllers.Invitation         ( InvitationCode(..) )
 import           Model
 import           JSON
 
--------------------------------------------------------------------------------
--- | User Get
--------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
+-- | User List
+----------------------------------------------------------------------------------------------------
 
-{-@ userGet :: TaggedT<{\_ -> False}, {\_ -> True}> _ _ @-}
-userGet :: Controller ()
-userGet = do
+{-@ userList :: TaggedT<{\_ -> False}, {\_ -> True}> _ _ @-}
+userList :: Controller ()
+userList = do
   _     <- requireAuthUser
   users <- selectList trueF
   users <- mapMC extractUserData users
@@ -70,3 +70,50 @@ data UserData = UserData
 
 instance ToJSON UserData where
   toEncoding = genericToEncoding (stripPrefix "user")
+
+----------------------------------------------------------------------------------------------------
+-- | User Get
+----------------------------------------------------------------------------------------------------
+
+{-@ userGet :: TaggedT<{\_ -> False}, {\_ -> True}> _ _ @-}
+userGet :: Int64 -> Controller ()
+userGet uid = do
+  let userId = toSqlKey uid
+  _        <- requireAuthUser
+  user     <- selectFirstOr notFoundJSON (userId' ==. userId)
+  userData <- extractUserData user
+  respondJSON status200 userData
+
+----------------------------------------------------------------------------------------------------
+-- | User Update
+----------------------------------------------------------------------------------------------------
+
+{-@ userUpdateMe :: TaggedT<{\_ -> False}, {\_ -> True}> _ _ @-}
+userUpdateMe :: Controller ()
+userUpdateMe = do
+  user            <- requireAuthUser
+  userId          <- project userId' user
+  UserUpdate {..} <- decodeBody
+  let up =
+        (userPhotoURL' `assign` userUpdatePhotoURL)
+          `combine` (userFirstName' `assign` userUpdateFirstName)
+          `combine` (userLastName' `assign` userUpdateLastName)
+          `combine` (userDisplayName' `assign` userUpdateDisplayName)
+          `combine` (userInstitution' `assign` userUpdateInstitution)
+  _        <- updateWhere (userId' ==. userId) up
+  user     <- selectFirstOr notFoundJSON (userId' ==. userId)
+  userData <- extractUserData user
+  respondJSON status200 userData
+
+
+data UserUpdate = UserUpdate
+  { userUpdatePhotoURL :: Maybe Text
+  , userUpdateFirstName :: Text
+  , userUpdateLastName :: Text
+  , userUpdateDisplayName :: Text
+  , userUpdateInstitution :: Text
+  }
+  deriving Generic
+
+instance FromJSON UserUpdate where
+  parseJSON = genericParseJSON (stripPrefix "userUpdate")

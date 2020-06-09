@@ -24,10 +24,13 @@ import { mapGetters } from "vuex";
   computed: mapGetters(["loggedIn"])
 })
 export default class Navbar extends Vue {
+  // The navBar is in charge of syncing the session user with the backend.
+  // Other components rely on this.
+  mounted() {
+    this.$store.dispatch("syncSessionUser");
+  }
+
   get isOrganizer() {
-    // This is not ideal because it only works if we have the logged in user,
-    // but doing a whole sync just to find out if the current user is an admin
-    // seems overkill
     return this.$store.getters.sessionUser?.level == "organizer";
   }
 
