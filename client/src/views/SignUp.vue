@@ -1,6 +1,6 @@
 <template>
   <b-overlay
-    :show="loading"
+    :show="loading || sending"
     spinner-variant="primary"
     spinner-type="grow"
     spinner-small
@@ -99,19 +99,29 @@
           </b-form-group>
 
           <b-form-group label="Photo" label-for="photo">
-            <b-form-file
-              placeholder="Choose a file or drop it here"
-              drop-placeholder="Drop file here..."
-              v-model="form.photo"
-              accept="image/*"
-              :disabled="fatalError"
-            ></b-form-file>
+            <b-form-row>
+              <b-col>
+                <b-form-file
+                  placeholder="Choose a file or drop it here"
+                  drop-placeholder="Drop file here..."
+                  v-model="form.photo"
+                  accept="image/*"
+                  v-on:input="onPhotoChange"
+                  :disabled="fatalError"
+                >
+                </b-form-file>
+              </b-col>
+              <b-col cols="auto" v-if="photoSrc">
+                <b-avatar :src="photoSrc" />
+              </b-col>
+              <modal-cropper ref="cropper" v-on:ok="onAcceptImage" />
+            </b-form-row>
           </b-form-group>
         </b-form-group>
 
         <b-form-group label-cols-lg="3">
           <b-button
-            :disabled="fatalError || sending"
+            :disabled="fatalError"
             variant="primary"
             size="lg"
             type="submit"
@@ -127,10 +137,11 @@
 
 <script lang="ts">
 import { Component, Vue } from "vue-property-decorator";
-import ApiService from "../services/api";
+import ApiService from "@/services/api";
 import _ from "lodash";
 import axios from "axios";
-import { PresignedURL, UserSignUp } from "../models";
+import { UserSignUp } from "@/models";
+import ModalCropper from "@/components/ModalCropper.vue";
 
 interface Form {
   password: string;
@@ -139,10 +150,9 @@ interface Form {
   lastName: string;
   displayName: string;
   institution: string;
-  photo: File | null;
 }
 
-@Component
+@Component({ components: { ModalCropper } })
 export default class SignIn extends Vue {
   form: Form = {
     password: "",
@@ -150,9 +160,10 @@ export default class SignIn extends Vue {
     firstName: "",
     lastName: "",
     displayName: "",
-    institution: "",
-    photo: null
+    institution: ""
   };
+  photoFile: File | null = null;
+  photoSrc: string | null = null;
   loading = false;
   fatalError = false;
   errorMsg = "";
@@ -167,7 +178,7 @@ export default class SignIn extends Vue {
           const displayName = _([invitation.firstName, invitation.lastName])
             .filter()
             .join(" ");
-          this.form = { password: "", displayName, photo: null, ...invitation };
+          this.form = { password: "", displayName, ...invitation };
           this.loading = false;
         })
         .catch(error => {
@@ -197,8 +208,7 @@ export default class SignIn extends Vue {
       return;
     }
     this.sending = true;
-    ApiService.preSignURL(code)
-      .then(data => this.uploadPhotoToS3(data))
+    return this.uploadPhotoToS3(code)
       .then(url => {
         const data: UserSignUp = {
           invitationCode: code,
@@ -207,29 +217,43 @@ export default class SignIn extends Vue {
         return this.$store.dispatch("signUp", data);
       })
       .then(() => {
-        this.sending = false;
         this.$router.replace({ name: "Home" });
       })
       .catch(error => {
-        this.sending = false;
         if (error.response?.status == 403) {
           this.setFatalError("Invalid invitation code");
         } else {
           this.setFatalError("Internal server error");
         }
-        this.loading = false;
+      })
+      .finally(() => {
+        this.sending = false;
       });
   }
 
-  uploadPhotoToS3(data: PresignedURL) {
-    if (!this.form.photo) {
+  uploadPhotoToS3(code: string): Promise<string | null> {
+    const photo = this.photoFile;
+    if (!photo) {
       return Promise.resolve(null);
     }
-    return axios
-      .put(data.signedURL, this.form.photo, {
-        headers: { "Content-Type": this.form.photo.type }
-      })
-      .then(() => data.objectURL);
+    return ApiService.preSignURL(code).then(data =>
+      axios
+        .put(data.signedURL, photo, {
+          headers: { "Content-Type": photo.type }
+        })
+        .then(() => data.objectURL)
+    );
+  }
+
+  onPhotoChange(file: File) {
+    (this.$refs.cropper as ModalCropper).show(file);
+  }
+
+  onAcceptImage({ blob, type }: { blob: Blob | null; type?: string }) {
+    if (blob) {
+      this.photoFile = new File([blob], "photo", { type });
+      this.photoSrc = window.URL.createObjectURL(blob);
+    }
   }
 }
 </script>

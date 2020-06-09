@@ -3,8 +3,6 @@ export interface InvitationInsert {
   firstName: string;
   lastName: string;
   institution: string;
-  country: string;
-  degree: string;
 }
 
 export interface Invitation extends InvitationInsert {

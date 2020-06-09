@@ -19,6 +19,15 @@ function delay(ms = 1000) {
   }
 }
 
+const INVITATION: Invitation = {
+  id: 1,
+  emailAddress: "charlie@hba.org",
+  firstName: "Charlie",
+  lastName: "Papazian",
+  institution: "Home Brewers Association",
+  accepted: false
+};
+
 const ROOMS: { [id: string]: Room } = {
   1: {
     id: 1,
@@ -152,8 +161,9 @@ class ApiService {
 
   // Invitations
 
-  getInvitation(param: string): Promise<Invitation> {
-    return Promise.reject("Not implemented");
+  async getInvitation(param: string): Promise<Invitation> {
+    await delay();
+    return INVITATION;
   }
 
   sendInvitations(invitations: InvitationInsert[]): Promise<string[]> {

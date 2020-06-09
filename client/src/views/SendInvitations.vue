@@ -253,7 +253,7 @@ export default class SendInvitations extends Vue {
   onFileChange(file: File) {
     const reader = new FileReader();
     reader.onload = (e: ProgressEvent<FileReader>) => {
-      if (e?.target === null) {
+      if (e.target === null) {
         return;
       }
       const bstr = e.target.result;
