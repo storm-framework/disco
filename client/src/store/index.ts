@@ -10,14 +10,12 @@ interface State {
   sessionUserId: string | null;
   users: { [key: string]: User };
   rooms: { [key: string]: Room };
-  activeRoomId: string | null;
 }
 
 const initialState: State = {
   sessionUserId: ApiService.sessionUserId,
   users: {},
-  rooms: {},
-  activeRoomId: null
+  rooms: {}
 };
 
 function addUsersToRoom(room: Room, users: User[]) {
@@ -33,9 +31,6 @@ export default new Vuex.Store({
     sync(state, { rooms, users }: { rooms: Room[]; users: User[] }) {
       state.rooms = Object.fromEntries(rooms.map(r => [r.id, r]));
       state.users = Object.fromEntries(users.map(u => [u.id, u]));
-    },
-    changeActiveRoom(state, roomId: string) {
-      state.activeRoomId = roomId;
     },
     swithToRoom(state, roomId) {
       const u = state.sessionUserId && state.users[state.sessionUserId];
@@ -106,17 +101,16 @@ export default new Vuex.Store({
     loggedIn: ({ sessionUserId }) => !!sessionUserId,
     sessionUser: ({ users, sessionUserId }) =>
       sessionUserId && users[sessionUserId],
-    rooms: ({ rooms, users }) => {
-      const usersByRoom = _(users)
-        .values()
-        .filter(u => u.room !== null)
-        .groupBy(u => u.room)
-        .value();
-      return _({})
-        .assign(rooms)
-        .assignWith(usersByRoom, addUsersToRoom)
-        .values()
-        .value();
+    rooms: ({ rooms }) => Object.values(rooms),
+    availableRooms: (_state, getters) => {
+      if (getters.currentRoom) {
+        return _.filter(
+          getters.rooms,
+          room => room.id !== getters.currentRoom.id
+        );
+      } else {
+        return getters.rooms;
+      }
     },
     roomUsers: ({ users }) => (roomId: string) =>
       _(users)
@@ -125,8 +119,6 @@ export default new Vuex.Store({
         .value(),
     room: ({ rooms }, getters) => (roomId: string) =>
       rooms[roomId] && addUsersToRoom(rooms[roomId], getters.roomUsers(roomId)),
-    activeRoom: ({ activeRoomId }, getters) =>
-      activeRoomId && getters.room(activeRoomId),
     currentRoom: (_state, getters) => {
       const currentRoomId = getters.sessionUser?.room;
       return currentRoomId && getters.room(currentRoomId);

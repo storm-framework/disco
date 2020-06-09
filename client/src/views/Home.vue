@@ -62,6 +62,10 @@ export default class Home extends Vue {
     return this.availableRooms.length !== 0;
   }
 
+  get availableRooms() {
+    return this.$store.getters.availableRooms;
+  }
+
   get fullName() {
     const sessionUser = this.$store.getters.sessionUser;
     return _.trim(_.join([sessionUser?.firstName, sessionUser?.lastName], " "));
@@ -72,15 +76,6 @@ export default class Home extends Vue {
     const fn = sessionUser?.firstName[0] || "";
     const ln = sessionUser?.lastName[0] || "";
     return _.trim(fn + ln);
-  }
-
-  get availableRooms() {
-    const allRooms = this.$store.getters.rooms;
-    if (this.currentRoom) {
-      return _.filter(allRooms, room => room.id !== this.currentRoom.id);
-    } else {
-      return allRooms;
-    }
   }
 
   mounted() {
