@@ -8,6 +8,42 @@
         </span>
       </heading>
 
+      <div class="mb-3 d-flex flex-row align-items-center">
+        <b-badge variant="info" class="mr-2">Topic</b-badge>
+        <div v-if="editingTopic" class="form-inline edit-topic">
+          <b-form-input
+            size="sm"
+            class="mr-2"
+            v-model="topic"
+            :disabled="saving"
+          />
+          <font-awesome-icon
+            icon="save"
+            class="text-primary mr-1"
+            size="lg"
+            @click="saveTopic"
+          />
+          <font-awesome-icon
+            icon="times-circle"
+            size="lg"
+            @click="editingTopic = false"
+            class="text-secondary"
+          />
+        </div>
+        <div v-else>
+          <span v-if="hasTopic">{{ room.topic }}</span>
+          <span class="font-italic" v-else>No topic</span>
+          <a
+            href="#"
+            class="ml-2"
+            v-if="isCurrentRoom"
+            @click.prevent="editTopic"
+          >
+            <font-awesome-icon icon="edit" />
+          </a>
+        </div>
+      </div>
+
       <b-card-text v-if="isCurrentRoom">
         You are in this room. If you accidentally left the chat,
         <a :href="room.zoomLink" target="_blank">
@@ -63,16 +99,30 @@ import _ from "lodash";
 
 import { library } from "@fortawesome/fontawesome-svg-core";
 import {
-  faDoorOpen,
   faComments,
-  faExternalLinkAlt
+  faDoorOpen,
+  faEdit,
+  faExternalLinkAlt,
+  faSave,
+  faTimesCircle
 } from "@fortawesome/free-solid-svg-icons";
 
-library.add(faDoorOpen, faComments, faExternalLinkAlt);
+library.add(
+  faComments,
+  faDoorOpen,
+  faEdit,
+  faExternalLinkAlt,
+  faSave,
+  faTimesCircle
+);
 
 @Component({ components: { Heading } })
 export default class RoomCard extends Mixins(HeadingContext) {
   @Prop() readonly room!: Room;
+
+  editingTopic = false;
+  saving = false;
+  topic = "";
 
   get empty() {
     return this.users.length === 0;
@@ -92,6 +142,30 @@ export default class RoomCard extends Mixins(HeadingContext) {
 
   leaveRoom() {
     this.$store.dispatch("leaveRoom");
+  }
+
+  editTopic() {
+    this.topic = this.room.topic;
+    this.editingTopic = true;
+  }
+
+  saveTopic() {
+    if (this.saving) {
+      return;
+    }
+    const topic = _.trim(this.topic);
+    const data = { ...this.room, topic };
+    this.saving = true;
+    this.$store
+      .dispatch("updateRoom", { roomId: this.room.id, data })
+      .finally(() => {
+        this.saving = false;
+        this.editingTopic = false;
+      });
+  }
+
+  get hasTopic() {
+    return !_.isEmpty(_.trim(this.room.topic));
   }
 
   userTip(user: User) {
@@ -124,5 +198,15 @@ export default class RoomCard extends Mixins(HeadingContext) {
 .user-list span {
   cursor: default;
   text-decoration: underline dotted;
+}
+
+.edit-topic {
+  display: flex;
+  flex: auto;
+}
+
+.edit-topic input {
+  flex: auto;
+  height: 24px;
 }
 </style>

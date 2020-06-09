@@ -3,13 +3,11 @@ import {
   InvitationInsert,
   PresignedURL,
   Room,
-  RoomInsert,
+  RoomData,
   User,
   UserData,
   UserSignUp
 } from "@/models";
-
-const API_URL = "/api";
 
 function delay(ms = 1000) {
   if (process.env.NODE_ENV === "development") {
@@ -34,21 +32,24 @@ const ROOMS: { [id: string]: Room } = {
     name: "Green Room",
     capacity: 8,
     zoomLink: "https://meet.jit.si/109283740293847",
-    color: "#00ff00"
+    color: "#00ff00",
+    topic: "Stuffs"
   },
   2: {
     id: 2,
     name: "Red Room",
     capacity: 5,
     zoomLink: "https://meet.jit.si/018471092384710",
-    color: "#ff0000"
+    color: "#ff0000",
+    topic: ""
   },
   3: {
     id: 3,
     name: "Blue Room",
     capacity: 10,
     zoomLink: "https://meet.jit.si/102389471203487",
-    color: "#0000ff"
+    color: "#0000ff",
+    topic: ""
   }
 };
 
@@ -62,8 +63,8 @@ const USERS: { [id: string]: User } = {
     displayName: "Charlie",
     institution: "Homebrewers",
     level: "organizer",
-    // room: "1",
-    room: null
+    room: "1"
+    // room: null
   },
   2: {
     id: 2,
@@ -209,7 +210,11 @@ class ApiService {
     return Promise.resolve(Object.values(ROOMS));
   }
 
-  updateRooms(updates: Room[], inserts: RoomInsert[]): Promise<number[]> {
+  updateRoom(id: number, data: RoomData): Promise<Room> {
+    return Promise.resolve({ ...data, id });
+  }
+
+  updateRooms(updates: Room[], inserts: RoomData[]): Promise<number[]> {
     return Promise.reject("Not implemented");
   }
 
@@ -221,7 +226,7 @@ class ApiService {
     return Promise.reject("Not implemented");
   }
 
-  // File
+  // Files
 
   preSignURL(code?: string): Promise<PresignedURL> {
     return Promise.reject("Not implemented");

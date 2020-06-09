@@ -37,14 +37,15 @@ export interface User extends UserData {
   room: string | null;
 }
 
-export interface RoomInsert {
+export interface RoomData {
   name: string;
   capacity: number;
   color: string;
+  topic: string;
   zoomLink: string;
 }
 
-export interface Room extends RoomInsert {
+export interface Room extends RoomData {
   id: number;
 }
 

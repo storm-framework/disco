@@ -1,7 +1,7 @@
 <template functional>
   <b-button class="icon-button" v-bind="data.attrs" v-on="listeners">
     <font-awesome-icon class="icon" :icon="props.icon" />
-    <slot/>
+    <slot />
   </b-button>
 </template>
 
@@ -27,6 +27,6 @@ export default {
 }
 
 .icon {
-  margin-right: .5em;
+  margin-right: 0.5em;
 }
 </style>

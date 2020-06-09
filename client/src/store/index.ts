@@ -32,6 +32,10 @@ export default new Vuex.Store({
       state.rooms = Object.fromEntries(rooms.map(r => [r.id, r]));
       state.users = Object.fromEntries(users.map(u => [u.id, u]));
     },
+    updateRoom({ rooms }, room: Room) {
+      // We assume the room is already in the store. if it's not this won't trigger reactivity
+      rooms[room.id] = room;
+    },
     swithToRoom(state, roomId) {
       const u = state.sessionUserId && state.users[state.sessionUserId];
       if (u) {
@@ -76,6 +80,10 @@ export default new Vuex.Store({
     updateUserDataMe: ({ commit }, data) =>
       ApiService.updateUserDataMe(data).then(user =>
         commit("updateUser", user)
+      ),
+    updateRoom: ({ commit }, { roomId, data }) =>
+      ApiService.updateRoom(roomId, data).then(room =>
+        commit("updateRoom", room)
       ),
     signOut: ({ commit }) =>
       ApiService.signOut().then(() => commit("removeSessionUser")),

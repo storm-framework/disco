@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+export PROD = 1
+
 rm -rf dist
 mkdir dist
 cd client 

@@ -9,6 +9,7 @@
             <tr>
               <th class="room-color sr-only">Color</th>
               <th class="room-name">Name</th>
+              <th class="room-topic">Topic</th>
               <th class="room-url">URL</th>
             </tr>
           </thead>
@@ -22,6 +23,9 @@
               </td>
               <td class="room-name">
                 <b-form-input type="text" v-model="room.name" required />
+              </td>
+              <td class="room-topic">
+                <b-form-input type="text" v-model="room.topic" />
               </td>
               <td class="room-url">
                 <b-form-input type="url" v-model="room.zoomLink" required />
@@ -51,7 +55,7 @@
 
 <script lang="ts">
 import { Component, Vue } from "vue-property-decorator";
-import { Room, RoomInsert } from "@/models";
+import { Room, RoomData } from "@/models";
 import ApiService from "@/services/api";
 import NTC from "@/vendor/ntc";
 
@@ -64,20 +68,23 @@ interface OldRoom {
   name: string;
   zoomLink: string;
   color: string;
+  topic: string;
 }
 
 interface NewRoom {
   name: string;
   zoomLink: string;
   color: string;
+  topic: string;
 }
 
-function parseNewRoom(row: NewRoom): RoomInsert {
+function parseNewRoom(row: NewRoom): RoomData {
   return {
     name: row.name,
     capacity: 10,
     zoomLink: row.zoomLink,
-    color: row.color
+    color: row.color,
+    topic: row.topic
   };
 }
 
@@ -174,6 +181,7 @@ export default class SignIn extends Vue {
             id: r.id,
             name: r.name,
             color: r.color,
+            topic: r.topic,
             zoomLink: r.zoomLink
           };
         });
@@ -194,6 +202,7 @@ export default class SignIn extends Vue {
     this.newRooms.push({
       name: `${name} Room`,
       zoomLink: randomJitsiLink(),
+      topic: "",
       color: color
     });
   }
@@ -269,11 +278,15 @@ main {
 }
 
 .room-name {
-  @include make-col(5);
+  @include make-col(3);
+}
+
+.room-topic {
+  @include make-col(4);
 }
 
 .room-url {
-  @include make-col(6);
+  @include make-col(4);
 }
 
 .save {

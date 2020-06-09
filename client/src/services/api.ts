@@ -3,7 +3,7 @@ import {
   InvitationInsert,
   PresignedURL,
   Room,
-  RoomInsert,
+  RoomData,
   User,
   UserData,
   UserSignUp
@@ -36,7 +36,8 @@ interface ApiService {
   // Rooms
 
   rooms(): Promise<Room[]>;
-  updateRooms(updates: Room[], inserts: RoomInsert[]): Promise<number[]>;
+  updateRoom(roomId: number, data: RoomData): Promise<Room>;
+  updateRooms(updates: Room[], inserts: RoomData[]): Promise<number[]>;
   joinRoom(roomId: string): Promise<string>;
   leaveRoom(): Promise<void>;
 

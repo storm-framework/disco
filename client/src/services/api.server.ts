@@ -3,7 +3,7 @@ import {
   InvitationInsert,
   PresignedURL,
   Room,
-  RoomInsert,
+  RoomData,
   User,
   UserData,
   UserSignUp
@@ -104,7 +104,11 @@ class ApiService {
     return this.get("/room");
   }
 
-  updateRooms(updates: Room[], inserts: RoomInsert[]): Promise<number[]> {
+  updateRoom(id: number, data: RoomData): Promise<Room> {
+    return this.post(`/room/${id}`, data);
+  }
+
+  updateRooms(updates: Room[], inserts: RoomData[]): Promise<number[]> {
     return this.post("/room", {
       inserts: inserts,
       updates: updates

@@ -3,6 +3,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE InstanceSigs #-}
+{-# LANGUAGE CPP #-}
 
 module Server
     ( runServer
@@ -83,12 +84,21 @@ runServer h p = runNoLoggingT $ do
             get "/api/user/:id"       userGet
             post "/api/user/me" userUpdateMe
             get "/api/room" roomGet
-            post "/api/room"          roomPost
+            post "/api/room"          roomBatchUpdate
+            post "/api/room/:id"      roomUpdate
             post "/api/room/leave"    leaveRoom
             post "/api/room/:id/join" joinRoom
             get "/api/signurl" s3SignedURL
 
+#ifdef PROD
             fallback (sendFromDirectory "static" "index.html")
+#else
+            fallback $ do
+                req <- request
+                let path = joinPath (map T.unpack (reqPathInfo req))
+                respondJSON status404 ("Route not found: " ++ path)
+#endif
+
 
 runWorker' :: Worker a -> IO a
 runWorker' worker = runSqlite "db.sqlite" $ do
