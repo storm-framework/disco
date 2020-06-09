@@ -56,6 +56,7 @@ const SYNC_INTERVAL = 10000;
 export default class Home extends Vue {
   syncing = false;
   currentRoom!: Room;
+  syncTimerHandler: number | null = null;
 
   get roomsAreAvailable() {
     return this.availableRooms.length !== 0;
@@ -86,6 +87,12 @@ export default class Home extends Vue {
     this.sync();
   }
 
+  beforeDestroy() {
+    if (this.syncTimerHandler) {
+      clearTimeout(this.syncTimerHandler);
+    }
+  }
+
   sync() {
     if (this.syncing) {
       return;
@@ -93,7 +100,7 @@ export default class Home extends Vue {
     this.syncing = true;
     this.$store.dispatch("sync").then(() => {
       this.syncing = false;
-      setTimeout(this.sync, SYNC_INTERVAL);
+      this.syncTimerHandler = setTimeout(this.sync, SYNC_INTERVAL);
     });
   }
 }
