@@ -65,7 +65,7 @@ invitationPut = do
         reqData
         codes
   ids <- insertMany invitations
-  _   <- runWorker (sendEmails ids)
+  _   <- runTask (sendEmails ids)
   respondJSON status201 (object ["keys" .= map fromSqlKey ids])
 
 data EmailData = EmailData
@@ -97,7 +97,7 @@ data EmailRender = EmailRender
 instance FromJSON EmailRender where
   parseJSON = genericParseJSON (stripPrefix "emailRender")
 
-sendEmails :: [InvitationId] -> Worker ()
+sendEmails :: [InvitationId] -> Task ()
 sendEmails ids = do
   invitations <- selectList (invitationId' <-. ids)
   forMC invitations $ \invitation -> do
@@ -113,7 +113,7 @@ sendEmails ids = do
   return ()
 
 
-renderEmail :: Entity Invitation -> Worker Mail
+renderEmail :: Entity Invitation -> Task Mail
 renderEmail invitation = do
   id           <- project invitationId' invitation
   emailAddress <- project invitationEmailAddress' invitation

@@ -54,14 +54,14 @@ instance HasSqlBackend Config where
 instance HasTemplateCache Config where
   getTemplateCache = configTemplateCache
 
-type Worker = TaggedT (ReaderT SqlBackend (ConfigT Config TIO))
+type Task = TaggedT (ReaderT SqlBackend (ConfigT Config TIO))
 
-runWorker :: Worker () -> Controller ()
-runWorker worker = do
+runTask :: Task () -> Controller ()
+runTask task = do
   b      <- backend
   config <- getConfig
-  let w = mapTaggedT (\w -> runReaderT (unConfigT (runReaderT w b)) config) worker
-  flip mapTaggedT (forkTIO w) $ \m -> do
+  let t = mapTaggedT (\t -> runReaderT (unConfigT (runReaderT t b)) config) task
+  flip mapTaggedT (forkTIO t) $ \m -> do
     liftTIO m
     return ()
 

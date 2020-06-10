@@ -66,7 +66,7 @@ import           Network.AWS.Data.Text          ( toText )
 
 
 {-@ ignore addOrganizer @-}
-addOrganizer :: UserCreate -> Worker UserId
+addOrganizer :: UserCreate -> Task UserId
 addOrganizer UserCreate {..} = do
   EncryptedPass encrypted <- encryptPassTIO' (Pass (T.encodeUtf8 password))
   let user = mkUser emailAddress

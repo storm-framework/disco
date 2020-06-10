@@ -10,48 +10,45 @@ You need to have stack in your `$PATH` for the following to work. If you want to
 $ make build
 ```
 
-## Init Database
-
-When you first run the server or whenever you update the models you need to run the migrations:
-
-```
-$ stack ghci
-> initDB
-```
-
-This will create the database if it doesn't exist and then run migrations. Persistent is not very smart out of the box to figure out how to run migrations, so you may need to delete the database and create again.
-
-```
-$ rm db.sqlite
-```
-
-## AWS Credentials
-
-We are using S3 to upload photos and we grab the credentials from two environment variables:
-
-```
-SOCIAL_DISTANCING_AWS_ACCESS_KEY
-SOCIAL_DISTANCING_AWS_SECRET_KEY
-```
-
-You need to set them for the code to be able to run, but you can set them to anything if you are not planning to upload any photos.
-
-## Add organizer user
-
-```
-$ stack ghci
-> let user = UserCreate "email@domain.com" "password" Nothing "First Name" "Last Name" "Badge Name" "Institution"
-> runWorker' $ addOrganizer user
-```
-
 ## Run the server
 
 The following will start the server in 127.0.0.0:3000
 
 ```
-$ make run
+$ stack run
 ```
+
+## Database Migrations
+
+Persistent is not very smart out of the box to figure out how to run migrations. If you ever find an
+error related to migrations when running the server removing the database should fix it.
+
+```bash
+$ rm db.sqlite
+```
+
+## AWS Credentials
+
+We are using S3 to upload photos. If you want to upload photos you need to setup the following environment
+variables to match and account and bucket in S3.
+
+```
+DISCO_AWS_ACCESS_KEY
+DISCO_AWS_SECRET_KEY
+DISCO_AWS_REGION
+DISCO_AWS_BUCKET
+```
+
+## Add organizer user
+
+To add an organizer run
+
+```
+$ stack run -- add-organizer --email="email@domain.com" --password "password"
+```
+
+This will add an organizer without profile info. You can edit the profile in the app later.
 
 ## Note on editing `Model.binah`
 
-If you edit `Model.binah` you'll first need to generate the corresponding `Model.hs`. The commands `make build` and `make run` are wrappers over `stack build` and `stack run` that auto generate `Model.hs` from `Model.binah` when necessary. For this to work you need to have `binah-codegen` in your `$PATH`. See https://github.com/nilehmann/binah-codegen for instructions. If you don't modify `Model.binah` things should work just fine because `Model.hs` is under version control.
+If you edit `Model.binah` you'll first need to generate the corresponding `Model.hs`. The command `make build` is a wrapper over `stack build` that auto generate `Model.hs` from `Model.binah` when necessary. For this to work you need to have `binah-codegen` in your `$PATH`. See https://github.com/nilehmann/binah-codegen for instructions. If you don't modify `Model.binah` things should work just fine because `Model.hs` is under version control. Alternatively you could also run `make model` to generate `Model.hs`.

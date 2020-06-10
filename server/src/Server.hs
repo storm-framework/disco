@@ -1,17 +1,21 @@
+{-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE InstanceSigs #-}
-{-# LANGUAGE CPP #-}
 
 module Server
     ( runServer
-    , runWorker'
+    , runTask'
     , initDB
+    , ServerOpts(..)
+    , Stage(..)
     )
 where
 
+import           Control.Monad                  ( when )
 import           Control.Monad.IO.Class         ( MonadIO(..) )
 import           Control.Monad.Reader           ( MonadReader(..)
                                                 , ReaderT(..)
@@ -28,6 +32,7 @@ import qualified Data.ByteString.Lazy          as LBS
 import           Network.Mime
 import           Frankie.Config
 import           Frankie.Auth
+import           Data.Maybe
 import qualified Data.Text                     as T
 import qualified Data.Text.Encoding            as T
 
@@ -43,6 +48,9 @@ import qualified Control.Concurrent.MVar       as MVar
 import           Control.Lens.Lens              ( (&) )
 import           Control.Lens.Operators         ( (^.) )
 import qualified Text.Mustache.Types           as Mustache
+import           Text.Read                      ( readMaybe )
+import           Data.Typeable
+import           Data.Data
 
 
 import           Binah.Core
@@ -62,17 +70,27 @@ import           Auth
 import qualified Network.AWS                   as AWS
 import qualified Network.AWS.S3                as S3
 
+data Stage = Prod | Dev deriving (Data, Typeable, Show)
+
+data ServerOpts = ServerOpts
+  { optsPort :: Port
+  , optsHost :: HostPreference
+  , optsStage :: Stage
+  , optsPool :: Int
+  , optsDBPath :: T.Text
+  }
 
 {-@ ignore runServer @-}
-runServer :: HostPreference -> Port -> IO ()
-runServer h p = runNoLoggingT $ do
+runServer :: ServerOpts -> IO ()
+runServer ServerOpts {..} = runNoLoggingT $ do
+    liftIO $ initDB optsDBPath
     templateCache <- liftIO $ MVar.newMVar mempty
-    pool          <- createSqlitePool "db.sqlite" 1
+    pool          <- createSqlitePool optsDBPath optsPool
     aws           <- liftIO getAwsConfig
     liftIO . runFrankieServer "dev" $ do
         mode "dev" $ do
-            host h
-            port p
+            host optsHost
+            port optsPort
             initWith $ initFromPool (Config authMethod templateCache aws) pool
         dispatch $ do
             post "/api/signin" signIn
@@ -90,39 +108,39 @@ runServer h p = runNoLoggingT $ do
             post "/api/room/:id/join" joinRoom
             get "/api/signurl" s3SignedURL
 
-#ifdef PROD
-            fallback (sendFromDirectory "static" "index.html")
-#else
-            fallback $ do
-                req <- request
-                let path = joinPath (map T.unpack (reqPathInfo req))
-                respondJSON status404 ("Route not found: " ++ path)
-#endif
+            case optsStage of
+                Prod -> fallback (sendFromDirectory "static" "index.html")
+                Dev  -> fallback $ do
+                    req <- request
+                    let path = joinPath (map T.unpack (reqPathInfo req))
+                    respondJSON status404 ("Route not found: " ++ path)
 
 
-runWorker' :: Worker a -> IO a
-runWorker' worker = runSqlite "db.sqlite" $ do
+runTask' :: T.Text -> Task a -> IO a
+runTask' dbpath task = runSqlite dbpath $ do
     templateCache <- liftIO $ MVar.newMVar mempty
     aws           <- liftIO getAwsConfig
     backend       <- ask
     let config = Config authMethod templateCache aws backend
-    liftIO . runTIO $ runReaderT (unConfigT (runReaderT (unTag worker) backend)) config
+    liftIO . runTIO $ runReaderT (unConfigT (runReaderT (unTag task) backend)) config
 
 
 getAwsConfig :: IO AWSConfig
 getAwsConfig = do
-    accessKey <- getEnv "SOCIAL_DISTANCING_AWS_ACCESS_KEY"
-    secretKey <- getEnv "SOCIAL_DISTANCING_AWS_SECRET_KEY"
+    accessKey <- fromMaybe "" <$> lookupEnv "DISCO_AWS_ACCESS_KEY"
+    secretKey <- fromMaybe "" <$> lookupEnv "DISCO_AWS_SECRET_KEY"
+    region    <- readMaybe . fromMaybe "" <$> lookupEnv "DISCO_AWS_REGION"
+    bucket    <- fromMaybe "distant-socialing" <$> lookupEnv "DISCO_AWS_BUCKET"
     env       <- AWS.newEnv $ AWS.FromKeys (AWS.AccessKey $ T.encodeUtf8 $ T.pack accessKey)
                                            (AWS.SecretKey $ T.encodeUtf8 $ T.pack secretKey)
     return $ AWSConfig { awsAuth   = env ^. AWS.envAuth
-                       , awsRegion = AWS.NorthCalifornia
-                       , awsBucket = S3.BucketName "binah-social-distancing"
+                       , awsRegion = fromMaybe AWS.NorthCalifornia region
+                       , awsBucket = S3.BucketName (T.pack bucket)
                        }
 
 {-@ ignore initDB @-}
-initDB :: IO ()
-initDB = runSqlite "db.sqlite" $ do
+initDB :: T.Text -> IO ()
+initDB dbpath = runSqlite dbpath $ do
     runMigration migrateAll
 
 -- Static files
