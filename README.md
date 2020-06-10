@@ -20,7 +20,7 @@ For local development you need to run both the [client](https://github.com/nileh
 
 ### Build the code
 
-To build just run:
+To build the code for production run:
 
 ```bash
 $ ./build.sh
@@ -28,6 +28,17 @@ $ ./build.sh
 
 This will create bundle files for the client app and compile the haskell code. It'll then copy everything to `dist/`.
 
+Alternatively, you can specify a docker image to build the binaries. Only the haskell code will be built inside the container. The image needs to have stack installed.
+
+```bash
+$ ./build.sh -i image
+```
+
 ### Run the code
 
-In production the server is setted up to serve all the the static files and to respond with `index.html` for any other unknown route (routes are handled in the client by vue). To run just execute the haskell binary.
+In production you need to run the server with `--static` specifying a directory to serve static files from. When `--static` is specified the server will also respond for any unknown route with `index.html` (routes are handled in the client by vue).
+For example, assuming you built the code with `build.sh` you can run the server like this:
+
+```bash
+$ dist/disco --static=dist/static
+```

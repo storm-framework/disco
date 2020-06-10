@@ -39,6 +39,18 @@ DISCO_AWS_REGION
 DISCO_AWS_BUCKET
 ```
 
+## SMTP
+
+If you want to send emails you need to configure the following environment variables to match an
+SMTP server. The connection will be over SSL.
+
+```
+DISCO_SMTP_HOST
+DISCO_SMTP_PORT
+DISCO_SMTP_USER
+DISCO_SMTP_PASS
+```
+
 ## Add organizer user
 
 To add an organizer run
