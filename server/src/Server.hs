@@ -102,10 +102,10 @@ runServer ServerOpts {..} = runNoLoggingT $ do
             get "/api/user/:id"       userGet
             post "/api/user/me" userUpdateMe
             get "/api/room" roomGet
-            post "/api/room"          roomBatchUpdate
-            post "/api/room/:id"      roomUpdate
-            post "/api/room/leave"    leaveRoom
-            post "/api/room/:id/join" joinRoom
+            post "/api/room"               roomBatchUpdate
+            post "/api/room/current/leave" leaveRoom
+            post "/api/room/:id"           roomUpdate
+            post "/api/room/:id/join"      joinRoom
             get "/api/signurl" s3SignedURL
 
             case optsStatic of
@@ -147,7 +147,7 @@ readAWSConfig = do
 readSMTPConfig :: IO SMTPConfig
 readSMTPConfig = do
     host <- fromMaybe "localhost" <$> lookupEnv "DISCO_SMTP_HOST"
-    port <- fromMaybe "25" <$> lookupEnv "DISCO_SMTP_PORT"
+    port <- fromMaybe "425" <$> lookupEnv "DISCO_SMTP_PORT"
     user <- fromMaybe "" <$> lookupEnv "DISCO_SMTP_USER"
     pass <- fromMaybe "" <$> lookupEnv "DISCO_SMTP_PASS"
     return $ SMTPConfig host (read port :: PortNumber) user pass

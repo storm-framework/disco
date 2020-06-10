@@ -120,7 +120,7 @@ class ApiService {
   }
 
   leaveRoom(): Promise<void> {
-    return this.post(`/room/leave`);
+    return this.post(`/room/current/leave`);
   }
 
   // Files
