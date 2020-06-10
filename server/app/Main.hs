@@ -7,6 +7,7 @@ module Main where
 import           Frankie                        ( HostPreference
                                                 , Port
                                                 )
+import           Data.Int                       ( Int64 )
 import qualified Data.Text                     as T
 import           Data.Maybe
 import           GHC.Exts                       ( fromString )
@@ -17,10 +18,11 @@ import           Server
 import           Auth                           ( addOrganizer
                                                 , UserCreate(..)
                                                 )
+import           Controllers.Invitation
 
 main :: IO ()
 main = do
-  args <- cmdArgs (modes [server &= auto, addorganizer &= explicit &= name "add-organizer"])
+  args <- cmdArgs (modes allModes)
   case args of
     Server {..} -> do
       runServer $ ServerOpts port (fromString host) static pool db
@@ -28,6 +30,7 @@ main = do
       let user = UserCreate email password Nothing "" "" "" ""
       runTask' db $ addOrganizer user
       return ()
+    SendInvitation {..} -> runTask' db $ sendEmail invitationId
 
 
 data Disco
@@ -41,7 +44,16 @@ data Disco
                  , password :: T.Text
                  , db :: T.Text
                  }
+  | SendInvitation { invitationId :: Int64
+                   , db :: T.Text
+                   }
   deriving (Data, Typeable, Show)
+
+allModes =
+  [ server &= auto
+  , addorganizer &= explicit &= name "add-organizer"
+  , sendinvitation &= explicit &= name "send-invitation"
+  ]
 
 server = Server
   { port   = 3000 &= typ "PORT" &= help "The port to bind to (default 3000)"
@@ -55,4 +67,9 @@ addorganizer = AddOrganizer
   { email    = "" &= typ "EMAIL"
   , password = "" &= typ "PASSWORD"
   , db       = "db.sqlite" &= typ "PATH" &= help "Database path (default db.sqlite)"
+  }
+
+sendinvitation = SendInvitation
+  { invitationId = 0 &= typ "ID"
+  , db = "db.sqlite" &= typ "PATH" &= help "Databse path (default db.sqlite"
   }

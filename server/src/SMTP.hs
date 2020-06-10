@@ -7,11 +7,13 @@ module SMTP
   , connectSMTP
   , connectSMTP'
   , login
+  , SMTPConnection
   , Mail
   , Address
   )
 where
 
+import           Network.Mail.SMTP              ( SMTPConnection )
 import qualified Network.Mail.SMTP             as M
 import qualified Network.Mail.Mime             as M
                                          hiding ( simpleMail )
@@ -46,7 +48,7 @@ simpleMail (Address from) to cc bcc subject parts = Mail
   cc'  = map (\(Address a) -> a) cc
   bcc' = map (\(Address a) -> a) bcc
 
-login :: MonadTIO m => M.SMTPConnection -> String -> String -> m (M.ReplyCode, BS.ByteString)
+login :: MonadTIO m => SMTPConnection -> String -> String -> m (M.ReplyCode, BS.ByteString)
 login conn user pass = liftTIO $ TIO $ M.login conn user pass
 
 connectSMTP :: MonadTIO m => String -> TaggedT m M.SMTPConnection

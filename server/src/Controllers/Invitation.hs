@@ -8,6 +8,7 @@ module Controllers.Invitation where
 
 import           Data.Text                      ( Text )
 import qualified Data.Text                     as T
+import qualified Data.Text.Encoding            as T
 import qualified Data.Text.Lazy                as LT
 import qualified Data.Text.Lazy.Encoding       as LT
 import           Data.Int                       ( Int64 )
@@ -103,18 +104,32 @@ sendEmails ids = do
   invitations     <- selectList (invitationId' <-. ids)
   conn            <- connectSMTP' smtpHost smtpPort
   _               <- login conn smtpUser smtpPass
-  forMC invitations $ \invitation -> do
-    id   <- project invitationId' invitation
-    mail <- renderEmail invitation
-    res  <- tryT $ renderAndSend conn mail
-    case res of
-      Left (SomeException e) -> do
-        let up1 = invitationEmailError' `assign` Just (show e)
-        let up2 = invitationEmailStatus' `assign` "error"
-        updateWhere (invitationId' ==. id) (up1 `combine` up2)
-      Right _ -> updateWhere (invitationId' ==. id) (invitationEmailStatus' `assign` "sent")
+  mapMC (sendEmail' conn) invitations
   return ()
 
+sendEmail :: Int64 -> Task ()
+sendEmail iid = do
+  let invitationId = toSqlKey iid
+  SMTPConfig {..} <- configSMTP <$> getConfig
+  invitation <- selectFirst (invitationId' ==. invitationId)
+  case invitation of
+    Just invitation -> do
+      conn <- connectSMTP' smtpHost smtpPort
+      _    <- login conn smtpUser smtpPass
+      sendEmail' conn invitation
+    Nothing ->  return ()
+
+sendEmail' :: SMTPConnection -> Entity Invitation -> Task ()
+sendEmail' conn invitation = do
+  id   <- project invitationId' invitation
+  mail <- renderEmail invitation
+  res  <- tryT $ renderAndSend conn mail
+  case res of
+    Left (SomeException e) -> do
+      let up1 = invitationEmailError' `assign` Just (show e)
+      let up2 = invitationEmailStatus' `assign` "error"
+      updateWhere (invitationId' ==. id) (up1 `combine` up2)
+    Right _ -> updateWhere (invitationId' ==. id) (invitationEmailStatus' `assign` "sent")
 
 renderEmail :: Entity Invitation -> Task Mail
 renderEmail invitation = do
