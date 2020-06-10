@@ -27,6 +27,7 @@ import           Binah.Templates
 import           Concurrent
 import qualified Network.AWS                   as AWS
 import qualified Network.AWS.S3                as S3
+import           Network.Socket                 ( PortNumber )
 
 import           Model
 
@@ -34,7 +35,15 @@ data Config = Config
   { configAuthMethod :: !(AuthMethod (Entity User) Controller)
   , configTemplateCache :: !(MVar.MVar Mustache.TemplateCache)
   , configAWS :: AWSConfig
+  , configSMTP :: SMTPConfig
   , configBackend :: SqlBackend
+  }
+
+data SMTPConfig = SMTPConfig
+  { smtpHost :: String
+  , smtpPort :: PortNumber
+  , smtpUser :: String
+  , smtpPass :: String
   }
 
 data AWSConfig = AWSConfig

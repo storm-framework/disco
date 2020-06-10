@@ -20,7 +20,7 @@ import           GHC.Generics
 import           Text.Mustache                  ( (~>) )
 import qualified Text.Mustache.Types           as Mustache
 import qualified Network.Mail.Mime             as M
-
+import           Frankie.Config
 
 import           Binah.Core
 import           Binah.Actions
@@ -99,11 +99,14 @@ instance FromJSON EmailRender where
 
 sendEmails :: [InvitationId] -> Task ()
 sendEmails ids = do
-  invitations <- selectList (invitationId' <-. ids)
+  SMTPConfig {..} <- configSMTP <$> getConfig
+  invitations     <- selectList (invitationId' <-. ids)
+  conn            <- connectSMTP' smtpHost smtpPort
+  _               <- login conn smtpUser smtpPass
   forMC invitations $ \invitation -> do
     id   <- project invitationId' invitation
     mail <- renderEmail invitation
-    res  <- tryT $ renderSendMail mail
+    res  <- tryT $ renderAndSend conn mail
     case res of
       Left (SomeException e) -> do
         let up1 = invitationEmailError' `assign` Just (show e)

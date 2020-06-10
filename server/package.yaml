@@ -55,6 +55,7 @@ dependencies:
   - amazonka-s3
   - amazonka-core
   - scrypt
+  - network
 
 library:
   source-dirs: src

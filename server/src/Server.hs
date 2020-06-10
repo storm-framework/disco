@@ -69,6 +69,7 @@ import           Auth
 
 import qualified Network.AWS                   as AWS
 import qualified Network.AWS.S3                as S3
+import           Network.Socket                 ( PortNumber )
 
 data Stage = Prod | Dev deriving (Data, Typeable, Show)
 
@@ -84,14 +85,13 @@ data ServerOpts = ServerOpts
 runServer :: ServerOpts -> IO ()
 runServer ServerOpts {..} = runNoLoggingT $ do
     liftIO $ initDB optsDBPath
-    templateCache <- liftIO $ MVar.newMVar mempty
-    pool          <- createSqlitePool optsDBPath optsPool
-    aws           <- liftIO getAwsConfig
+    mkConfig <- liftIO readConfig
+    pool     <- createSqlitePool optsDBPath optsPool
     liftIO . runFrankieServer "dev" $ do
         mode "dev" $ do
             host optsHost
             port optsPort
-            initWith $ initFromPool (Config authMethod templateCache aws) pool
+            initWith $ initFromPool mkConfig pool
         dispatch $ do
             post "/api/signin" signIn
             post "/api/signup" signUp
@@ -118,15 +118,21 @@ runServer ServerOpts {..} = runNoLoggingT $ do
 
 runTask' :: T.Text -> Task a -> IO a
 runTask' dbpath task = runSqlite dbpath $ do
+    mkConfig <- liftIO readConfig
+    backend  <- ask
+    liftIO . runTIO $ runReaderT (unConfigT (runReaderT (unTag task) backend)) (mkConfig backend)
+
+
+readConfig :: IO (SqlBackend -> Config)
+readConfig = do
     templateCache <- liftIO $ MVar.newMVar mempty
-    aws           <- liftIO getAwsConfig
-    backend       <- ask
-    let config = Config authMethod templateCache aws backend
-    liftIO . runTIO $ runReaderT (unConfigT (runReaderT (unTag task) backend)) config
+    aws           <- liftIO readAWSConfig
+    smtp          <- liftIO readSMTPConfig
+    return $ Config authMethod templateCache aws smtp
 
 
-getAwsConfig :: IO AWSConfig
-getAwsConfig = do
+readAWSConfig :: IO AWSConfig
+readAWSConfig = do
     accessKey <- fromMaybe "" <$> lookupEnv "DISCO_AWS_ACCESS_KEY"
     secretKey <- fromMaybe "" <$> lookupEnv "DISCO_AWS_SECRET_KEY"
     region    <- readMaybe . fromMaybe "" <$> lookupEnv "DISCO_AWS_REGION"
@@ -137,6 +143,14 @@ getAwsConfig = do
                        , awsRegion = fromMaybe AWS.NorthCalifornia region
                        , awsBucket = S3.BucketName (T.pack bucket)
                        }
+
+readSMTPConfig :: IO SMTPConfig
+readSMTPConfig = do
+    host <- fromMaybe "localhost" <$> lookupEnv "DISCO_SMTP_HOST"
+    port <- fromMaybe "25" <$> lookupEnv "DISCO_SMTP_PORT"
+    user <- fromMaybe "" <$> lookupEnv "DISCO_SMTP_USER"
+    pass <- fromMaybe "" <$> lookupEnv "DISCO_SMTP_PASS"
+    return $ SMTPConfig host (read port :: PortNumber) user pass
 
 {-@ ignore initDB @-}
 initDB :: T.Text -> IO ()

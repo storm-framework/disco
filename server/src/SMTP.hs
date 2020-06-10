@@ -5,6 +5,8 @@ module SMTP
   , simpleMail
   , mkPublicAddress
   , connectSMTP
+  , connectSMTP'
+  , login
   , Mail
   , Address
   )
@@ -13,8 +15,10 @@ where
 import qualified Network.Mail.SMTP             as M
 import qualified Network.Mail.Mime             as M
                                          hiding ( simpleMail )
+import           Network.Socket                 ( PortNumber )
 import qualified Data.Text                     as T
 import qualified Data.Text.Lazy                as LT
+import qualified Data.ByteString               as BS
 
 import           Binah.Infrastructure
 import           Binah.Core
@@ -42,10 +46,16 @@ simpleMail (Address from) to cc bcc subject parts = Mail
   cc'  = map (\(Address a) -> a) cc
   bcc' = map (\(Address a) -> a) bcc
 
+login :: MonadTIO m => M.SMTPConnection -> String -> String -> m (M.ReplyCode, BS.ByteString)
+login conn user pass = liftTIO $ TIO $ M.login conn user pass
+
 connectSMTP :: MonadTIO m => String -> TaggedT m M.SMTPConnection
 connectSMTP hostname = liftTIO $ TIO $ M.connectSMTP hostname
 
-renderAndSend :: MonadTIO m => M.SMTPConnection -> Mail -> TaggedT m ()
+connectSMTP' :: MonadTIO m => String -> PortNumber -> m M.SMTPConnection
+connectSMTP' hostname port = liftTIO $ TIO $ M.connectSMTP' hostname port
+
+renderAndSend :: MonadTIO m => M.SMTPConnection -> Mail -> m ()
 renderAndSend conn (Mail mail) = liftTIO $ TIO $ M.renderAndSend conn mail
 
 renderSendMail :: MonadTIO m => Mail -> TaggedT m ()
