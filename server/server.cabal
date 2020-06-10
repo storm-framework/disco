@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: f18913c96f5f8a17d59e9b2b32e9089884077d9bd6a00c02f25414d8024fca25
+-- hash: 571674e1e5053cc92cb26c42488ede51354c7136349f149616f5b2ca6014aef7
 
 name:           server
 version:        0.1.0.0
@@ -55,7 +55,8 @@ library
   hs-source-dirs:
       src
   build-depends:
-      aeson
+      HaskellNet-SSL
+    , aeson
     , amazonka
     , amazonka-core
     , amazonka-s3
@@ -82,7 +83,6 @@ library
     , persistent-template
     , resource-pool
     , scrypt
-    , smtp-mail
     , text
     , time
     , transformers
@@ -101,7 +101,8 @@ executable disco
       app
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
-      aeson
+      HaskellNet-SSL
+    , aeson
     , amazonka
     , amazonka-core
     , amazonka-s3
@@ -129,7 +130,6 @@ executable disco
     , resource-pool
     , scrypt
     , server
-    , smtp-mail
     , text
     , time
     , transformers
@@ -149,7 +149,8 @@ test-suite server-test
       test
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
-      aeson
+      HaskellNet-SSL
+    , aeson
     , amazonka
     , amazonka-core
     , amazonka-s3
@@ -177,7 +178,6 @@ test-suite server-test
     , resource-pool
     , scrypt
     , server
-    , smtp-mail
     , text
     , time
     , transformers

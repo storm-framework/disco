@@ -44,8 +44,6 @@ dependencies:
   - transformers-base
   - monad-control
   - monad-logger
-  - smtp-mail
-  - mime-mail
   - mime-types
   - filepath
   - directory
@@ -56,6 +54,8 @@ dependencies:
   - amazonka-core
   - scrypt
   - network
+  - HaskellNet-SSL
+  - mime-mail
 
 library:
   source-dirs: src

@@ -72,26 +72,16 @@ invitationPut = do
 data EmailData = EmailData
   { emailDataInvitationId :: InvitationId
   , emailDataInvitationCode :: Text
-  , emailDataFirstName :: Text
-  , emailDataLastName :: Text
-  , emailDataFullName :: Text
   }
 
 instance TemplateData EmailData where
   templateFile = "invitation.json.mustache"
-  toMustache (EmailData id code firstName lastName fullName) = Mustache.object
-    [ "invitationId" ~> id
-    , "invitationCode" ~> code
-    , "firstName" ~> firstName
-    , "lastName" ~> lastName
-    , "fullName" ~> fullName
-    ]
+  toMustache (EmailData id code) = Mustache.object ["invitationId" ~> id, "invitationCode" ~> code]
 
 data EmailRender = EmailRender
-  { emailRenderBodyHtml :: LT.Text
-  , emailRenderBodyPlain :: LT.Text
-  , emailRenderSubject :: Text
-  , emailRenderFrom :: Text
+  { emailRenderBodyPlain :: LT.Text
+  , emailRenderSubject :: String
+  , emailRenderFrom :: String
   }
   deriving (Generic, Show)
 
@@ -102,8 +92,9 @@ sendEmails :: [InvitationId] -> Task ()
 sendEmails ids = do
   SMTPConfig {..} <- configSMTP <$> getConfig
   invitations     <- selectList (invitationId' <-. ids)
-  conn            <- connectSMTP' smtpHost smtpPort
-  _               <- login conn smtpUser smtpPass
+  let settings = defaultSettingsSMTPSSL { sslPort = smtpPort }
+  conn <- connectSMTPSSLWithSettings smtpHost settings
+  _    <- authenticate LOGIN smtpUser smtpPass conn
   mapMC (sendEmail' conn) invitations
   return ()
 
@@ -111,19 +102,20 @@ sendEmail :: Int64 -> Task ()
 sendEmail iid = do
   let invitationId = toSqlKey iid
   SMTPConfig {..} <- configSMTP <$> getConfig
-  invitation <- selectFirst (invitationId' ==. invitationId)
+  invitation      <- selectFirst (invitationId' ==. invitationId)
   case invitation of
     Just invitation -> do
-      conn <- connectSMTP' smtpHost smtpPort
-      _    <- login conn smtpUser smtpPass
+      let settings = defaultSettingsSMTPSSL { sslPort = smtpPort }
+      conn <- connectSMTPSSLWithSettings smtpHost settings
+      _    <- authenticate LOGIN smtpUser smtpPass conn
       sendEmail' conn invitation
-    Nothing ->  return ()
+    Nothing -> return ()
 
 sendEmail' :: SMTPConnection -> Entity Invitation -> Task ()
 sendEmail' conn invitation = do
-  id   <- project invitationId' invitation
-  mail <- renderEmail invitation
-  res  <- tryT $ renderAndSend conn mail
+  id                        <- project invitationId' invitation
+  (to, from, subject, body) <- renderEmail invitation
+  res                       <- tryT $ sendPlainTextMail to from subject body conn
   case res of
     Left (SomeException e) -> do
       let up1 = invitationEmailError' `assign` Just (show e)
@@ -131,24 +123,16 @@ sendEmail' conn invitation = do
       updateWhere (invitationId' ==. id) (up1 `combine` up2)
     Right _ -> updateWhere (invitationId' ==. id) (invitationEmailStatus' `assign` "sent")
 
-renderEmail :: Entity Invitation -> Task Mail
+renderEmail :: Entity Invitation -> Task (Address, Address, String, LT.Text)
 renderEmail invitation = do
   id           <- project invitationId' invitation
   emailAddress <- project invitationEmailAddress' invitation
   code         <- project invitationCode' invitation
-  firstName    <- project invitationFirstName' invitation
-  lastName     <- project invitationLastName' invitation
-  let fullName = T.strip $ firstName `T.append` " " `T.append` lastName
-  raw <- renderTemplate (EmailData id code firstName lastName fullName)
+  raw          <- renderTemplate (EmailData id code)
   let EmailRender {..} = fromJust $ decode (LT.encodeUtf8 (LT.fromStrict raw))
-  let to               = mkPublicAddress (Just fullName) emailAddress
-  let from             = mkPublicAddress Nothing emailRenderFrom
-  return $ simpleMail from
-                      [to]
-                      []
-                      []
-                      emailRenderSubject
-                      [M.htmlPart emailRenderBodyHtml, M.plainPart emailRenderBodyPlain]
+  let to               = mkPublicAddress (T.unpack emailAddress)
+  let from             = mkPublicAddress emailRenderFrom
+  return (to, from, emailRenderSubject, emailRenderBodyPlain)
 
 
 newtype PutReq = PutReq [InvitationInsert]
