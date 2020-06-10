@@ -75,7 +75,7 @@ data Stage = Prod | Dev deriving (Data, Typeable, Show)
 data ServerOpts = ServerOpts
   { optsPort :: Port
   , optsHost :: HostPreference
-  , optsStage :: Stage
+  , optsStatic :: Maybe String
   , optsPool :: Int
   , optsDBPath :: T.Text
   }
@@ -108,9 +108,9 @@ runServer ServerOpts {..} = runNoLoggingT $ do
             post "/api/room/:id/join" joinRoom
             get "/api/signurl" s3SignedURL
 
-            case optsStage of
-                Prod -> fallback (sendFromDirectory "static" "index.html")
-                Dev  -> fallback $ do
+            case optsStatic of
+                Just path -> fallback (sendFromDirectory path "index.html")
+                Nothing   -> fallback $ do
                     req <- request
                     let path = joinPath (map T.unpack (reqPathInfo req))
                     respondJSON status404 ("Route not found: " ++ path)
