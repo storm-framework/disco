@@ -19,7 +19,7 @@
           />
           <font-awesome-icon
             icon="save"
-            class="text-primary mr-1"
+            class="text-primary mr-1 action"
             size="lg"
             @click="saveTopic"
           />
@@ -27,7 +27,7 @@
             icon="times-circle"
             size="lg"
             @click="editingTopic = false"
-            class="text-secondary"
+            class="text-secondary action"
           />
         </div>
         <div v-else>
@@ -219,5 +219,9 @@ export default class RoomCard extends Mixins(HeadingContext) {
 .edit-topic input {
   flex: auto;
   height: 24px;
+}
+
+.edit-topic .action {
+  cursor: pointer;
 }
 </style>

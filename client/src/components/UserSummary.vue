@@ -2,14 +2,21 @@
   <div>
     <div class="user-brief" v-if="!long">
       <b-avatar class="photo" :src="photoURL" :text="avatarText" size="2em" />
-      <p class="name">{{ name }}</p>
+      <p class="name">{{ displayName }}</p>
     </div>
     <b-media v-else>
       <template v-slot:aside>
         <b-avatar class="photo" :src="photoURL" :text="avatarText" size="6em" />
       </template>
       <heading :level="1" :context="headingContext">
-        {{ name }}
+        {{ displayName }}
+        <router-link
+          class="edit-profile"
+          :to="{ name: 'Profile' }"
+          v-if="editable"
+        >
+          <font-awesome-icon icon="edit" />
+        </router-link>
       </heading>
       <dl>
         <div class="info-item">
@@ -36,59 +43,43 @@
 import { Component, Prop, Mixins } from "vue-property-decorator";
 import HeadingContext from "@/mixins/HeadingContext";
 import Heading from "@/components/Heading";
+import _ from "lodash";
 
 import { library } from "@fortawesome/fontawesome-svg-core";
 import {
   faUser,
   faUniversity,
-  faLink
+  faLink,
+  faEdit
 } from "@fortawesome/free-solid-svg-icons";
 
-library.add(faUser, faUniversity, faLink);
+library.add(faUser, faUniversity, faLink, faEdit);
 
 @Component({ components: { Heading } })
 export default class UserSummary extends Mixins(HeadingContext) {
-  // TODO: Remove firstName and lastName
-  @Prop({ default: "Foobar" })
-  readonly firstName!: string;
+  @Prop({ type: Boolean, default: false }) editable!: boolean;
 
-  @Prop({ default: "Quuxlington" })
-  readonly lastName!: string;
+  @Prop({ required: true }) displayName!: string;
 
-  get name(): string {
-    return `${this.firstName} ${this.lastName}`;
-  }
+  @Prop({ type: Boolean, default: false }) long!: boolean;
 
-  @Prop({ type: Boolean, default: false })
-  long!: boolean;
+  @Prop({ default: "" })
+  readonly photoURL!: string;
 
-  @Prop({ default: null })
-  readonly photoURL!: string | null;
+  @Prop({ default: "" })
+  readonly pronouns!: string;
 
-  @Prop({
-    default: "they/them" // TODO: default null
-  })
-  readonly pronouns!: string | null;
+  @Prop({ default: "" })
+  readonly institution!: string;
 
-  @Prop({
-    default: "PLMW" // TODO: default null
-  })
-  readonly institution!: string | null;
+  @Prop({ default: "" })
+  readonly website!: string;
 
-  @Prop({
-    default: "example.com" // TODO: default null
-  })
-  readonly website!: string | null;
-
-  @Prop({
-    // TODO: default null
-    default:
-      "Doloribus rem voluptas omnis occaecati et ea. Rerum aspernatur ex fugit quam. Est culpa et quia et beatae et. Quibusdam ut illum illo modi magni maxime. Rerum modi error deleniti provident."
-  })
-  readonly bio!: string | null;
+  @Prop({ default: "" })
+  readonly bio!: string;
 
   get avatarText(): string {
-    return this.name.slice(0, 2);
+    return this.displayName.slice(0, 2);
   }
 }
 </script>
@@ -117,5 +108,10 @@ export default class UserSummary extends Mixins(HeadingContext) {
     margin-bottom: 0;
     margin-left: 1em;
   }
+}
+
+.edit-profile {
+  vertical-align: super;
+  font-size: 16px;
 }
 </style>
