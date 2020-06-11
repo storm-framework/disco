@@ -15,16 +15,17 @@
             size="sm"
             class="mr-2"
             v-model="topic"
+            autofocus
             :disabled="saving"
           />
           <font-awesome-icon
             icon="save"
-            class="text-primary mr-1 action"
+            class="text-primary mr-2 action"
             size="lg"
             @click="saveTopic"
           />
           <font-awesome-icon
-            icon="times-circle"
+            icon="times"
             size="lg"
             @click="editingTopic = false"
             class="text-secondary action"
@@ -113,17 +114,10 @@ import {
   faEdit,
   faExternalLinkAlt,
   faSave,
-  faTimesCircle
+  faTimes
 } from "@fortawesome/free-solid-svg-icons";
 
-library.add(
-  faComments,
-  faDoorOpen,
-  faEdit,
-  faExternalLinkAlt,
-  faSave,
-  faTimesCircle
-);
+library.add(faComments, faDoorOpen, faEdit, faExternalLinkAlt, faSave, faTimes);
 
 @Component({ components: { UserSummary, Heading } })
 export default class RoomCard extends Mixins(HeadingContext) {
