@@ -9,7 +9,9 @@
     bg-color="#f5f5f5"
   >
     <b-container>
-      <b-alert :show="fatalError" variant="danger">{{ errorMsg }}</b-alert>
+      <b-alert :show="error" variant="danger" :dismissible="!fatalError">{{
+        errorMsg
+      }}</b-alert>
       <b-form @submit.prevent="onSubmit">
         <b-form-group
           label-cols-lg="3"
@@ -95,6 +97,7 @@ export default class SignIn extends Vue {
   };
   loading = false;
   fatalError = false;
+  error = false;
   errorMsg = "";
   sending = false;
 
@@ -117,20 +120,21 @@ export default class SignIn extends Vue {
         })
         .catch(error => {
           if (error.response?.status == 404) {
-            this.setFatalError("Invalid invitation code");
+            this.setError("Invalid invitation code", true);
           } else {
-            this.setFatalError("Internal server error");
+            this.setError("There was an unexpected error", true);
           }
         })
         .finally(() => (this.loading = false));
     } else {
-      this.setFatalError("Missing invitation code");
+      this.setError("Missing invitation code", true);
     }
   }
 
-  setFatalError(msg: string) {
+  setError(msg: string, fatal = false) {
     this.errorMsg = msg;
-    this.fatalError = true;
+    this.error = true;
+    this.fatalError = fatal;
   }
 
   onSubmit() {
@@ -142,14 +146,12 @@ export default class SignIn extends Vue {
     this.submit(code)
       .catch(error => {
         if (error.response?.status == 403) {
-          this.setFatalError("Invalid invitation code");
+          this.setError("Invalid invitation code", true);
         } else {
-          this.setFatalError("Internal server error");
+          this.setError("There was an unexpected error");
         }
       })
-      .finally(() => {
-        this.sending = false;
-      });
+      .finally(() => (this.sending = false));
   }
 
   async submit(code: string) {

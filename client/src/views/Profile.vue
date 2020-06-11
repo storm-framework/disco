@@ -1,10 +1,11 @@
 <template>
   <b-container>
+    <b-alert :show="error" variant="danger" dismissible>{{ errorMsg }}</b-alert>
     <b-form @submit.prevent="onSubmit">
-      <profile-form v-model="profile" :disabled="fatalError" />
+      <profile-form v-model="profile" />
 
       <b-button
-        :disabled="fatalError || sending"
+        :disabled="sending"
         variant="primary"
         size="lg"
         type="submit"
@@ -40,14 +41,18 @@ export default class Profile extends Vue {
     }
   };
 
-  loading = false;
-  fatalError = false;
+  error = false;
   errorMsg = "";
   sending = false;
 
   onSubmit() {
     this.sending = true;
-    this.submit().finally(() => (this.sending = false));
+    this.submit()
+      .catch(() => {
+        this.error = true;
+        this.errorMsg = "There was an unexpected error.";
+      })
+      .finally(() => (this.sending = false));
   }
 
   async submit() {
