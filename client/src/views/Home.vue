@@ -10,7 +10,24 @@
         :h-context="4"
         class="col-5"
       />
-      <p v-else class="h5 align-self-center ml-5">You have not joined a room</p>
+      <b-col
+        v-else
+        cols="4"
+        class="align-items-center d-flex flex-column justify-content-center"
+      >
+        <p class="h5">
+          You have not joined a room
+        </p>
+        <icon-button
+          v-if="roomsAreAvailable"
+          icon="external-link-alt"
+          variant="primary"
+          @click="joinRandomRoom"
+          target="_blank"
+        >
+          Random room
+        </icon-button>
+      </b-col>
     </section>
     <section v-if="roomsAreAvailable">
       <h2 v-if="currentRoom" class="mt-5">Other Rooms</h2>
@@ -41,9 +58,14 @@ const SYNC_INTERVAL = 10000;
 export default class Home extends Vue {
   syncing = false;
   currentRoom!: Room;
+  syncTimerHandler: number | null = null;
 
   get roomsAreAvailable() {
     return this.availableRooms.length !== 0;
+  }
+
+  get availableRooms(): Room[] {
+    return this.$store.getters.availableRooms;
   }
 
   get fullName() {
@@ -58,17 +80,14 @@ export default class Home extends Vue {
     return _.trim(fn + ln);
   }
 
-  get availableRooms() {
-    const allRooms = this.$store.getters.rooms;
-    if (this.currentRoom) {
-      return _.filter(allRooms, room => room.id !== this.currentRoom.id);
-    } else {
-      return allRooms;
-    }
-  }
-
   mounted() {
     this.sync();
+  }
+
+  beforeDestroy() {
+    if (this.syncTimerHandler) {
+      clearTimeout(this.syncTimerHandler);
+    }
   }
 
   sync() {
@@ -78,8 +97,16 @@ export default class Home extends Vue {
     this.syncing = true;
     this.$store.dispatch("sync").then(() => {
       this.syncing = false;
-      setTimeout(this.sync, SYNC_INTERVAL);
+      this.syncTimerHandler = setTimeout(this.sync, SYNC_INTERVAL);
     });
+  }
+
+  joinRandomRoom() {
+    const random = _.sample(this.availableRooms);
+    if (random) {
+      window.open(random.zoomLink, "_blank");
+      this.$store.dispatch("joinRoom", random.id);
+    }
   }
 }
 </script>

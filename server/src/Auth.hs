@@ -34,6 +34,7 @@ import qualified Data.ByteString               as ByteString
 import qualified Data.ByteString.Base64.URL    as B64Url
 import qualified Data.ByteString.Lazy          as L
 import           Data.Int                       ( Int64 )
+import           Data.Maybe                     ( listToMaybe )
 import           Database.Persist.Sql           ( toSqlKey
                                                 , fromSqlKey
                                                 )
@@ -65,6 +66,22 @@ import           Network.AWS.S3
 import           Network.AWS.Data.Text          ( toText )
 
 
+{-@ ignore addOrganizer @-}
+addOrganizer :: UserCreate -> Task UserId
+addOrganizer UserCreate {..} = do
+  EncryptedPass encrypted <- encryptPassTIO' (Pass (T.encodeUtf8 password))
+  let user = mkUser emailAddress
+                    encrypted
+                    photoURL
+                    firstName
+                    lastName
+                    displayName
+                    institution
+                    "organizer"
+                    "public"
+                    Nothing
+  insert user
+
 --------------------------------------------------------------------------------
 -- | SignIn
 --------------------------------------------------------------------------------
@@ -83,10 +100,12 @@ signIn = do
 {-@ ignore authUser @-}
 authUser :: Text -> Text -> Controller (Entity User)
 authUser emailAddress password = do
-  maybeUser <- selectFirst (userPassword' ==. password &&: userEmailAddress' ==. emailAddress)
-  case maybeUser of
-    Nothing   -> respondError status401 (Just "incorrect login")
-    Just user -> return user
+  user <- selectFirstOr (errorResponse status401 (Just "Incorrect credentials"))
+                        (userEmailAddress' ==. emailAddress)
+  encrypted <- project userPassword' user
+  if verifyPass' (Pass (T.encodeUtf8 password)) (EncryptedPass encrypted)
+    then return user
+    else respondError status401 (Just "Incorrect credentials")
 
 data SignInReq = SignInReq
   { signInReqEmailAddress :: Text
@@ -114,8 +133,9 @@ instance ToJSON AuthRes where
 signUp :: Controller ()
 signUp = do
   (SignUpReq (InvitationCode id code) UserCreate {..}) <- decodeBody
+  EncryptedPass encrypted <- encryptPassTIO' (Pass (T.encodeUtf8 password))
   let user = mkUser emailAddress
-                    password
+                    encrypted
                     photoURL
                     firstName
                     lastName
@@ -165,16 +185,26 @@ instance FromJSON UserCreate where
 -- | SignIn
 --------------------------------------------------------------------------------
 
-s3SignedURL :: Controller ()
-s3SignedURL = do
+
+presignS3URL :: Controller ()
+presignS3URL = do
+  code         <- listToMaybe <$> queryParams "code"
+  invitationId <- listToMaybe <$> queryParams "id"
+  emailAddress <- case (code, invitationId) of
+    (Just code, Just id) -> do
+      invitation <- selectFirstOr (errorResponse status401 Nothing)
+                                  (invitationId' ==. id &&: invitationCode' ==. code)
+      project invitationEmailAddress' invitation
+    _ -> requireAuthUser >>= project userEmailAddress'
   t              <- liftTIO currentTime
   AWSConfig {..} <- configAWS <$> getConfig
-  objectKey      <- genRandomCode
-  let request = putObject awsBucket (ObjectKey objectKey) ""
+  let objectKey = textBase64 emailAddress
+  let request   = putObject awsBucket (ObjectKey objectKey) ""
   signedUrl <- presignURL awsAuth awsRegion t 900 request
-  let objectURL =
-        printf "https://%s.s3-%s.amazonaws.com/%s" (toText awsBucket) (toText awsRegion) objectKey :: String
-  respondJSON status200 $ object ["signedURL" .= T.decodeUtf8 signedUrl, "objectURL" .= objectURL]
+  respondJSON status200 $ T.decodeUtf8 signedUrl
+
+textBase64 :: T.Text -> T.Text
+textBase64 = T.decodeUtf8 . B64Url.encode . T.encodeUtf8
 
 -------------------------------------------------------------------------------
 -- | Auth method
@@ -191,9 +221,10 @@ authMethod = AuthMethod
 {-@ ignore checkIfAuth @-}
 checkIfAuth :: Controller (Maybe (Entity User))
 checkIfAuth = do
+  key        <- configSecretKey <$> getConfig
   authHeader <- requestHeader hAuthorization
   let token = authHeader >>= ByteString.stripPrefix "Bearer " <&> L.fromStrict
-  claims <- liftTIO $ mapM doVerify token
+  claims <- liftTIO $ mapM (doVerify key) token
   case claims of
     Just (Right claims) -> do
       let sub    = claims ^. claimSub ^? _Just . string
@@ -210,8 +241,9 @@ checkIfAuth = do
 {-@ ignore genJwt @-}
 genJwt :: UserId -> Controller L.ByteString
 genJwt userId = do
+  key    <- configSecretKey <$> getConfig
   claims <- liftTIO $ mkClaims userId
-  jwt    <- liftTIO $ doJwtSign claims
+  jwt    <- liftTIO $ doJwtSign key claims
   case jwt of
     Right jwt                         -> return (encodeCompact jwt)
     Left  (JWSError                e) -> respondError status500 (Just (show e))
@@ -225,20 +257,13 @@ mkClaims userId = do
   return $ emptyClaimsSet & (claimSub ?~ uid ^. re string) & (claimIat ?~ NumericDate t)
   where uid = T.pack (show (fromSqlKey userId))
 
-doJwtSign :: ClaimsSet -> TIO (Either JWTError SignedJWT)
-doJwtSign claims = runExceptT $ do
+doJwtSign :: JWK -> ClaimsSet -> TIO (Either JWTError SignedJWT)
+doJwtSign key claims = runExceptT $ do
   alg <- bestJWSAlg key
   signClaims key (newJWSHeader ((), alg)) claims
 
-doVerify :: L.ByteString -> TIO (Either JWTError ClaimsSet)
-doVerify s = runExceptT $ do
+doVerify :: JWK -> L.ByteString -> TIO (Either JWTError ClaimsSet)
+doVerify key s = runExceptT $ do
   let audCheck = const True
   s' <- decodeCompact s
   verifyClaims (defaultJWTValidationSettings audCheck) key s'
-
--- TODO: Read this from env
-key :: JWK
-key = fromOctets raw
- where
-  raw :: ByteString
-  raw = "\xe5L\xb7\xf6\x03|\xb6\n\x10\xd8\xb8\x96\xe2\xc4W@#W\xb4>\th*iiW\x12\x80z\x04i="

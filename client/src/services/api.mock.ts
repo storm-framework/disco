@@ -1,14 +1,12 @@
 import {
   Invitation,
   InvitationInsert,
-  PresignedURL,
   Room,
-  RoomInsert,
+  RoomData,
   User,
+  UserData,
   UserSignUp
 } from "@/models";
-
-const API_URL = "/api";
 
 function delay(ms = 1000) {
   if (process.env.NODE_ENV === "development") {
@@ -18,40 +16,54 @@ function delay(ms = 1000) {
   }
 }
 
+const INVITATION: Invitation = {
+  id: 1,
+  emailAddress: "charlie@hba.org",
+  firstName: "Charlie",
+  lastName: "Papazian",
+  institution: "Home Brewers Association",
+  accepted: false
+};
+
 const ROOMS: { [id: string]: Room } = {
   1: {
     id: 1,
     name: "Green Room",
     capacity: 8,
-    zoomLink: "https://meet.jitsi.si/109283740293847",
-    color: "#00ff00"
+    zoomLink: "https://meet.jit.si/109283740293847",
+    color: "#00ff00",
+    topic: "Stuffs"
   },
   2: {
     id: 2,
     name: "Red Room",
     capacity: 5,
-    zoomLink: "https://meet.jitsi.si/018471092384710",
-    color: "#ff0000"
+    zoomLink: "https://meet.jit.si/018471092384710",
+    color: "#ff0000",
+    topic: ""
   },
   3: {
     id: 3,
     name: "Blue Room",
     capacity: 10,
-    zoomLink: "https://meet.jitsi.si/102389471203487",
-    color: "#0000ff"
+    zoomLink: "https://meet.jit.si/102389471203487",
+    color: "#0000ff",
+    topic: ""
   }
 };
 
 const USERS: { [id: string]: User } = {
   1: {
     id: 1,
-    photoURL: null,
+    photoURL:
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/7/77/Avatar_cat.png/120px-Avatar_cat.png",
     firstName: "Charlie",
     lastName: "Papazian",
     displayName: "Charlie",
     institution: "Homebrewers",
     level: "organizer",
     room: "1"
+    // room: null
   },
   2: {
     id: 2,
@@ -151,8 +163,9 @@ class ApiService {
 
   // Invitations
 
-  getInvitation(param: string): Promise<Invitation> {
-    return Promise.reject("Not implemented");
+  async getInvitation(param: string): Promise<Invitation> {
+    await delay();
+    return INVITATION;
   }
 
   sendInvitations(invitations: InvitationInsert[]): Promise<string[]> {
@@ -165,9 +178,29 @@ class ApiService {
 
   // Users
 
+  async user(userId: number): Promise<User> {
+    await delay();
+    const user = USERS[SESSION_USER_ID];
+    if (user) {
+      return user;
+    } else {
+      return this.errorResponse(404);
+    }
+  }
+
   async users(): Promise<User[]> {
     await delay();
     return Object.values(USERS);
+  }
+
+  async updateUserDataMe(data: UserData): Promise<User> {
+    await delay();
+    const user = USERS[SESSION_USER_ID];
+    if (user) {
+      return { ...user, ...data };
+    } else {
+      return this.errorResponse(404);
+    }
   }
 
   // Rooms
@@ -176,7 +209,11 @@ class ApiService {
     return Promise.resolve(Object.values(ROOMS));
   }
 
-  updateRooms(updates: Room[], inserts: RoomInsert[]): Promise<number[]> {
+  updateRoom(id: number, data: RoomData): Promise<Room> {
+    return Promise.resolve({ ...data, id });
+  }
+
+  updateRooms(updates: Room[], inserts: RoomData[]): Promise<number[]> {
     return Promise.reject("Not implemented");
   }
 
@@ -188,10 +225,19 @@ class ApiService {
     return Promise.reject("Not implemented");
   }
 
-  // Photos
+  // Files
 
-  preSignURL(code: string): Promise<PresignedURL> {
-    return Promise.reject("Not implemented");
+  async uploadFile(file: File, code?: string): Promise<string> {
+    await delay();
+    return Promise.resolve(
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/7/77/Avatar_cat.png/120px-Avatar_cat.png"
+    );
+  }
+
+  // Errors
+
+  errorResponse(status: number): Promise<any> {
+    return Promise.reject({ response: { status: status } });
   }
 }
 

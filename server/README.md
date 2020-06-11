@@ -1,31 +1,66 @@
 # server
 
 ## Dependencies
+
 You need to have stack in your `$PATH` for the following to work. If you want to edit `Model.binah` you'll also need [binah-codegen](https://github.com/nilehmann/binah-codegen) see below for further instructinos.
 
 ## Build the code
 
 ```
-make build
+$ make build
 ```
-
-## AWS Credentials
-We are using S3 to upload photos and we grab the credentials from two environment variables:
-
-```
-SOCIAL_DISTANCING_AWS_ACCESS_KEY
-SOCIAL_DISTANCING_AWS_SECRET_KEY
-```
-
-You need to set them for the code to be able to run, but you can set them to anything if you are not planning to upload any photos.
 
 ## Run the server
+
 The following will start the server in 127.0.0.0:3000
 
 ```
-make run
+$ stack run
 ```
+
+## Database Migrations
+
+Persistent is not very smart out of the box to figure out how to run migrations. If you ever find an
+error related to migrations when running the server removing the database should fix it.
+
+```bash
+$ rm db.sqlite
+```
+
+## AWS Credentials
+
+We are using S3 to upload photos. If you want to upload photos you need to setup the following environment
+variables to match and account and bucket in S3.
+
+```
+DISCO_AWS_ACCESS_KEY
+DISCO_AWS_SECRET_KEY
+DISCO_AWS_REGION
+DISCO_AWS_BUCKET
+```
+
+## SMTP
+
+If you want to send emails you need to configure the following environment variables to match an
+SMTP server. The connection will be over SSL.
+
+```
+DISCO_SMTP_HOST
+DISCO_SMTP_PORT
+DISCO_SMTP_USER
+DISCO_SMTP_PASS
+```
+
+## Add organizer user
+
+To add an organizer run
+
+```
+$ stack run -- add-organizer --email="email@domain.com" --password "password"
+```
+
+This will add an organizer without profile info. You can edit the profile in the app later.
 
 ## Note on editing `Model.binah`
 
-If you edit `Model.binah` you'll first need to generate the corresponding `Model.hs`. The commands `make build` and `make run` are wrappers over `stack build` and `stack run` that auto generate `Model.hs` from `Model.binah` when necessary. For this to work you need to have `binah-codegen` in your `$PATH`. See https://github.com/nilehmann/binah-codegen for instructions. If you don't modify `Model.binah` things should work just fine because `Model.hs` is under version control.
+If you edit `Model.binah` you'll first need to generate the corresponding `Model.hs`. The command `make build` is a wrapper over `stack build` that auto generate `Model.hs` from `Model.binah` when necessary. For this to work you need to have `binah-codegen` in your `$PATH`. See https://github.com/nilehmann/binah-codegen for instructions. If you don't modify `Model.binah` things should work just fine because `Model.hs` is under version control. Alternatively you could also run `make model` to generate `Model.hs`.

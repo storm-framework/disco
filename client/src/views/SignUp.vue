@@ -1,6 +1,6 @@
 <template>
   <b-overlay
-    :show="loading"
+    :show="loading || sending"
     spinner-variant="primary"
     spinner-type="grow"
     spinner-small
@@ -99,19 +99,16 @@
           </b-form-group>
 
           <b-form-group label="Photo" label-for="photo">
-            <b-form-file
-              placeholder="Choose a file or drop it here"
-              drop-placeholder="Drop file here..."
-              v-model="form.photo"
-              accept="image/*"
+            <photo-input
+              @fileInput="form.photoFile = $event"
               :disabled="fatalError"
-            ></b-form-file>
+            />
           </b-form-group>
         </b-form-group>
 
         <b-form-group label-cols-lg="3">
           <b-button
-            :disabled="fatalError || sending"
+            :disabled="fatalError"
             variant="primary"
             size="lg"
             type="submit"
@@ -127,10 +124,10 @@
 
 <script lang="ts">
 import { Component, Vue } from "vue-property-decorator";
-import ApiService from "../services/api";
+import ApiService from "@/services/api";
 import _ from "lodash";
-import axios from "axios";
-import { PresignedURL, UserSignUp } from "../models";
+import { UserSignUp } from "@/models";
+import PhotoInput from "@/components/PhotoInput.vue";
 
 interface Form {
   password: string;
@@ -139,10 +136,10 @@ interface Form {
   lastName: string;
   displayName: string;
   institution: string;
-  photo: File | null;
+  photoFile: File | null;
 }
 
-@Component
+@Component({ components: { PhotoInput } })
 export default class SignIn extends Vue {
   form: Form = {
     password: "",
@@ -151,7 +148,7 @@ export default class SignIn extends Vue {
     lastName: "",
     displayName: "",
     institution: "",
-    photo: null
+    photoFile: null
   };
   loading = false;
   fatalError = false;
@@ -159,7 +156,7 @@ export default class SignIn extends Vue {
   sending = false;
 
   mounted() {
-    const code = this.$route.query?.code;
+    const code = this.code();
     if (typeof code === "string") {
       this.loading = true;
       ApiService.getInvitation(code)
@@ -167,8 +164,12 @@ export default class SignIn extends Vue {
           const displayName = _([invitation.firstName, invitation.lastName])
             .filter()
             .join(" ");
-          this.form = { password: "", displayName, photo: null, ...invitation };
-          this.loading = false;
+          this.form = {
+            password: "",
+            photoFile: null,
+            displayName,
+            ...invitation
+          };
         })
         .catch(error => {
           if (error.response?.status == 404) {
@@ -176,8 +177,8 @@ export default class SignIn extends Vue {
           } else {
             this.setFatalError("Internal server error");
           }
-          this.loading = false;
-        });
+        })
+        .finally(() => (this.loading = false));
     } else {
       this.setFatalError("Missing invitation code");
     }
@@ -189,47 +190,44 @@ export default class SignIn extends Vue {
   }
 
   onSubmit() {
-    if (this.sending) {
-      return;
-    }
-    const code = this.$route.query?.code;
-    if (typeof code !== "string") {
+    const code = this.code();
+    if (this.sending || !code) {
       return;
     }
     this.sending = true;
-    ApiService.preSignURL(code)
-      .then(data => this.uploadPhotoToS3(data))
-      .then(url => {
-        const data: UserSignUp = {
-          invitationCode: code,
-          user: { photoURL: url, ...this.form }
-        };
-        return this.$store.dispatch("signUp", data);
-      })
-      .then(() => {
-        this.sending = false;
-        this.$router.replace({ name: "Home" });
-      })
+    this.submit(code)
       .catch(error => {
-        this.sending = false;
         if (error.response?.status == 403) {
           this.setFatalError("Invalid invitation code");
         } else {
           this.setFatalError("Internal server error");
         }
-        this.loading = false;
+      })
+      .finally(() => {
+        this.sending = false;
       });
   }
 
-  uploadPhotoToS3(data: PresignedURL) {
-    if (!this.form.photo) {
-      return Promise.resolve(null);
+  async submit(code: string) {
+    let photoURL = null;
+    if (this.form.photoFile) {
+      photoURL = await ApiService.uploadFile(this.form.photoFile, code);
     }
-    return axios
-      .put(data.signedURL, this.form.photo, {
-        headers: { "Content-Type": this.form.photo.type }
-      })
-      .then(() => data.objectURL);
+    const data: UserSignUp = {
+      invitationCode: code,
+      user: { ...this.form, photoURL }
+    };
+    await this.$store.dispatch("signUp", data);
+    this.$router.replace({ name: "Home" });
+  }
+
+  code(): string | null {
+    const c = this.$route.query?.code;
+    if (typeof c === "string") {
+      return c;
+    } else {
+      return null;
+    }
   }
 }
 </script>

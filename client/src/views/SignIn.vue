@@ -94,5 +94,9 @@ export default class SignIn extends Vue {
 }
 .form-signin .form-control {
   height: auto;
+  position: relative;
+  box-sizing: border-box;
+  padding: 10px;
+  font-size: 16px;
 }
 </style>

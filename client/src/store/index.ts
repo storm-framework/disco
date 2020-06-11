@@ -10,14 +10,12 @@ interface State {
   sessionUserId: string | null;
   users: { [key: string]: User };
   rooms: { [key: string]: Room };
-  activeRoomId: string | null;
 }
 
 const initialState: State = {
   sessionUserId: ApiService.sessionUserId,
   users: {},
-  rooms: {},
-  activeRoomId: null
+  rooms: {}
 };
 
 function addUsersToRoom(room: Room, users: User[]) {
@@ -34,8 +32,9 @@ export default new Vuex.Store({
       state.rooms = Object.fromEntries(rooms.map(r => [r.id, r]));
       state.users = Object.fromEntries(users.map(u => [u.id, u]));
     },
-    changeActiveRoom(state, roomId: string) {
-      state.activeRoomId = roomId;
+    updateRoom({ rooms }, room: Room) {
+      // We assume the room is already in the store. if it's not this won't trigger reactivity
+      rooms[room.id] = room;
     },
     swithToRoom(state, roomId) {
       const u = state.sessionUserId && state.users[state.sessionUserId];
@@ -43,8 +42,11 @@ export default new Vuex.Store({
         u.room = roomId;
       }
     },
-    setSessionUser(state, user) {
-      state.sessionUserId = user.id;
+    updateUser(state, user) {
+      Vue.set(state.users, user.id, user);
+    },
+    setSessionUser(state, userId) {
+      state.sessionUserId = userId;
     },
     removeSessionUser(state) {
       state.sessionUserId = null;
@@ -58,12 +60,31 @@ export default new Vuex.Store({
   actions: {
     signIn: ({ commit }, { emailAddress, password }) =>
       ApiService.signIn(emailAddress, password).then(user => {
-        commit("setSessionUser", user);
+        commit("updateUser", user);
+        commit("setSessionUser", user.id);
       }),
     signUp: ({ commit }, data) =>
       ApiService.signUp(data).then(user => {
-        commit("setSessionUser", user);
+        commit("updateUser", user);
+        commit("setSessionUser", user.id);
       }),
+    syncSessionUser: ({ dispatch, state }) => {
+      if (state.sessionUserId !== null) {
+        return dispatch("syncUser", state.sessionUserId);
+      } else {
+        return Promise.resolve();
+      }
+    },
+    syncUser: ({ commit }, userId: number) =>
+      ApiService.user(userId).then(user => commit("updateUser", user)),
+    updateUserDataMe: ({ commit }, data) =>
+      ApiService.updateUserDataMe(data).then(user =>
+        commit("updateUser", user)
+      ),
+    updateRoom: ({ commit }, { roomId, data }) =>
+      ApiService.updateRoom(roomId, data).then(room =>
+        commit("updateRoom", room)
+      ),
     signOut: ({ commit }) =>
       ApiService.signOut().then(() => commit("removeSessionUser")),
     sync: ({ commit }) =>
@@ -74,9 +95,6 @@ export default new Vuex.Store({
       commit("changeActiveRoom", roomId);
     },
     joinRoom: async ({ commit }, roomId: string) => {
-      if (!roomId) {
-        return Promise.reject();
-      }
       const zoomLink = await ApiService.joinRoom(roomId);
       commit("swithToRoom", roomId);
       return zoomLink;
@@ -88,17 +106,16 @@ export default new Vuex.Store({
     loggedIn: ({ sessionUserId }) => !!sessionUserId,
     sessionUser: ({ users, sessionUserId }) =>
       sessionUserId && users[sessionUserId],
-    rooms: ({ rooms, users }) => {
-      const usersByRoom = _(users)
-        .values()
-        .filter(u => u.room !== null)
-        .groupBy(u => u.room)
-        .value();
-      return _({})
-        .assign(rooms)
-        .assignWith(usersByRoom, addUsersToRoom)
-        .values()
-        .value();
+    rooms: ({ rooms }) => Object.values(rooms),
+    availableRooms: (_state, getters) => {
+      if (getters.currentRoom) {
+        return _.filter(
+          getters.rooms,
+          room => room.id !== getters.currentRoom.id
+        );
+      } else {
+        return getters.rooms;
+      }
     },
     roomUsers: ({ users }) => (roomId: string) =>
       _(users)
@@ -107,8 +124,6 @@ export default new Vuex.Store({
         .value(),
     room: ({ rooms }, getters) => (roomId: string) =>
       rooms[roomId] && addUsersToRoom(rooms[roomId], getters.roomUsers(roomId)),
-    activeRoom: ({ activeRoomId }, getters) =>
-      activeRoomId && getters.room(activeRoomId),
     currentRoom: (_state, getters) => {
       const currentRoomId = getters.sessionUser?.room;
       return currentRoomId && getters.room(currentRoomId);

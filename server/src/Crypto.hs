@@ -1,7 +1,14 @@
-module Crypto where
+module Crypto
+  ( genRandomCodes
+  , genRandomCode
+  , encryptPassTIO'
+  , module Crypto.Scrypt
+  )
+where
 
 import           Control.Monad.Time             ( MonadTime(..) )
 import           Crypto.JWT                     ( MonadRandom(..) )
+import           Crypto.Scrypt
 import           Data.Text                      ( Text(..) )
 import qualified Data.Text.Encoding            as T
 import qualified Data.ByteString.Base64.URL    as B64Url
@@ -29,3 +36,10 @@ genRandomCode :: Controller Text
 genRandomCode = do
   bytes <- liftTIO (getRandomBytes 24)
   return $ T.decodeUtf8 $ B64Url.encode bytes
+
+----------------------------------------------------------------------------------------------------
+-- | Scrypto
+----------------------------------------------------------------------------------------------------
+
+encryptPassTIO' :: MonadTIO m => Pass -> m EncryptedPass
+encryptPassTIO' = liftTIO . TIO . encryptPassIO'

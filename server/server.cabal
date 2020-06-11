@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 89236cddd26f5c722e8483966b82064233527998a93edf2562b7d027676ae7cd
+-- hash: 571674e1e5053cc92cb26c42488ede51354c7136349f149616f5b2ca6014aef7
 
 name:           server
 version:        0.1.0.0
@@ -55,7 +55,8 @@ library
   hs-source-dirs:
       src
   build-depends:
-      aeson
+      HaskellNet-SSL
+    , aeson
     , amazonka
     , amazonka-core
     , amazonka-s3
@@ -76,11 +77,12 @@ library
     , monad-time
     , mtl
     , mustache
+    , network
     , persistent
     , persistent-sqlite
     , persistent-template
     , resource-pool
-    , smtp-mail
+    , scrypt
     , text
     , time
     , transformers
@@ -91,7 +93,7 @@ library
     , warp
   default-language: Haskell2010
 
-executable covideo
+executable disco
   main-is: Main.hs
   other-modules:
       Paths_server
@@ -99,7 +101,8 @@ executable covideo
       app
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
-      aeson
+      HaskellNet-SSL
+    , aeson
     , amazonka
     , amazonka-core
     , amazonka-s3
@@ -120,12 +123,13 @@ executable covideo
     , monad-time
     , mtl
     , mustache
+    , network
     , persistent
     , persistent-sqlite
     , persistent-template
     , resource-pool
+    , scrypt
     , server
-    , smtp-mail
     , text
     , time
     , transformers
@@ -145,7 +149,8 @@ test-suite server-test
       test
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
-      aeson
+      HaskellNet-SSL
+    , aeson
     , amazonka
     , amazonka-core
     , amazonka-s3
@@ -166,12 +171,13 @@ test-suite server-test
     , monad-time
     , mtl
     , mustache
+    , network
     , persistent
     , persistent-sqlite
     , persistent-template
     , resource-pool
+    , scrypt
     , server
-    , smtp-mail
     , text
     , time
     , transformers

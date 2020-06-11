@@ -2,6 +2,7 @@ import ApiService from "@/services/api";
 import Admin from "@/views/Admin.vue";
 import Home from "@/views/Home.vue";
 import Invitations from "@/views/Invitations.vue";
+import Profile from "@/views/Profile.vue";
 import SendInvitations from "@/views/SendInvitations.vue";
 import SignIn from "@/views/SignIn.vue";
 import SignUp from "@/views/SignUp.vue";
@@ -21,6 +22,11 @@ const routes: Array<RouteConfig> = [
     path: "/signup",
     name: "SignUp",
     component: SignUp
+  },
+  {
+    path: "/profile",
+    name: "Profile",
+    component: Profile
   },
   {
     path: "/invitation",

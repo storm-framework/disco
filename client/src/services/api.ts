@@ -1,10 +1,10 @@
 import {
   Invitation,
   InvitationInsert,
-  PresignedURL,
   Room,
-  RoomInsert,
+  RoomData,
   User,
+  UserData,
   UserSignUp
 } from "@/models";
 import Mock from "./api.mock";
@@ -29,17 +29,20 @@ interface ApiService {
   // Users
 
   users(): Promise<User[]>;
+  user(userId: number): Promise<User>;
+  updateUserDataMe(data: UserData): Promise<User>;
 
   // Rooms
 
   rooms(): Promise<Room[]>;
-  updateRooms(updates: Room[], inserts: RoomInsert[]): Promise<number[]>;
+  updateRoom(roomId: number, data: RoomData): Promise<Room>;
+  updateRooms(updates: Room[], inserts: RoomData[]): Promise<number[]>;
   joinRoom(roomId: string): Promise<string>;
   leaveRoom(): Promise<void>;
 
-  //  Photos
+  //  Upload Files
 
-  preSignURL(code: string): Promise<PresignedURL>;
+  uploadFile(file: File, code?: string): Promise<string>;
 }
 
 let module: ApiService;

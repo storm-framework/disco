@@ -42,7 +42,7 @@ module Model
   , roomId'
   , roomColor'
   , roomName'
-  , roomCapacity'
+  , roomTopic'
   , roomZoomLink'
   , InvitationId
   , UserId
@@ -63,6 +63,8 @@ import qualified Database.Persist              as Persist
 
 import           Binah.Core
 
+import Data.ByteString (ByteString)
+
 share [mkPersist sqlSettings, mkMigrate "migrateAll"] [persistLowerCase|
 Invitation
   code Text
@@ -73,10 +75,11 @@ Invitation
   accepted Bool
   emailStatus String
   emailError String Maybe
+  UniqueInvitationEmailAddress emailAddress
 
 User
   emailAddress Text
-  password Text
+  password ByteString
   photoURL Text Maybe
   firstName Text
   lastName Text
@@ -85,12 +88,14 @@ User
   level String
   visibility String
   room RoomId Maybe
+  UniqueUserEmailAddress emailAddress
 
 Room
   color Text
   name Text
-  capacity Int
+  topic Text
   zoomLink Text
+  
 |]
 
 {-@
@@ -297,7 +302,7 @@ invitationEmailError' = EntityFieldWrapper InvitationEmailError
 -- * User
 {-@ mkUser ::
      x_0: Text
-  -> x_1: Text
+  -> x_1: ByteString
   -> x_2: (Maybe Text)
   -> x_3: Text
   -> x_4: Text
@@ -338,13 +343,13 @@ userId' = EntityFieldWrapper UserId
   , {\row field  -> field == userEmailAddress (entityVal row)}
   , {\field row  -> field == userEmailAddress (entityVal row)}
   , {\old -> userEmailAddressCap old}
-  , {\old _ _ -> userEmailAddressCap old}
+  , {\x_0 x_1 x_2 -> ((False)) => (userEmailAddressCap x_0)}
   > _ _
 @-}
 userEmailAddress' :: EntityFieldWrapper User Text
 userEmailAddress' = EntityFieldWrapper UserEmailAddress
 
-{-@ measure userPassword :: User -> Text @-}
+{-@ measure userPassword :: User -> ByteString @-}
 
 {-@ measure userPasswordCap :: Entity User -> Bool @-}
 
@@ -353,10 +358,10 @@ userEmailAddress' = EntityFieldWrapper UserEmailAddress
   , {\row field  -> field == userPassword (entityVal row)}
   , {\field row  -> field == userPassword (entityVal row)}
   , {\old -> userPasswordCap old}
-  , {\old _ _ -> userPasswordCap old}
+  , {\x_0 x_1 x_2 -> ((False)) => (userPasswordCap x_0)}
   > _ _
 @-}
-userPassword' :: EntityFieldWrapper User Text
+userPassword' :: EntityFieldWrapper User ByteString
 userPassword' = EntityFieldWrapper UserPassword
 
 {-@ measure userPhotoURL :: User -> (Maybe Text) @-}
@@ -368,7 +373,7 @@ userPassword' = EntityFieldWrapper UserPassword
   , {\row field  -> field == userPhotoURL (entityVal row)}
   , {\field row  -> field == userPhotoURL (entityVal row)}
   , {\old -> userPhotoURLCap old}
-  , {\old _ _ -> userPhotoURLCap old}
+  , {\x_0 x_1 x_2 -> ((IsSelf x_0 x_2)) => (userPhotoURLCap x_0)}
   > _ _
 @-}
 userPhotoURL' :: EntityFieldWrapper User (Maybe Text)
@@ -383,7 +388,7 @@ userPhotoURL' = EntityFieldWrapper UserPhotoURL
   , {\row field  -> field == userFirstName (entityVal row)}
   , {\field row  -> field == userFirstName (entityVal row)}
   , {\old -> userFirstNameCap old}
-  , {\old _ _ -> userFirstNameCap old}
+  , {\x_0 x_1 x_2 -> ((IsSelf x_0 x_2)) => (userFirstNameCap x_0)}
   > _ _
 @-}
 userFirstName' :: EntityFieldWrapper User Text
@@ -398,7 +403,7 @@ userFirstName' = EntityFieldWrapper UserFirstName
   , {\row field  -> field == userLastName (entityVal row)}
   , {\field row  -> field == userLastName (entityVal row)}
   , {\old -> userLastNameCap old}
-  , {\old _ _ -> userLastNameCap old}
+  , {\x_0 x_1 x_2 -> ((IsSelf x_0 x_2)) => (userLastNameCap x_0)}
   > _ _
 @-}
 userLastName' :: EntityFieldWrapper User Text
@@ -413,7 +418,7 @@ userLastName' = EntityFieldWrapper UserLastName
   , {\row field  -> field == userDisplayName (entityVal row)}
   , {\field row  -> field == userDisplayName (entityVal row)}
   , {\old -> userDisplayNameCap old}
-  , {\old _ _ -> userDisplayNameCap old}
+  , {\x_0 x_1 x_2 -> ((IsSelf x_0 x_2)) => (userDisplayNameCap x_0)}
   > _ _
 @-}
 userDisplayName' :: EntityFieldWrapper User Text
@@ -428,7 +433,7 @@ userDisplayName' = EntityFieldWrapper UserDisplayName
   , {\row field  -> field == userInstitution (entityVal row)}
   , {\field row  -> field == userInstitution (entityVal row)}
   , {\old -> userInstitutionCap old}
-  , {\old _ _ -> userInstitutionCap old}
+  , {\x_0 x_1 x_2 -> ((IsSelf x_0 x_2)) => (userInstitutionCap x_0)}
   > _ _
 @-}
 userInstitution' :: EntityFieldWrapper User Text
@@ -443,7 +448,7 @@ userInstitution' = EntityFieldWrapper UserInstitution
   , {\row field  -> field == userLevel (entityVal row)}
   , {\field row  -> field == userLevel (entityVal row)}
   , {\old -> userLevelCap old}
-  , {\old _ _ -> userLevelCap old}
+  , {\x_0 x_1 x_2 -> ((False)) => (userLevelCap x_0)}
   > _ _
 @-}
 userLevel' :: EntityFieldWrapper User String
@@ -483,10 +488,10 @@ userRoom' = EntityFieldWrapper UserRoom
 {-@ mkRoom ::
      x_0: Text
   -> x_1: Text
-  -> x_2: Int
+  -> x_2: Text
   -> x_3: Text
   -> BinahRecord <
-       {\row -> roomColor (entityVal row) == x_0 && roomName (entityVal row) == x_1 && roomCapacity (entityVal row) == x_2 && roomZoomLink (entityVal row) == x_3}
+       {\row -> roomColor (entityVal row) == x_0 && roomName (entityVal row) == x_1 && roomTopic (entityVal row) == x_2 && roomZoomLink (entityVal row) == x_3}
      , {\_ viewer -> IsOrganizer viewer}
      , {\x_0 x_1 -> False}
      > Room
@@ -538,20 +543,20 @@ roomColor' = EntityFieldWrapper RoomColor
 roomName' :: EntityFieldWrapper Room Text
 roomName' = EntityFieldWrapper RoomName
 
-{-@ measure roomCapacity :: Room -> Int @-}
+{-@ measure roomTopic :: Room -> Text @-}
 
-{-@ measure roomCapacityCap :: Entity Room -> Bool @-}
+{-@ measure roomTopicCap :: Entity Room -> Bool @-}
 
-{-@ assume roomCapacity' :: EntityFieldWrapper <
+{-@ assume roomTopic' :: EntityFieldWrapper <
     {\_ _ -> True}
-  , {\row field  -> field == roomCapacity (entityVal row)}
-  , {\field row  -> field == roomCapacity (entityVal row)}
-  , {\old -> roomCapacityCap old}
-  , {\x_0 x_1 x_2 -> ((IsOrganizer x_2)) => (roomCapacityCap x_0)}
+  , {\row field  -> field == roomTopic (entityVal row)}
+  , {\field row  -> field == roomTopic (entityVal row)}
+  , {\old -> roomTopicCap old}
+  , {\old _ _ -> roomTopicCap old}
   > _ _
 @-}
-roomCapacity' :: EntityFieldWrapper Room Int
-roomCapacity' = EntityFieldWrapper RoomCapacity
+roomTopic' :: EntityFieldWrapper Room Text
+roomTopic' = EntityFieldWrapper RoomTopic
 
 {-@ measure roomZoomLink :: Room -> Text @-}
 

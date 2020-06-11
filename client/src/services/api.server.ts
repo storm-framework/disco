@@ -1,12 +1,13 @@
 import {
   Invitation,
   InvitationInsert,
-  PresignedURL,
   Room,
-  RoomInsert,
+  RoomData,
   User,
+  UserData,
   UserSignUp
 } from "@/models";
+import router from "@/router";
 import axios, { AxiosRequestConfig } from "axios";
 import _ from "lodash";
 
@@ -89,13 +90,25 @@ class ApiService {
     return this.get("/user");
   }
 
+  user(userId: number): Promise<User> {
+    return this.get(`/user/${userId}`);
+  }
+
+  updateUserDataMe(data: UserData): Promise<User> {
+    return this.post(`/user/me`, data);
+  }
+
   // Rooms
 
   rooms(): Promise<Room[]> {
     return this.get("/room");
   }
 
-  updateRooms(updates: Room[], inserts: RoomInsert[]): Promise<number[]> {
+  updateRoom(id: number, data: RoomData): Promise<Room> {
+    return this.post(`/room/${id}`, data);
+  }
+
+  updateRooms(updates: Room[], inserts: RoomData[]): Promise<number[]> {
     return this.post("/room", {
       inserts: inserts,
       updates: updates
@@ -107,13 +120,22 @@ class ApiService {
   }
 
   leaveRoom(): Promise<void> {
-    return this.post(`/room/leave`);
+    return this.post(`/room/current/leave`);
   }
 
-  // Photos
+  // Files
 
-  preSignURL(code: string): Promise<PresignedURL> {
+  presignURL(code?: string): Promise<string> {
     return this.get(`/signurl?code=${code}`);
+  }
+
+  async uploadFile(file: File, code?: string): Promise<string> {
+    const presigned = await this.presignURL(code);
+    await axios.put(presigned, file, {
+      headers: { "Content-Type": file.type }
+    });
+    const u = new URL(presigned);
+    return `${u.protocol}//${u.host}${u.pathname}`;
   }
 
   // Raw Requests
@@ -124,20 +146,35 @@ class ApiService {
     config?: AxiosRequestConfig
   ): Promise<any> {
     await delay();
-    const response = await axios.post(`${API_URL}${path}`, data, {
-      headers: this.authHeader(),
-      ...config
-    });
-    return response.data;
+    try {
+      const response = await axios.post(`${API_URL}${path}`, data, {
+        headers: this.authHeader(),
+        ...config
+      });
+      axios.create({});
+      return response.data;
+    } catch (error) {
+      if (error?.response?.status == 401) {
+        router.replace({ name: "SignIn" });
+      }
+      throw error;
+    }
   }
 
   async get(path: string, config?: AxiosRequestConfig): Promise<any> {
     await delay();
-    const response = await axios.get(`${API_URL}${path}`, {
-      headers: this.authHeader(),
-      ...config
-    });
-    return response.data;
+    try {
+      const response = await axios.get(`${API_URL}${path}`, {
+        headers: this.authHeader(),
+        ...config
+      });
+      return response.data;
+    } catch (error) {
+      if (error?.response?.status == 401) {
+        router.replace({ name: "SignIn" });
+      }
+      throw error;
+    }
   }
 
   async put(
@@ -146,11 +183,18 @@ class ApiService {
     config?: AxiosRequestConfig
   ): Promise<any> {
     await delay();
-    const response = await axios.put(`${API_URL}${path}`, data, {
-      headers: this.authHeader(),
-      ...config
-    });
-    return response.data;
+    try {
+      const response = await axios.put(`${API_URL}${path}`, data, {
+        headers: this.authHeader(),
+        ...config
+      });
+      return response.data;
+    } catch (error) {
+      if (error?.response?.status == 401) {
+        router.replace({ name: "SignIn" });
+      }
+      throw error;
+    }
   }
 
   authHeader() {

@@ -3,8 +3,6 @@ export interface InvitationInsert {
   firstName: string;
   lastName: string;
   institution: string;
-  country: string;
-  degree: string;
 }
 
 export interface Invitation extends InvitationInsert {
@@ -25,29 +23,28 @@ export interface UserSignUp {
   };
 }
 
-export interface User {
-  id: number;
-  photoURL: string | null;
+export interface UserData {
   firstName: string;
   lastName: string;
+  photoURL: string | null;
   displayName: string;
   institution: string;
+}
+
+export interface User extends UserData {
+  id: number;
   level: string;
   room: string | null;
 }
 
-export interface RoomInsert {
+export interface RoomData {
   name: string;
   capacity: number;
   color: string;
+  topic: string;
   zoomLink: string;
 }
 
-export interface Room extends RoomInsert {
+export interface Room extends RoomData {
   id: number;
-}
-
-export interface PresignedURL {
-  signedURL: string;
-  objectURL: string;
 }

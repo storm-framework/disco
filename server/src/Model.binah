@@ -1,3 +1,5 @@
+import Data.ByteString (ByteString)
+
 Invitation
   code Text
   emailAddress Text
@@ -7,6 +9,8 @@ Invitation
   accepted Bool
   emailStatus String
   emailError String Maybe
+
+  UniqueInvitationEmailAddress emailAddress
 
   insert {\invitation viewer ->
     not (invitationAccepted invitation)
@@ -25,7 +29,7 @@ Invitation
 
 User
   emailAddress Text
-  password Text
+  password ByteString
   photoURL Text Maybe
   firstName Text
   lastName Text
@@ -35,6 +39,8 @@ User
   visibility String
   room RoomId Maybe
 
+  UniqueUserEmailAddress emailAddress
+
   insert {\new viewer -> IsOrganizer viewer || userLevel new == "attendee"}
 
   read [ password ] @IsSelf
@@ -42,12 +48,16 @@ User
     userVisibility user == "public" || IsSelf user viewer
   }
 
-  update [ room ] {\old _ viewer -> IsSelf old viewer}
+  update [ password, level, emailAddress ] {\_ _ _ -> False}
+
+  update [ photoURL, firstName, lastName, displayName, institution, room ] {\old _ viewer ->
+    IsSelf old viewer
+  }
 
 Room
   color Text
   name Text
-  capacity Int
+  topic Text
   zoomLink Text
 
   insert {\_ viewer -> IsOrganizer viewer}

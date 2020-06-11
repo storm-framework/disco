@@ -1,3 +1,5 @@
+{-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
@@ -6,10 +8,14 @@
 
 module Server
     ( runServer
+    , runTask'
     , initDB
+    , ServerOpts(..)
+    , Stage(..)
     )
 where
 
+import           Control.Monad                  ( when )
 import           Control.Monad.IO.Class         ( MonadIO(..) )
 import           Control.Monad.Reader           ( MonadReader(..)
                                                 , ReaderT(..)
@@ -19,6 +25,7 @@ import           Database.Persist.Sqlite        ( SqlBackend
                                                 , runMigration
                                                 , createSqlitePool
                                                 )
+import           Crypto.JWT                    as JWT
 import           System.FilePath               as P
 import           System.Directory
 import           System.Environment
@@ -26,6 +33,7 @@ import qualified Data.ByteString.Lazy          as LBS
 import           Network.Mime
 import           Frankie.Config
 import           Frankie.Auth
+import           Data.Maybe
 import qualified Data.Text                     as T
 import qualified Data.Text.Encoding            as T
 
@@ -41,6 +49,9 @@ import qualified Control.Concurrent.MVar       as MVar
 import           Control.Lens.Lens              ( (&) )
 import           Control.Lens.Operators         ( (^.) )
 import qualified Text.Mustache.Types           as Mustache
+import           Text.Read                      ( readMaybe )
+import           Data.Typeable
+import           Data.Data
 
 
 import           Binah.Core
@@ -59,48 +70,95 @@ import           Auth
 
 import qualified Network.AWS                   as AWS
 import qualified Network.AWS.S3                as S3
+import           Network.Socket                 ( PortNumber )
 
+data Stage = Prod | Dev deriving (Data, Typeable, Show)
+
+data ServerOpts = ServerOpts
+  { optsPort :: Port
+  , optsHost :: HostPreference
+  , optsStatic :: Maybe String
+  , optsPool :: Int
+  , optsDBPath :: T.Text
+  }
 
 {-@ ignore runServer @-}
-runServer :: HostPreference -> Port -> IO ()
-runServer h p = runNoLoggingT $ do
-    templateCache <- liftIO $ MVar.newMVar mempty
-    pool          <- createSqlitePool "db.sqlite" 1
-    aws           <- liftIO getAwsConfig
+runServer :: ServerOpts -> IO ()
+runServer ServerOpts {..} = runNoLoggingT $ do
+    liftIO $ initDB optsDBPath
+    mkConfig <- liftIO readConfig
+    pool     <- createSqlitePool optsDBPath optsPool
     liftIO . runFrankieServer "dev" $ do
         mode "dev" $ do
-            host h
-            port p
-            initWith $ initFromPool aws templateCache pool
+            host optsHost
+            port optsPort
+            initWith $ initFromPool mkConfig pool
         dispatch $ do
             post "/api/signin" signIn
             post "/api/signup" signUp
             put "/api/invitation" invitationPut
             get "/api/invitation/:id" invitationGet
-            get "/api/invitation"     invitationIndex
-            get "/api/user"           userGet
-            get "/api/room"           roomGet
-            post "/api/room"          roomPost
-            post "/api/room/leave"    leaveRoom
-            post "/api/room/:id/join" joinRoom
-            get "/api/signurl" s3SignedURL
+            get "/api/invitation"     invitationList
+            get "/api/user"           userList
+            get "/api/user/:id"       userGet
+            post "/api/user/me" userUpdateMe
+            get "/api/room" roomGet
+            post "/api/room"               roomBatchUpdate
+            post "/api/room/current/leave" leaveRoom
+            post "/api/room/:id"           roomUpdate
+            post "/api/room/:id/join"      joinRoom
+            get "/api/signurl" presignS3URL
 
-            fallback (sendFromDirectory "static" "index.html")
+            case optsStatic of
+                Just path -> fallback (sendFromDirectory path "index.html")
+                Nothing   -> fallback $ do
+                    req <- request
+                    let path = joinPath (map T.unpack (reqPathInfo req))
+                    respondJSON status404 ("Route not found: " ++ path)
 
-getAwsConfig :: IO AWSConfig
-getAwsConfig = do
-    accessKey <- getEnv "SOCIAL_DISTANCING_AWS_ACCESS_KEY"
-    secretKey <- getEnv "SOCIAL_DISTANCING_AWS_SECRET_KEY"
+
+runTask' :: T.Text -> Task a -> IO a
+runTask' dbpath task = runSqlite dbpath $ do
+    mkConfig <- liftIO readConfig
+    backend  <- ask
+    liftIO . runTIO $ runReaderT (unConfigT (runReaderT (unTag task) backend)) (mkConfig backend)
+
+
+readConfig :: IO (SqlBackend -> Config)
+readConfig =
+    Config authMethod <$> MVar.newMVar mempty <*> readAWSConfig <*> readSMTPConfig <*> readSecretKey
+
+
+readSecretKey :: IO JWT.JWK
+readSecretKey = do
+    secret <- fromMaybe "sb8NHmF@_-nsf*ymt!wJ3.KXmTDPsNoy" <$> lookupEnv "DISCO_SECRET_KEY"
+    return $ JWT.fromOctets . T.encodeUtf8 . T.pack $ secret
+
+
+readAWSConfig :: IO AWSConfig
+readAWSConfig = do
+    accessKey <- fromMaybe "" <$> lookupEnv "DISCO_AWS_ACCESS_KEY"
+    secretKey <- fromMaybe "" <$> lookupEnv "DISCO_AWS_SECRET_KEY"
+    region    <- readMaybe . fromMaybe "" <$> lookupEnv "DISCO_AWS_REGION"
+    bucket    <- fromMaybe "distant-socialing" <$> lookupEnv "DISCO_AWS_BUCKET"
     env       <- AWS.newEnv $ AWS.FromKeys (AWS.AccessKey $ T.encodeUtf8 $ T.pack accessKey)
                                            (AWS.SecretKey $ T.encodeUtf8 $ T.pack secretKey)
     return $ AWSConfig { awsAuth   = env ^. AWS.envAuth
-                       , awsRegion = AWS.NorthCalifornia
-                       , awsBucket = S3.BucketName "binah-social-distancing"
+                       , awsRegion = fromMaybe AWS.NorthCalifornia region
+                       , awsBucket = S3.BucketName (T.pack bucket)
                        }
 
+readSMTPConfig :: IO SMTPConfig
+readSMTPConfig = do
+    host <- fromMaybe "localhost" <$> lookupEnv "DISCO_SMTP_HOST"
+    port <- fromMaybe "425" <$> lookupEnv "DISCO_SMTP_PORT"
+    user <- fromMaybe "" <$> lookupEnv "DISCO_SMTP_USER"
+    pass <- fromMaybe "" <$> lookupEnv "DISCO_SMTP_PASS"
+    return $ SMTPConfig host (read port :: PortNumber) user pass
+
 {-@ ignore initDB @-}
-initDB :: IO ()
-initDB = runSqlite "db.sqlite" $ do
+initDB :: T.Text -> IO ()
+initDB dbpath = runSqlite dbpath $ do
     runMigration migrateAll
 
 -- Static files
@@ -122,14 +180,9 @@ sendFile path = do
 
 -- TODO find a way to provide this without exposing the instance of MonadBaseControl
 
-initFromPool
-    :: AWSConfig
-    -> MVar.MVar Mustache.TemplateCache
-    -> Pool SqlBackend
-    -> Controller ()
-    -> ControllerT TIO ()
-initFromPool aws cache pool controller = Pool.withResource pool $ \sqlBackend ->
-    configure (Config sqlBackend authMethod cache aws) . reading backend . unTag $ controller
+initFromPool :: (SqlBackend -> Config) -> Pool SqlBackend -> Controller () -> ControllerT TIO ()
+initFromPool mkConfig pool controller = Pool.withResource pool
+    $ \sqlBackend -> configure (mkConfig sqlBackend) . reading backend . unTag $ controller
 
 instance MonadBase IO TIO where
     liftBase = TIO

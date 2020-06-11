@@ -27,14 +27,25 @@ import           Binah.Templates
 import           Concurrent
 import qualified Network.AWS                   as AWS
 import qualified Network.AWS.S3                as S3
+import           Network.Socket                 ( PortNumber )
+import           Crypto.JWT                    as JWT
 
 import           Model
 
 data Config = Config
-  { configBackend :: SqlBackend
-  , configAuthMethod :: !(AuthMethod (Entity User) Controller)
+  { configAuthMethod :: !(AuthMethod (Entity User) Controller)
   , configTemplateCache :: !(MVar.MVar Mustache.TemplateCache)
   , configAWS :: AWSConfig
+  , configSMTP :: SMTPConfig
+  , configSecretKey :: JWT.JWK
+  , configBackend :: SqlBackend
+  }
+
+data SMTPConfig = SMTPConfig
+  { smtpHost :: String
+  , smtpPort :: PortNumber
+  , smtpUser :: String
+  , smtpPass :: String
   }
 
 data AWSConfig = AWSConfig
@@ -54,14 +65,14 @@ instance HasSqlBackend Config where
 instance HasTemplateCache Config where
   getTemplateCache = configTemplateCache
 
-type Worker = TaggedT (ReaderT SqlBackend (ConfigT Config TIO))
+type Task = TaggedT (ReaderT SqlBackend (ConfigT Config TIO))
 
-runWorker :: Worker () -> Controller ()
-runWorker worker = do
+runTask :: Task () -> Controller ()
+runTask task = do
   b      <- backend
   config <- getConfig
-  let w = mapTaggedT (\w -> runReaderT (unConfigT (runReaderT w b)) config) worker
-  flip mapTaggedT (forkTIO w) $ \m -> do
+  let t = mapTaggedT (\t -> runReaderT (unConfigT (runReaderT t b)) config) task
+  flip mapTaggedT (forkTIO t) $ \m -> do
     liftTIO m
     return ()
 

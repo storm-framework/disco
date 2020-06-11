@@ -31,24 +31,43 @@ import           Model
 import           JSON
 
 -------------------------------------------------------------------------------
--- | Room Post
+-- | Room Update
 -------------------------------------------------------------------------------
 
-{-@ roomPost :: TaggedT<{\_ -> False}, {\_ -> True}> _ _ @-}
-roomPost :: Controller ()
-roomPost = do
+{-@ roomUpdate :: TaggedT<{\_ -> False}, {\_ -> True}> _ _ @-}
+roomUpdate :: Int64 -> Controller ()
+roomUpdate rid = do
+  let roomId = toSqlKey rid
+  RoomInsert {..} <- decodeBody
+  let up =
+        (roomColor' `assign` insertColor)
+          `combine` (roomName' `assign` insertName)
+          `combine` (roomTopic' `assign` insertTopic)
+          `combine` (roomZoomLink' `assign` insertZoomLink)
+  _        <- updateWhere (roomId' ==. roomId) up
+  room     <- selectFirstOr notFoundJSON (roomId' ==. roomId)
+  roomData <- extractRoomData room
+  respondJSON status200 roomData
+
+
+-------------------------------------------------------------------------------
+-- | Room Batch Update
+-------------------------------------------------------------------------------
+
+{-@ roomBatchUpdate :: TaggedT<{\_ -> False}, {\_ -> True}> _ _ @-}
+roomBatchUpdate :: Controller ()
+roomBatchUpdate = do
   viewer                    <- requireAuthUser
   _                         <- requireOrganizer viewer
   (PostReq inserts updates) <- decodeBody
 
-  let rooms = map
-        (\RoomInsert {..} -> mkRoom insertColor insertName insertCapacity insertZoomLink)
-        inserts
+  let rooms =
+        map (\RoomInsert {..} -> mkRoom insertColor insertName insertTopic insertZoomLink) inserts
   ids <- insertMany rooms
   _   <- forMC updates $ \RoomData {..} -> do
     let up1 = roomColor' `assign` roomColor
     let up2 = roomName' `assign` roomName
-    let up3 = roomCapacity' `assign` roomCapacity
+    let up3 = roomTopic' `assign` roomTopic
     let up4 = roomZoomLink' `assign` roomZoomLink
     let up  = up1 `combine` up2 `combine` up3 `combine` up4
     updateWhere (roomId' ==. roomId) up
@@ -63,6 +82,7 @@ data PostReq = PostReq
 
 instance FromJSON PostReq where
   parseJSON = genericParseJSON (stripPrefix "postReq")
+
 
 -------------------------------------------------------------------------------
 -- | Join Room
@@ -100,22 +120,25 @@ roomGet :: Controller ()
 roomGet = do
   _     <- requireAuthUser
   rooms <- selectList trueF
-  rooms <- forMC rooms $ \r ->
-    do
-        RoomData
-      <$> project roomId'       r
-      <*> project roomColor'    r
-      <*> project roomName'     r
-      <*> project roomCapacity' r
-      <*> project roomZoomLink' r
+  rooms <- mapMC extractRoomData rooms
   respondJSON status200 rooms
+
+
+extractRoomData :: Entity Room -> Controller RoomData
+extractRoomData room =
+  RoomData
+    <$> project roomId'       room
+    <*> project roomColor'    room
+    <*> project roomName'     room
+    <*> project roomTopic'    room
+    <*> project roomZoomLink' room
 
 -- | RoomInsert
 
 data RoomInsert = RoomInsert
   { insertColor :: Text
   , insertName :: Text
-  , insertCapacity :: Int
+  , insertTopic :: Text
   , insertZoomLink :: Text
   }
   deriving Generic
@@ -132,7 +155,7 @@ data RoomData = RoomData
   { roomId :: RoomId
   , roomColor :: Text
   , roomName :: Text
-  , roomCapacity :: Int
+  , roomTopic :: Text
   , roomZoomLink :: Text
   }
   deriving Generic

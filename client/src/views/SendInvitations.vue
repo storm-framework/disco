@@ -4,7 +4,7 @@
       <b-row class="justify-content-end align-items-center mb-3">
         <b-col>
           <span class="invalid-data" v-show="hasErrors">
-            The data contains erros
+            {{ errorMessage }}
           </span>
         </b-col>
         <b-col cols="auto">
@@ -13,10 +13,16 @@
             class="mr-1"
             v-b-modal.import-file-modal
             variant="outline-primary"
+            :disabled="sending"
           >
             <font-awesome-icon icon="file-import" /> Import
           </b-button>
-          <b-button size="sm" v-on:click="onSend" variant="primary">
+          <b-button
+            size="sm"
+            v-on:click="onSend"
+            variant="primary"
+            :disabled="sending"
+          >
             <font-awesome-icon icon="paper-plane" /> Send
           </b-button>
         </b-col>
@@ -149,6 +155,8 @@ export default class SendInvitations extends Vue {
     colHeaders: _.map(this.columns, c => c.title)
   };
   hasErrors = false;
+  errorMessage = "";
+  sending = false;
   rows: string[][] = [];
 
   onSend() {
@@ -164,10 +172,18 @@ export default class SendInvitations extends Vue {
         // Pop the empty row
         invitations.pop();
         if (!_.isEmpty(invitations)) {
-          ApiService.sendInvitations(invitations).then(() =>
-            this.$router.push({ name: "Invitations" })
-          );
+          this.sending = true;
+          ApiService.sendInvitations(invitations)
+            .then(() => this.$router.push({ name: "Invitations" }))
+            .catch(() => {
+              this.hasErrors = true;
+              this.errorMessage =
+                "There was an error sending the invitations. This may be caused by duplicate email addresses.";
+            })
+            .finally(() => (this.sending = false));
         }
+      } else {
+        this.errorMessage = "The data contains erros";
       }
     });
   }
@@ -253,7 +269,7 @@ export default class SendInvitations extends Vue {
   onFileChange(file: File) {
     const reader = new FileReader();
     reader.onload = (e: ProgressEvent<FileReader>) => {
-      if (e?.target === null) {
+      if (e.target === null) {
         return;
       }
       const bstr = e.target.result;
