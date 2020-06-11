@@ -31,10 +31,11 @@ User
   emailAddress Text
   password ByteString
   photoURL Text Maybe
-  firstName Text
-  lastName Text
   displayName Text
   institution Text
+  pronouns Text
+  website Text
+  bio Text
   level String
   visibility String
   room RoomId Maybe

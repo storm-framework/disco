@@ -27,7 +27,7 @@ main = do
     Server {..} -> do
       runServer $ ServerOpts port (fromString host) static pool db
     AddOrganizer {..} -> do
-      let user = UserCreate email password Nothing "" "" "" ""
+      let user = UserCreate email password Nothing "" "" "" "" ""
       runTask' db $ addOrganizer user
       return ()
     SendInvitation {..} -> runTask' db $ sendEmail invitationId

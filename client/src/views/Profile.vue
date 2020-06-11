@@ -1,60 +1,7 @@
 <template>
   <b-container>
     <b-form @submit.prevent="onSubmit">
-      <b-form-group label="First name*" label-for="full-name">
-        <b-form-input
-          id="first-name"
-          type="text"
-          v-model="form.firstName"
-          required
-          placeholder="First name"
-          :disabled="fatalError"
-        ></b-form-input>
-      </b-form-group>
-
-      <b-form-group label="Last name*" label-for="full-name">
-        <b-form-input
-          id="last-name"
-          type="text"
-          v-model="form.lastName"
-          required
-          placeholder="Last name"
-          :disabled="fatalError"
-        ></b-form-input>
-      </b-form-group>
-
-      <b-form-group
-        label="Badge name*"
-        label-for="display-name"
-        description="People will use your badge name to identify you in the app."
-      >
-        <b-form-input
-          id="display-name"
-          type="text"
-          v-model="form.displayName"
-          required
-          placeholder="Badge name"
-          :disabled="fatalError"
-        ></b-form-input>
-      </b-form-group>
-
-      <b-form-group label="Institution" label-for="institution">
-        <b-form-input
-          id="institution"
-          type="text"
-          v-model="form.institution"
-          placeholder="Institution"
-          :disabled="fatalError"
-        ></b-form-input>
-      </b-form-group>
-
-      <b-form-group label="Photo" label-for="photo">
-        <photo-input
-          :disabled="fatalError"
-          v-model="photoURL"
-          @fileInput="form.photoFile = $event"
-        />
-      </b-form-group>
+      <profile-form v-model="profile" :disabled="fatalError" />
 
       <b-button
         :disabled="fatalError || sending"
@@ -74,29 +21,24 @@ import { Component, Vue, Watch } from "vue-property-decorator";
 import { mapGetters } from "vuex";
 import { User, UserData } from "@/models";
 import ApiService from "@/services/api";
-import PhotoInput from "@/components/PhotoInput.vue";
-
-interface Form {
-  firstName: string;
-  lastName: string;
-  displayName: string;
-  institution: string;
-  photoFile: File | null;
-}
+import ProfileForm, { ProfileFormData } from "@/components/ProfileForm.vue";
 
 @Component({
   computed: mapGetters(["sessionUser"]),
-  components: { PhotoInput }
+  components: { ProfileForm }
 })
 export default class Profile extends Vue {
-  form: Form = {
-    firstName: "",
-    lastName: "",
+  profile: ProfileFormData = {
     displayName: "",
     institution: "",
-    photoFile: null
+    pronouns: "",
+    website: "",
+    bio: "",
+    photo: {
+      file: null,
+      previewURL: null
+    }
   };
-  photoURL: string | null = null;
 
   loading = false;
   fatalError = false;
@@ -110,11 +52,11 @@ export default class Profile extends Vue {
 
   async submit() {
     let photoURL = this.$store.getters.sessionUser?.photoURL;
-    if (this.form.photoFile) {
-      photoURL = await ApiService.uploadFile(this.form.photoFile);
+    if (this.profile.photo.file) {
+      photoURL = await ApiService.uploadFile(this.profile.photo.file);
     }
     const data: UserData = {
-      ...this.form,
+      ...this.profile,
       photoURL
     };
     return this.$store.dispatch("updateUserDataMe", data);
@@ -125,8 +67,13 @@ export default class Profile extends Vue {
   sessionUserUpdated(newVal: User | null, oldVal: User | null) {
     // Only update the first time to avoid overriding the data while we are editing it.
     if (newVal && !oldVal) {
-      this.photoURL = newVal.photoURL;
-      this.form = { photoFile: null, ...newVal };
+      this.profile = {
+        photo: {
+          file: null,
+          previewURL: newVal.photoURL
+        },
+        ...newVal
+      };
     }
   }
 }

@@ -22,21 +22,17 @@
             <b-form-input
               id="email-address"
               type="email"
-              v-model="form.emailAddress"
+              v-model="emailAddress"
               required
               disabled
             ></b-form-input>
           </b-form-group>
 
-          <b-form-group
-            label="Password*"
-            label-for="password"
-            description="Choose an easy password. This is just a demo and your account will be deleted afterwards."
-          >
+          <b-form-group label="Password*" label-for="password">
             <b-form-input
               id="password"
               type="password"
-              v-model="form.password"
+              v-model="password"
               required
               placeholder="Password"
               :disabled="fatalError"
@@ -51,59 +47,7 @@
           label-class="font-weight-bold pt-0"
           class="mb-0"
         >
-          <b-form-group label="First name*" label-for="full-name">
-            <b-form-input
-              id="first-name"
-              type="text"
-              v-model="form.firstName"
-              required
-              placeholder="First name"
-              :disabled="fatalError"
-            ></b-form-input>
-          </b-form-group>
-
-          <b-form-group label="Last name*" label-for="full-name">
-            <b-form-input
-              id="last-name"
-              type="text"
-              v-model="form.lastName"
-              required
-              placeholder="Last name"
-              :disabled="fatalError"
-            ></b-form-input>
-          </b-form-group>
-
-          <b-form-group
-            label="Badge name*"
-            label-for="display-name"
-            description="People will use your badge name to identify you in the app."
-          >
-            <b-form-input
-              id="display-name"
-              type="text"
-              v-model="form.displayName"
-              required
-              placeholder="Badge name"
-              :disabled="fatalError"
-            ></b-form-input>
-          </b-form-group>
-
-          <b-form-group label="Institution" label-for="institution">
-            <b-form-input
-              id="institution"
-              type="text"
-              v-model="form.institution"
-              placeholder="Institution"
-              :disabled="fatalError"
-            ></b-form-input>
-          </b-form-group>
-
-          <b-form-group label="Photo" label-for="photo">
-            <photo-input
-              @fileInput="form.photoFile = $event"
-              :disabled="fatalError"
-            />
-          </b-form-group>
+          <profile-form :disabled="fatalError" v-model="profile" />
         </b-form-group>
 
         <b-form-group label-cols-lg="3">
@@ -127,28 +71,27 @@ import { Component, Vue } from "vue-property-decorator";
 import ApiService from "@/services/api";
 import _ from "lodash";
 import { UserSignUp } from "@/models";
-import PhotoInput from "@/components/PhotoInput.vue";
+import ProfileForm, { ProfileFormData } from "@/components/ProfileForm.vue";
 
 interface Form {
-  password: string;
   emailAddress: string;
-  firstName: string;
-  lastName: string;
-  displayName: string;
-  institution: string;
-  photoFile: File | null;
+  password: string;
 }
 
-@Component({ components: { PhotoInput } })
+@Component({ components: { ProfileForm } })
 export default class SignIn extends Vue {
-  form: Form = {
-    password: "",
-    emailAddress: "",
-    firstName: "",
-    lastName: "",
+  emailAddress = "";
+  password = "";
+  profile: ProfileFormData = {
     displayName: "",
+    photo: {
+      previewURL: null,
+      file: null
+    },
+    pronouns: "",
     institution: "",
-    photoFile: null
+    website: "",
+    bio: ""
   };
   loading = false;
   fatalError = false;
@@ -164,11 +107,12 @@ export default class SignIn extends Vue {
           const displayName = _([invitation.firstName, invitation.lastName])
             .filter()
             .join(" ");
-          this.form = {
-            password: "",
-            photoFile: null,
+          this.emailAddress = invitation.emailAddress;
+          this.password = "";
+          this.profile = {
+            ...this.profile,
             displayName,
-            ...invitation
+            institution: invitation.institution
           };
         })
         .catch(error => {
@@ -210,12 +154,17 @@ export default class SignIn extends Vue {
 
   async submit(code: string) {
     let photoURL = null;
-    if (this.form.photoFile) {
-      photoURL = await ApiService.uploadFile(this.form.photoFile, code);
+    if (this.profile.photo.file) {
+      photoURL = await ApiService.uploadFile(this.profile.photo.file, code);
     }
     const data: UserSignUp = {
       invitationCode: code,
-      user: { ...this.form, photoURL }
+      user: {
+        emailAddress: this.emailAddress,
+        password: this.password,
+        ...this.profile,
+        photoURL
+      }
     };
     await this.$store.dispatch("signUp", data);
     this.$router.replace({ name: "Home" });

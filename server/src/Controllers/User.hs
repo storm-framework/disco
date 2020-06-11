@@ -46,23 +46,25 @@ extractUserData u = do
   id           <- project userId' u
   emailAddress <- project userEmailAddress' u
   photoURL     <- project userPhotoURL' u
-  firstName    <- project userFirstName' u
-  lastName     <- project userLastName' u
   displayName  <- project userDisplayName' u
   institution  <- project userInstitution' u
+  pronouns     <- project userPronouns' u
+  website      <- project userWebsite' u
+  bio          <- project userBio' u
   level        <- project userLevel' u
   visibility   <- project userVisibility' u
   room         <- if visibility == "public" then project userRoom' u else return Nothing
-  return $ UserData id emailAddress photoURL firstName lastName displayName institution level room
+  return $ UserData id emailAddress photoURL displayName institution pronouns website bio level room
 
 data UserData = UserData
   { userId :: UserId
   , userEmailAddress :: Text
   , userPhotoURL :: Maybe Text
-  , userFirstName :: Text
-  , userLastName :: Text
   , userDisplayName :: Text
   , userInstitution :: Text
+  , userPronouns :: Text
+  , userWebsite :: Text
+  , userBio:: Text
   , userLevel :: String
   , userRoom :: Maybe RoomId
   }
@@ -96,10 +98,11 @@ userUpdateMe = do
   UserUpdate {..} <- decodeBody
   let up =
         (userPhotoURL' `assign` userUpdatePhotoURL)
-          `combine` (userFirstName' `assign` userUpdateFirstName)
-          `combine` (userLastName' `assign` userUpdateLastName)
           `combine` (userDisplayName' `assign` userUpdateDisplayName)
           `combine` (userInstitution' `assign` userUpdateInstitution)
+          `combine` (userPronouns' `assign` userUpdatePronouns)
+          `combine` (userWebsite' `assign` userUpdateWebsite)
+          `combine` (userBio' `assign` userUpdateBio)
   _        <- updateWhere (userId' ==. userId) up
   user     <- selectFirstOr notFoundJSON (userId' ==. userId)
   userData <- extractUserData user
@@ -108,10 +111,11 @@ userUpdateMe = do
 
 data UserUpdate = UserUpdate
   { userUpdatePhotoURL :: Maybe Text
-  , userUpdateFirstName :: Text
-  , userUpdateLastName :: Text
   , userUpdateDisplayName :: Text
   , userUpdateInstitution :: Text
+  , userUpdatePronouns:: Text
+  , userUpdateWebsite:: Text
+  , userUpdateBio:: Text
   }
   deriving Generic
 

@@ -73,10 +73,11 @@ addOrganizer UserCreate {..} = do
   let user = mkUser emailAddress
                     encrypted
                     photoURL
-                    firstName
-                    lastName
                     displayName
                     institution
+                    pronouns
+                    website
+                    bio
                     "organizer"
                     "public"
                     Nothing
@@ -137,10 +138,11 @@ signUp = do
   let user = mkUser emailAddress
                     encrypted
                     photoURL
-                    firstName
-                    lastName
                     displayName
                     institution
+                    pronouns
+                    website
+                    bio
                     "attendee"
                     "public"
                     Nothing
@@ -171,10 +173,11 @@ data UserCreate = UserCreate
   { emailAddress :: Text
   , password :: Text
   , photoURL :: Maybe Text
-  , firstName :: Text
-  , lastName :: Text
   , displayName :: Text
   , institution :: Text
+  , pronouns :: Text
+  , website :: Text
+  , bio :: Text
   }
   deriving Generic
 

@@ -11,8 +11,8 @@
         >
         </b-form-file>
       </b-col>
-      <b-col cols="auto" v-if="src">
-        <b-avatar :src="src" />
+      <b-col cols="auto" v-if="value.previewURL">
+        <b-avatar :src="value.previewURL" />
       </b-col>
       <modal-cropper ref="cropper" v-on:ok="onAcceptImage" />
     </b-form-row>
@@ -21,30 +21,26 @@
 
 <script lang="ts">
 import "reflect-metadata";
-import { Component, Vue, Prop, Watch } from "vue-property-decorator";
+import { Component, Vue, Prop } from "vue-property-decorator";
 import ModalCropper from "@/components/ModalCropper.vue";
 
 @Component({ components: { ModalCropper } })
 export default class SignIn extends Vue {
   @Prop({ default: false }) disabled!: boolean;
-  @Prop() value?: string;
-
-  src: string | null = null;
+  @Prop({ required: true }) value!: {
+    file: File | null;
+    previewURL: string | null;
+  };
 
   onFileChange(file: File) {
     (this.$refs.cropper as ModalCropper).show(file);
   }
 
-  @Watch("value")
-  onValueChange(value: string) {
-    this.src = value;
-  }
-
   onAcceptImage({ blob, type }: { blob: Blob | null; type?: string }) {
     if (blob) {
-      this.$emit("fileInput", new File([blob], "photo", { type }));
-      this.src = window.URL.createObjectURL(blob);
-      this.$emit("input", this.src);
+      const file = new File([blob], "photo", { type });
+      const previewURL = window.URL.createObjectURL(blob);
+      this.$emit("input", { file, previewURL });
     }
   }
 }

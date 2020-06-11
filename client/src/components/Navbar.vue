@@ -27,12 +27,12 @@ export default class Navbar extends Vue {
   // The navBar is in charge of syncing the session user with the backend.
   // Other components rely on this.
   mounted() {
-    // this.$store.dispatch("syncSessionUser").catch(error => {
-    //   // Don't panic if the user is not yet authenticated
-    //   if (error?.response?.status !== 401) {
-    //     throw error;
-    //   }
-    // });
+    this.$store.dispatch("syncSessionUser").catch(error => {
+      // Don't panic if the user is not yet authenticated
+      if (error?.response?.status !== 401) {
+        throw error;
+      }
+    });
   }
 
   get isOrganizer() {

@@ -188,16 +188,6 @@ export default class RoomCard extends Mixins(HeadingContext) {
   get hasTopic() {
     return !_.isEmpty(_.trim(this.room.topic));
   }
-
-  userTip(user: User) {
-    const fullName = _.trim(_.join([user.firstName, user.lastName], " "));
-    const institution = _.trim(user.institution);
-    let html = `<strong>${fullName}</strong>`;
-    if (!_.isEmpty(institution)) {
-      html += `<br><span class="font-italic">${institution}</span>`;
-    }
-    return html;
-  }
 }
 </script>
 

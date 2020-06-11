@@ -32,10 +32,11 @@ module Model
   , userEmailAddress'
   , userPassword'
   , userPhotoURL'
-  , userFirstName'
-  , userLastName'
   , userDisplayName'
   , userInstitution'
+  , userPronouns'
+  , userWebsite'
+  , userBio'
   , userLevel'
   , userVisibility'
   , userRoom'
@@ -81,10 +82,11 @@ User
   emailAddress Text
   password ByteString
   photoURL Text Maybe
-  firstName Text
-  lastName Text
   displayName Text
   institution Text
+  pronouns Text
+  website Text
+  bio Text
   level String
   visibility String
   room RoomId Maybe
@@ -308,16 +310,17 @@ invitationEmailError' = EntityFieldWrapper InvitationEmailError
   -> x_4: Text
   -> x_5: Text
   -> x_6: Text
-  -> x_7: String
+  -> x_7: Text
   -> x_8: String
-  -> x_9: (Maybe RoomId)
+  -> x_9: String
+  -> x_10: (Maybe RoomId)
   -> BinahRecord <
-       {\row -> userEmailAddress (entityVal row) == x_0 && userPassword (entityVal row) == x_1 && userPhotoURL (entityVal row) == x_2 && userFirstName (entityVal row) == x_3 && userLastName (entityVal row) == x_4 && userDisplayName (entityVal row) == x_5 && userInstitution (entityVal row) == x_6 && userLevel (entityVal row) == x_7 && userVisibility (entityVal row) == x_8 && userRoom (entityVal row) == x_9}
+       {\row -> userEmailAddress (entityVal row) == x_0 && userPassword (entityVal row) == x_1 && userPhotoURL (entityVal row) == x_2 && userDisplayName (entityVal row) == x_3 && userInstitution (entityVal row) == x_4 && userPronouns (entityVal row) == x_5 && userWebsite (entityVal row) == x_6 && userBio (entityVal row) == x_7 && userLevel (entityVal row) == x_8 && userVisibility (entityVal row) == x_9 && userRoom (entityVal row) == x_10}
      , {\new viewer -> IsOrganizer viewer || userLevel (entityVal new) == "attendee"}
      , {\x_0 x_1 -> (userVisibility (entityVal x_0) == "public" || IsSelf x_0 x_1) || (x_0 == x_1)}
      > User
 @-}
-mkUser x_0 x_1 x_2 x_3 x_4 x_5 x_6 x_7 x_8 x_9 = BinahRecord (User x_0 x_1 x_2 x_3 x_4 x_5 x_6 x_7 x_8 x_9)
+mkUser x_0 x_1 x_2 x_3 x_4 x_5 x_6 x_7 x_8 x_9 x_10 = BinahRecord (User x_0 x_1 x_2 x_3 x_4 x_5 x_6 x_7 x_8 x_9 x_10)
 
 {-@ invariant {v: Entity User | v == getJust (entityKey v)} @-}
 
@@ -379,36 +382,6 @@ userPassword' = EntityFieldWrapper UserPassword
 userPhotoURL' :: EntityFieldWrapper User (Maybe Text)
 userPhotoURL' = EntityFieldWrapper UserPhotoURL
 
-{-@ measure userFirstName :: User -> Text @-}
-
-{-@ measure userFirstNameCap :: Entity User -> Bool @-}
-
-{-@ assume userFirstName' :: EntityFieldWrapper <
-    {\_ _ -> True}
-  , {\row field  -> field == userFirstName (entityVal row)}
-  , {\field row  -> field == userFirstName (entityVal row)}
-  , {\old -> userFirstNameCap old}
-  , {\x_0 x_1 x_2 -> ((IsSelf x_0 x_2)) => (userFirstNameCap x_0)}
-  > _ _
-@-}
-userFirstName' :: EntityFieldWrapper User Text
-userFirstName' = EntityFieldWrapper UserFirstName
-
-{-@ measure userLastName :: User -> Text @-}
-
-{-@ measure userLastNameCap :: Entity User -> Bool @-}
-
-{-@ assume userLastName' :: EntityFieldWrapper <
-    {\_ _ -> True}
-  , {\row field  -> field == userLastName (entityVal row)}
-  , {\field row  -> field == userLastName (entityVal row)}
-  , {\old -> userLastNameCap old}
-  , {\x_0 x_1 x_2 -> ((IsSelf x_0 x_2)) => (userLastNameCap x_0)}
-  > _ _
-@-}
-userLastName' :: EntityFieldWrapper User Text
-userLastName' = EntityFieldWrapper UserLastName
-
 {-@ measure userDisplayName :: User -> Text @-}
 
 {-@ measure userDisplayNameCap :: Entity User -> Bool @-}
@@ -438,6 +411,51 @@ userDisplayName' = EntityFieldWrapper UserDisplayName
 @-}
 userInstitution' :: EntityFieldWrapper User Text
 userInstitution' = EntityFieldWrapper UserInstitution
+
+{-@ measure userPronouns :: User -> Text @-}
+
+{-@ measure userPronounsCap :: Entity User -> Bool @-}
+
+{-@ assume userPronouns' :: EntityFieldWrapper <
+    {\_ _ -> True}
+  , {\row field  -> field == userPronouns (entityVal row)}
+  , {\field row  -> field == userPronouns (entityVal row)}
+  , {\old -> userPronounsCap old}
+  , {\old _ _ -> userPronounsCap old}
+  > _ _
+@-}
+userPronouns' :: EntityFieldWrapper User Text
+userPronouns' = EntityFieldWrapper UserPronouns
+
+{-@ measure userWebsite :: User -> Text @-}
+
+{-@ measure userWebsiteCap :: Entity User -> Bool @-}
+
+{-@ assume userWebsite' :: EntityFieldWrapper <
+    {\_ _ -> True}
+  , {\row field  -> field == userWebsite (entityVal row)}
+  , {\field row  -> field == userWebsite (entityVal row)}
+  , {\old -> userWebsiteCap old}
+  , {\old _ _ -> userWebsiteCap old}
+  > _ _
+@-}
+userWebsite' :: EntityFieldWrapper User Text
+userWebsite' = EntityFieldWrapper UserWebsite
+
+{-@ measure userBio :: User -> Text @-}
+
+{-@ measure userBioCap :: Entity User -> Bool @-}
+
+{-@ assume userBio' :: EntityFieldWrapper <
+    {\_ _ -> True}
+  , {\row field  -> field == userBio (entityVal row)}
+  , {\field row  -> field == userBio (entityVal row)}
+  , {\old -> userBioCap old}
+  , {\old _ _ -> userBioCap old}
+  > _ _
+@-}
+userBio' :: EntityFieldWrapper User Text
+userBio' = EntityFieldWrapper UserBio
 
 {-@ measure userLevel :: User -> String @-}
 

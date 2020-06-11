@@ -15,20 +15,22 @@ export interface UserSignUp {
   user: {
     emailAddress: string;
     password: string;
-    firstName: string;
-    lastName: string;
     photoURL: string | null;
     displayName: string;
     institution: string;
+    website: string;
+    bio: string;
+    pronouns: string;
   };
 }
 
 export interface UserData {
-  firstName: string;
-  lastName: string;
   photoURL: string | null;
   displayName: string;
   institution: string;
+  website: string;
+  bio: string;
+  pronouns: string;
 }
 
 export interface User extends UserData {
