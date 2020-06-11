@@ -118,10 +118,7 @@ export default new Vuex.Store({
       }
     },
     roomUsers: ({ users }) => (roomId: string) =>
-      _(users)
-        .values()
-        .filter(u => u.room == roomId)
-        .value(),
+      _.filter(_.values(users), u => u.room == roomId),
     room: ({ rooms }, getters) => (roomId: string) =>
       rooms[roomId] && addUsersToRoom(rooms[roomId], getters.roomUsers(roomId)),
     currentRoom: (_state, getters) => {

@@ -135,9 +135,9 @@ export default class SignIn extends Vue {
       this.loading = true;
       ApiService.getInvitation(code)
         .then(invitation => {
-          const displayName = _([invitation.firstName, invitation.lastName])
-            .filter()
-            .join(" ");
+          const displayName = _.trim(
+            _.join([invitation.firstName, invitation.lastName], " ")
+          );
           this.emailAddress = invitation.emailAddress;
           this.password = "";
           this.profile = {

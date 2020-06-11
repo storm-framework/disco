@@ -1,5 +1,13 @@
 const BundleAnalyzerPlugin = require("webpack-bundle-analyzer")
   .BundleAnalyzerPlugin;
+const LodashModuleReplacementPlugin = require("lodash-webpack-plugin");
+
+const plugins = [new LodashModuleReplacementPlugin()];
+
+if (process.env.BUNDLE_ANALYZER) {
+  plugins.push(new BundleAnalyzerPlugin());
+}
+
 module.exports = {
   productionSourceMap: false,
   devServer: {
@@ -11,6 +19,6 @@ module.exports = {
     }
   },
   configureWebpack: {
-    plugins: process.env.BUNDLE_ANALYZER ? [new BundleAnalyzerPlugin()] : []
+    plugins
   }
 };

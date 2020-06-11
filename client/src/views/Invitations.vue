@@ -70,7 +70,7 @@ export default class Invitations extends Vue {
     ApiService.getInvitations().then(d => {
       this.invitations = d.map(r => [
         r.emailAddress,
-        _([r.firstName, r.lastName]).join(" "),
+        _.join([r.firstName, r.lastName], " "),
         r.accepted
       ]);
     });
