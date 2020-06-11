@@ -3,12 +3,12 @@
     <h1 class="sr-only">Overview</h1>
     <h2 class="sr-only">Your status</h2>
     <section v-if="sessionUser" class="row">
-      <user-summary long v-bind="sessionUser" :h-context="3" class="col-7" />
+      <user-summary long v-bind="sessionUser" :h-context="3" class="col-6" />
       <room-card
         v-if="currentRoom"
         :room="currentRoom"
         :h-context="4"
-        class="col-5"
+        class="col-6"
       />
       <b-col
         v-else
@@ -33,7 +33,11 @@
       <h2 v-if="currentRoom" class="mt-5">Other Rooms</h2>
       <h2 v-else class="mt-5">All Rooms</h2>
       <ul class="row list-unstyled mt-4">
-        <li class="mb-4 col-4" v-for="room in availableRooms" :key="room.id">
+        <li
+          class="mb-4 col-lg-auto"
+          v-for="room in availableRooms"
+          :key="room.id"
+        >
           <room-card :room="room" :h-context="3" class="available-room" />
         </li>
       </ul>
@@ -111,8 +115,4 @@ export default class Home extends Vue {
 }
 </script>
 
-<style lang="scss" scoped>
-.available-room {
-  height: 100%;
-}
-</style>
+<style lang="scss" scoped></style>

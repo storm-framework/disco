@@ -61,6 +61,7 @@
 
         <b-list-group class="user-list">
           <b-list-group-item
+            button
             v-for="user in users"
             :key="user.id"
             @click="toggleExpanded(user)"
@@ -126,7 +127,7 @@ library.add(
 @Component({ components: { UserSummary, Heading } })
 export default class RoomCard extends Mixins(HeadingContext) {
   @Prop() readonly room!: Room;
-  selectedUserId: string | null = null;
+  selectedUserId: number | null = null;
 
   editingTopic = false;
   saving = false;

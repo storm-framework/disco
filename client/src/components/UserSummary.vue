@@ -27,7 +27,7 @@
           </dd>
         </div>
       </dl>
-      <p>{{ bio }}</p>
+      <p class="bio">{{ bio }}</p>
     </b-media>
   </div>
 </template>
@@ -60,7 +60,7 @@ export default class UserSummary extends Mixins(HeadingContext) {
   }
 
   @Prop({ type: Boolean, default: false })
-  long: boolean;
+  long!: boolean;
 
   @Prop({ default: null })
   readonly photoURL!: string | null;
@@ -90,22 +90,11 @@ export default class UserSummary extends Mixins(HeadingContext) {
   get avatarText(): string {
     return this.name.slice(0, 2);
   }
-
-  get avatarSize(): string {
-    if (this.extended) {
-      return "6em";
-    } else {
-      return "2.5em";
-    }
-  }
 }
 </script>
 
 <style lang="scss" scoped>
 .info-item {
-  display: inline-block;
-  margin-right: 1em;
-
   dt,
   dd {
     display: inline;
@@ -114,6 +103,10 @@ export default class UserSummary extends Mixins(HeadingContext) {
   dt {
     margin-right: 0.5em;
   }
+}
+
+.bio {
+  max-width: 20em;
 }
 
 .user-brief {
