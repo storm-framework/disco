@@ -28,6 +28,7 @@ import           Concurrent
 import qualified Network.AWS                   as AWS
 import qualified Network.AWS.S3                as S3
 import           Network.Socket                 ( PortNumber )
+import           Crypto.JWT                    as JWT
 
 import           Model
 
@@ -36,6 +37,7 @@ data Config = Config
   , configTemplateCache :: !(MVar.MVar Mustache.TemplateCache)
   , configAWS :: AWSConfig
   , configSMTP :: SMTPConfig
+  , configSecretKey :: JWT.JWK
   , configBackend :: SqlBackend
   }
 

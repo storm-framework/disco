@@ -7,6 +7,7 @@ import {
   UserData,
   UserSignUp
 } from "@/models";
+import router from "@/router";
 import axios, { AxiosRequestConfig } from "axios";
 import _ from "lodash";
 
@@ -145,20 +146,35 @@ class ApiService {
     config?: AxiosRequestConfig
   ): Promise<any> {
     await delay();
-    const response = await axios.post(`${API_URL}${path}`, data, {
-      headers: this.authHeader(),
-      ...config
-    });
-    return response.data;
+    try {
+      const response = await axios.post(`${API_URL}${path}`, data, {
+        headers: this.authHeader(),
+        ...config
+      });
+      axios.create({});
+      return response.data;
+    } catch (error) {
+      if (error?.response?.status == 401) {
+        router.replace({ name: "SignIn" });
+      }
+      throw error;
+    }
   }
 
   async get(path: string, config?: AxiosRequestConfig): Promise<any> {
     await delay();
-    const response = await axios.get(`${API_URL}${path}`, {
-      headers: this.authHeader(),
-      ...config
-    });
-    return response.data;
+    try {
+      const response = await axios.get(`${API_URL}${path}`, {
+        headers: this.authHeader(),
+        ...config
+      });
+      return response.data;
+    } catch (error) {
+      if (error?.response?.status == 401) {
+        router.replace({ name: "SignIn" });
+      }
+      throw error;
+    }
   }
 
   async put(
@@ -167,11 +183,18 @@ class ApiService {
     config?: AxiosRequestConfig
   ): Promise<any> {
     await delay();
-    const response = await axios.put(`${API_URL}${path}`, data, {
-      headers: this.authHeader(),
-      ...config
-    });
-    return response.data;
+    try {
+      const response = await axios.put(`${API_URL}${path}`, data, {
+        headers: this.authHeader(),
+        ...config
+      });
+      return response.data;
+    } catch (error) {
+      if (error?.response?.status == 401) {
+        router.replace({ name: "SignIn" });
+      }
+      throw error;
+    }
   }
 
   authHeader() {

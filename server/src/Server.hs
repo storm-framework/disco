@@ -25,6 +25,7 @@ import           Database.Persist.Sqlite        ( SqlBackend
                                                 , runMigration
                                                 , createSqlitePool
                                                 )
+import           Crypto.JWT                    as JWT
 import           System.FilePath               as P
 import           System.Directory
 import           System.Environment
@@ -106,7 +107,6 @@ runServer ServerOpts {..} = runNoLoggingT $ do
             post "/api/room/current/leave" leaveRoom
             post "/api/room/:id"           roomUpdate
             post "/api/room/:id/join"      joinRoom
-
             get "/api/signurl" presignS3URL
 
             case optsStatic of
@@ -125,11 +125,14 @@ runTask' dbpath task = runSqlite dbpath $ do
 
 
 readConfig :: IO (SqlBackend -> Config)
-readConfig = do
-    templateCache <- liftIO $ MVar.newMVar mempty
-    aws           <- liftIO readAWSConfig
-    smtp          <- liftIO readSMTPConfig
-    return $ Config authMethod templateCache aws smtp
+readConfig =
+    Config authMethod <$> MVar.newMVar mempty <*> readAWSConfig <*> readSMTPConfig <*> readSecretKey
+
+
+readSecretKey :: IO JWT.JWK
+readSecretKey = do
+    secret <- fromMaybe "sb8NHmF@_-nsf*ymt!wJ3.KXmTDPsNoy" <$> lookupEnv "DISCO_SECRET_KEY"
+    return $ JWT.fromOctets . T.encodeUtf8 . T.pack $ secret
 
 
 readAWSConfig :: IO AWSConfig

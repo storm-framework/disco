@@ -70,7 +70,7 @@ export default new Vuex.Store({
       }),
     syncSessionUser: ({ dispatch, state }) => {
       if (state.sessionUserId !== null) {
-        dispatch("syncUser", state.sessionUserId);
+        return dispatch("syncUser", state.sessionUserId);
       } else {
         return Promise.resolve();
       }
