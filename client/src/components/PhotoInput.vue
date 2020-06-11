@@ -22,9 +22,10 @@
 <script lang="ts">
 import "reflect-metadata";
 import { Component, Vue, Prop } from "vue-property-decorator";
-import ModalCropper from "@/components/ModalCropper.vue";
 
-@Component({ components: { ModalCropper } })
+@Component({
+  components: { ModalCropper: () => import("@/components/ModalCropper.vue") }
+})
 export default class SignIn extends Vue {
   @Prop({ default: false }) disabled!: boolean;
   @Prop({ required: true }) value!: {
@@ -33,7 +34,7 @@ export default class SignIn extends Vue {
   };
 
   onFileChange(file: File) {
-    (this.$refs.cropper as ModalCropper).show(file);
+    (this.$refs.cropper as any).show(file);
   }
 
   onAcceptImage({ blob, type }: { blob: Blob | null; type?: string }) {
