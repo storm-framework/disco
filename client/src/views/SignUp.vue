@@ -27,7 +27,7 @@
               v-model="emailAddress"
               required
               disabled
-            ></b-form-input>
+            />
           </b-form-group>
 
           <b-form-group label="Password*" label-for="password">
@@ -36,9 +36,27 @@
               type="password"
               v-model="password"
               required
+              trim
               placeholder="Password"
               :disabled="fatalError"
-            ></b-form-input>
+            />
+          </b-form-group>
+
+          <b-form-group
+            label="Repeat password*"
+            label-for="repeat-password"
+            :state="!invalid"
+            invalid-feedback="Password doesn't match"
+          >
+            <b-form-input
+              id="repeat-password"
+              type="password"
+              v-model="repeatPassword"
+              required
+              trim
+              placeholder="Password"
+              :disabled="fatalError"
+            />
           </b-form-group>
         </b-form-group>
 
@@ -54,7 +72,7 @@
 
         <b-form-group label-cols-lg="3">
           <b-button
-            :disabled="fatalError"
+            :disabled="fatalError || invalid"
             variant="primary"
             size="lg"
             type="submit"
@@ -80,10 +98,15 @@ interface Form {
   password: string;
 }
 
-@Component({ components: { ProfileForm } })
+@Component({
+  components: { ProfileForm },
+  watch: { repeatPassword: "validate" }
+})
 export default class SignIn extends Vue {
   emailAddress = "";
   password = "";
+  repeatPassword = "";
+
   profile: ProfileFormData = {
     displayName: "",
     photo: {
@@ -100,6 +123,11 @@ export default class SignIn extends Vue {
   error = false;
   errorMsg = "";
   sending = false;
+
+  get invalid() {
+    if (_.isEmpty(this.password) || _.isEmpty(this.repeatPassword)) return null;
+    return this.password != this.repeatPassword ? true : null;
+  }
 
   mounted() {
     const code = this.code();
@@ -139,7 +167,7 @@ export default class SignIn extends Vue {
 
   onSubmit() {
     const code = this.code();
-    if (this.sending || !code) {
+    if (this.sending || !code || this.invalid) {
       return;
     }
     this.sending = true;

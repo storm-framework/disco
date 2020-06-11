@@ -11,6 +11,7 @@
         :value="value.displayName"
         @input="updateInput('displayName', $event)"
         required
+        trim
         placeholder="Badge name"
         :disabled="disabled"
       />
@@ -28,6 +29,7 @@
       <b-form-input
         id="pronouns"
         type="text"
+        trim
         :value="value.pronouns"
         @input="updateInput('pronouns', $event)"
         placeholder="they/them"
@@ -39,6 +41,7 @@
       <b-form-input
         id="institution"
         type="text"
+        trim
         :value="value.institution"
         @input="updateInput('institution', $event)"
         placeholder="Affiliation"
@@ -50,6 +53,7 @@
       <b-form-input
         id="website"
         type="url"
+        trim
         :value="value.website"
         @input="updateInput('website', $event)"
         placeholder="Website"
@@ -60,6 +64,7 @@
     <b-form-group label="Bio" label-for="website">
       <b-form-textarea
         id="bio"
+        trim
         type="text"
         :value="value.bio"
         @input="updateInput('bio', $event)"

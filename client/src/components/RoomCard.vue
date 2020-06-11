@@ -65,6 +65,7 @@
             v-for="user in users"
             :key="user.id"
             @click="toggleExpanded(user)"
+            class="compact"
           >
             <user-summary
               v-bind="user"
@@ -195,6 +196,7 @@ export default class RoomCard extends Mixins(HeadingContext) {
 .room-card {
   overflow: hidden;
   border-top-width: 1rem;
+  min-width: 300px;
 }
 
 .badge {
@@ -223,5 +225,9 @@ export default class RoomCard extends Mixins(HeadingContext) {
 
 .edit-topic .action {
   cursor: pointer;
+}
+
+.list-group-item.compact {
+  padding: 0.5rem 1rem;
 }
 </style>
