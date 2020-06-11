@@ -1,71 +1,52 @@
 <template>
-<main>
-  <h1>Manage rooms</h1>
-  <b-form
-    class="form-send-invitations"
-    @submit.prevent="onSubmit"
-    >
-    <b-alert :show="fatalError" variant="danger">{{ errorMsg }}</b-alert>
-    <fieldset v-if="!loading" :disabled="fatalError">
-      <table class="rooms-table">
-        <thead>
-          <tr>
-            <th class="room-color sr-only">Color</th>
-            <th class="room-name">Name</th>
-            <th class="room-url">URL</th>
-          </tr>
-        </thead>
-        <tbody v-for="group in roomGroups" :key="group">
-          <tr
-            v-for="(room, index) in groupRooms(group)"
-            :key="keyFor(group, index)"
+  <main>
+    <h1>Manage rooms</h1>
+    <b-form class="form-send-invitations" @submit.prevent="onSubmit">
+      <b-alert :show="fatalError" variant="danger">{{ errorMsg }}</b-alert>
+      <fieldset v-if="!loading" :disabled="fatalError">
+        <table class="rooms-table">
+          <thead>
+            <tr>
+              <th class="room-color sr-only">Color</th>
+              <th class="room-name">Name</th>
+              <th class="room-url">URL</th>
+            </tr>
+          </thead>
+          <tbody v-for="group in roomGroups" :key="group">
+            <tr
+              v-for="(room, index) in groupRooms(group)"
+              :key="keyFor(group, index)"
             >
-            <td class="room-color">
-              <b-form-input
-                type="color"
-                v-model="room.color"
-                />
-            </td>
-            <td class="room-name">
-              <b-form-input
-                type="text"
-                v-model="room.name"
-                required
-                />
-            </td>
-            <td class="room-url">
-              <b-form-input
-                type="url"
-                v-model="room.zoomLink"
-                required
-                />
-            </td>
-          </tr>
-          <tr
-            v-if="group === 'new'">
-            <td colspan="3" class="new-row">
-              <icon-button
-                icon="plus"
-                class="add-room"
-                @click="add"
-                >
-                Add Room
-              </icon-button>
-             </td>
-          </tr>
-        </tbody>
-      </table>
+              <td class="room-color">
+                <b-form-input type="color" v-model="room.color" />
+              </td>
+              <td class="room-name">
+                <b-form-input type="text" v-model="room.name" required />
+              </td>
+              <td class="room-url">
+                <b-form-input type="url" v-model="room.zoomLink" required />
+              </td>
+            </tr>
+            <tr v-if="group === 'new'">
+              <td colspan="3" class="new-row">
+                <icon-button icon="plus" class="add-room" @click="add">
+                  Add Room
+                </icon-button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
         <b-button
           type="submit"
           variant="primary"
           class="save"
           :disabled="saving"
-          >
+        >
           Save
-      </b-button>
-    </fieldset>
-  </b-form>
-</main>
+        </b-button>
+      </fieldset>
+    </b-form>
+  </main>
 </template>
 
 <script lang="ts">
@@ -78,9 +59,8 @@ import { library } from "@fortawesome/fontawesome-svg-core";
 import { faPlus } from "@fortawesome/free-solid-svg-icons";
 library.add(faPlus);
 
-
 interface OldRoom {
-    id: number;
+  id: number;
   name: string;
   zoomLink: string;
   color: string;
@@ -252,7 +232,13 @@ main {
 }
 
 .rooms-table {
-  &, thead, tbody, tfoot, tr, th, td {
+  &,
+  thead,
+  tbody,
+  tfoot,
+  tr,
+  th,
+  td {
     display: block;
   }
 
@@ -261,7 +247,8 @@ main {
     margin-bottom: $spacer;
   }
 
-  th, td {
+  th,
+  td {
     @include make-col-ready();
   }
 
@@ -271,8 +258,8 @@ main {
 }
 
 .new-row {
-    text-align: center;
-    width: 100%;
+  text-align: center;
+  width: 100%;
 }
 
 .room-color {
@@ -288,6 +275,6 @@ main {
 }
 
 .save {
-    float:right;
+  float: right;
 }
 </style>

@@ -3,23 +3,7 @@
     <h1 class="sr-only">Overview</h1>
     <h2 class="sr-only">Your status</h2>
     <section v-if="sessionUser" class="row">
-      <b-media
-        tag="section"
-        vertical-align="center"
-        class="col-7 align-items-center"
-      >
-        <template v-slot:aside>
-          <b-avatar :src="sessionUser.photoURL" :text="initials" size="300" />
-        </template>
-
-        <h3>{{ fullName }}</h3>
-
-        <dl>
-          <dt>Badge name</dt>
-          <dd>{{ sessionUser.displayName }}</dd>
-        </dl>
-      </b-media>
-
+      <user-summary long v-bind="sessionUser" :h-context="3" class="col-7" />
       <room-card
         v-if="currentRoom"
         :room="currentRoom"
@@ -43,6 +27,7 @@
 <script lang="ts">
 import { Component, Vue } from "vue-property-decorator";
 import RoomCard from "@/components/RoomCard.vue";
+import UserSummary from "@/components/UserSummary.vue";
 import { Room } from "@/models";
 import { mapGetters } from "vuex";
 import _ from "lodash";
@@ -50,7 +35,7 @@ import _ from "lodash";
 const SYNC_INTERVAL = 10000;
 
 @Component({
-  components: { RoomCard },
+  components: { RoomCard, UserSummary },
   computed: mapGetters(["sessionUser", "currentRoom"])
 })
 export default class Home extends Vue {

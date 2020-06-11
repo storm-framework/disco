@@ -1,5 +1,5 @@
 <template>
-  <article :style="{ borderTopColor: room.color }" class="card">
+  <article :style="{ borderTopColor: room.color }" class="room-card card">
     <b-card-body>
       <heading :level="1" :context="headingContext" class="card-title h4">
         {{ room.name }}
@@ -23,13 +23,19 @@
           In this room
         </heading>
 
-        <ul class="user-list">
-          <li v-for="user in users" :key="user.id">
-            <span v-b-tooltip.hover.html="userTip(user)">
-              {{ user.displayName }}
-            </span>
-          </li>
-        </ul>
+        <b-list-group class="user-list">
+          <b-list-group-item
+            v-for="user in users"
+            :key="user.id"
+            @click="toggleExpanded(user)"
+          >
+            <user-summary
+              v-bind="user"
+              :long="isExpanded(user)"
+              :heading-context="headingContext + 2"
+            />
+          </b-list-group-item>
+        </b-list-group>
       </template>
 
       <icon-button
@@ -37,7 +43,7 @@
         icon="door-open"
         @click="leaveRoom"
         variant="danger"
-        >
+      >
         Leave
       </icon-button>
       <icon-button
@@ -57,6 +63,7 @@
 <script lang="ts">
 import { Component, Prop, Mixins } from "vue-property-decorator";
 import { Room, User } from "@/models";
+import UserSummary from "@/components/UserSummary.vue";
 import HeadingContext from "@/mixins/HeadingContext";
 import Heading from "@/components/Heading";
 import _ from "lodash";
@@ -70,9 +77,10 @@ import {
 
 library.add(faDoorOpen, faComments, faExternalLinkAlt);
 
-@Component({ components: { Heading } })
+@Component({ components: { UserSummary, Heading } })
 export default class RoomCard extends Mixins(HeadingContext) {
   @Prop() readonly room!: Room;
+  selectedUserId: string | null = null;
 
   get empty() {
     return this.users.length === 0;
@@ -84,6 +92,18 @@ export default class RoomCard extends Mixins(HeadingContext) {
 
   get isCurrentRoom() {
     return this.$store.getters.currentRoom?.id === this.room.id;
+  }
+
+  isExpanded(user: User) {
+    return user.id === this.selectedUserId;
+  }
+
+  toggleExpanded(user: User) {
+    if (this.isExpanded(user)) {
+      this.selectedUserId = null;
+    } else {
+      this.selectedUserId = user.id;
+    }
   }
 
   joinRoom() {
@@ -107,7 +127,7 @@ export default class RoomCard extends Mixins(HeadingContext) {
 </script>
 
 <style lang="scss" scoped>
-.card {
+.room-card {
   overflow: hidden;
   border-top-width: 1rem;
 }
@@ -117,7 +137,7 @@ export default class RoomCard extends Mixins(HeadingContext) {
   vertical-align: -0.25em;
 }
 
-.card .user-list {
+.user-list {
   margin-bottom: 1rem;
 }
 

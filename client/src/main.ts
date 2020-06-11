@@ -14,7 +14,6 @@ import IconButton from "./components/IconButton.vue";
 import "./plugins/bootstrap-vue";
 import "./plugins/vue-fontawesome";
 
-
 Vue.config.productionTip = false;
 Vue.component("icon-button", IconButton);
 
