@@ -75,6 +75,7 @@ Invitation
   accepted Bool
   emailStatus String
   emailError String Maybe
+  UniqueInvitationEmailAddress emailAddress
 
 User
   emailAddress Text
@@ -87,12 +88,14 @@ User
   level String
   visibility String
   room RoomId Maybe
+  UniqueUserEmailAddress emailAddress
 
 Room
   color Text
   name Text
   topic Text
   zoomLink Text
+  
 |]
 
 {-@

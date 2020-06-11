@@ -10,6 +10,8 @@ Invitation
   emailStatus String
   emailError String Maybe
 
+  UniqueInvitationEmailAddress emailAddress
+
   insert {\invitation viewer ->
     not (invitationAccepted invitation)
     && IsOrganizer viewer
@@ -36,6 +38,8 @@ User
   level String
   visibility String
   room RoomId Maybe
+
+  UniqueUserEmailAddress emailAddress
 
   insert {\new viewer -> IsOrganizer viewer || userLevel new == "attendee"}
 
