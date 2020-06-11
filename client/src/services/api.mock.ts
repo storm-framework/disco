@@ -1,7 +1,6 @@
 import {
   Invitation,
   InvitationInsert,
-  PresignedURL,
   Room,
   RoomData,
   User,
@@ -227,10 +226,6 @@ class ApiService {
   }
 
   // Files
-
-  preSignURL(code?: string): Promise<PresignedURL> {
-    return Promise.reject("Not implemented");
-  }
 
   async uploadFile(file: File, code?: string): Promise<string> {
     await delay();

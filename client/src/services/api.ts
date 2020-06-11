@@ -1,7 +1,6 @@
 import {
   Invitation,
   InvitationInsert,
-  PresignedURL,
   Room,
   RoomData,
   User,
@@ -43,7 +42,6 @@ interface ApiService {
 
   //  Upload Files
 
-  preSignURL(code?: string): Promise<PresignedURL>;
   uploadFile(file: File, code?: string): Promise<string>;
 }
 

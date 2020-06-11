@@ -106,7 +106,8 @@ runServer ServerOpts {..} = runNoLoggingT $ do
             post "/api/room/current/leave" leaveRoom
             post "/api/room/:id"           roomUpdate
             post "/api/room/:id/join"      joinRoom
-            get "/api/signurl" s3SignedURL
+
+            get "/api/signurl" presignS3URL
 
             case optsStatic of
                 Just path -> fallback (sendFromDirectory path "index.html")

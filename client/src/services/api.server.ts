@@ -1,7 +1,6 @@
 import {
   Invitation,
   InvitationInsert,
-  PresignedURL,
   Room,
   RoomData,
   User,
@@ -125,16 +124,17 @@ class ApiService {
 
   // Files
 
-  preSignURL(code?: string): Promise<PresignedURL> {
+  presignURL(code?: string): Promise<string> {
     return this.get(`/signurl?code=${code}`);
   }
 
   async uploadFile(file: File, code?: string): Promise<string> {
-    const presigned = await this.preSignURL(code);
-    await axios.put(presigned.signedURL, file, {
+    const presigned = await this.presignURL(code);
+    await axios.put(presigned, file, {
       headers: { "Content-Type": file.type }
     });
-    return presigned.objectURL;
+    const u = new URL(presigned);
+    return `${u.protocol}//${u.host}${u.pathname}`;
   }
 
   // Raw Requests

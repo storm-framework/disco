@@ -34,6 +34,7 @@ import qualified Data.ByteString               as ByteString
 import qualified Data.ByteString.Base64.URL    as B64Url
 import qualified Data.ByteString.Lazy          as L
 import           Data.Int                       ( Int64 )
+import           Data.Maybe                     ( listToMaybe )
 import           Database.Persist.Sql           ( toSqlKey
                                                 , fromSqlKey
                                                 )
@@ -184,16 +185,26 @@ instance FromJSON UserCreate where
 -- | SignIn
 --------------------------------------------------------------------------------
 
-s3SignedURL :: Controller ()
-s3SignedURL = do
+
+presignS3URL :: Controller ()
+presignS3URL = do
+  code         <- listToMaybe <$> queryParams "code"
+  invitationId <- listToMaybe <$> queryParams "id"
+  emailAddress <- case (code, invitationId) of
+    (Just code, Just id) -> do
+      invitation <- selectFirstOr (errorResponse status401 Nothing)
+                                  (invitationId' ==. id &&: invitationCode' ==. code)
+      project invitationEmailAddress' invitation
+    _ -> requireAuthUser >>= project userEmailAddress'
   t              <- liftTIO currentTime
   AWSConfig {..} <- configAWS <$> getConfig
-  objectKey      <- genRandomCode
-  let request = putObject awsBucket (ObjectKey objectKey) ""
+  let objectKey = textBase64 emailAddress
+  let request   = putObject awsBucket (ObjectKey objectKey) ""
   signedUrl <- presignURL awsAuth awsRegion t 900 request
-  let objectURL =
-        printf "https://%s.s3-%s.amazonaws.com/%s" (toText awsBucket) (toText awsRegion) objectKey :: String
-  respondJSON status200 $ object ["signedURL" .= T.decodeUtf8 signedUrl, "objectURL" .= objectURL]
+  respondJSON status200 $ T.decodeUtf8 signedUrl
+
+textBase64 :: T.Text -> T.Text
+textBase64 = T.decodeUtf8 . B64Url.encode . T.encodeUtf8
 
 -------------------------------------------------------------------------------
 -- | Auth method

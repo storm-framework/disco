@@ -48,8 +48,3 @@ export interface RoomData {
 export interface Room extends RoomData {
   id: number;
 }
-
-export interface PresignedURL {
-  signedURL: string;
-  objectURL: string;
-}

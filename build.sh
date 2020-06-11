@@ -21,12 +21,13 @@ then
   cd server
   make build
   stack install --local-bin-path ../dist --
-  cp -r templates ../dist
+  cd ..
 else
   echo "Building inside docker: $DOCKERIMAGE"
   docker run -w /workspace -v `pwd`/dist:/dist -v `pwd`/server:/workspace -v ~/.stack:/root/.stack $DOCKERIMAGE stack install --local-bin-path /dist --work-dir .stack-work-docker --allow-different-user
   docker run -v `pwd`/dist:/dist $DOCKERIMAGE chown $(id -u $USER):$(id -g $USER) /dist/disco
 fi
+cp -r server/templates dist/
 
 if [ $COMPRESS == true ] ; then
     tar cf disco.tar.gz dist
