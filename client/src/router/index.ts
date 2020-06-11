@@ -1,9 +1,6 @@
 import ApiService from "@/services/api";
-import Admin from "@/views/Admin.vue";
 import Home from "@/views/Home.vue";
-import Invitations from "@/views/Invitations.vue";
 import Profile from "@/views/Profile.vue";
-import SendInvitations from "@/views/SendInvitations.vue";
 import SignIn from "@/views/SignIn.vue";
 import SignUp from "@/views/SignUp.vue";
 import _ from "lodash";
@@ -24,6 +21,11 @@ const routes: Array<RouteConfig> = [
     component: SignUp
   },
   {
+    path: "/",
+    name: "Home",
+    component: Home
+  },
+  {
     path: "/profile",
     name: "Profile",
     component: Profile
@@ -31,22 +33,19 @@ const routes: Array<RouteConfig> = [
   {
     path: "/invitation",
     name: "Invitations",
-    component: Invitations
+    component: () =>
+      import(/* webpackChunkName: "admin" */ "@/views/Invitations.vue")
   },
   {
     path: "/invitation/send",
     name: "SendInvitations",
-    component: SendInvitations
+    component: () =>
+      import(/* webpackChunkName: "admin" */ "@/views/SendInvitations.vue")
   },
   {
     path: "/admin",
     name: "Admin",
-    component: Admin
-  },
-  {
-    path: "/",
-    name: "Home",
-    component: Home
+    component: () => import(/* webpackChunkName: "admin" */ "@/views/Admin.vue")
   }
 ];
 
