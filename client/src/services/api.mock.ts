@@ -57,11 +57,11 @@ const USERS: { [id: string]: User } = {
     id: 1,
     photoURL:
       "https://upload.wikimedia.org/wikipedia/commons/thumb/7/77/Avatar_cat.png/120px-Avatar_cat.png",
-    displayName: "Charlie Papazian",
+    displayName: "Firstname Q. Lastname, Ph. D.",
     institution: "Homebrewers",
-    pronouns: "",
+    pronouns: "they/them",
     bio: "",
-    website: "",
+    website: "#ThisIsAMisleadingHashtag",
     level: "organizer",
     room: "1"
     // room: null
@@ -69,67 +69,67 @@ const USERS: { [id: string]: User } = {
   2: {
     id: 2,
     photoURL: null,
-    displayName: "Beerhunter",
-    institution: "Beer",
-    pronouns: "",
+    displayName: "昔追能変",
+    institution: "",
+    pronouns: "he/him",
     bio: "",
-    website: "",
-    level: "atendee",
+    website: "https://example.com",
+    level: "attendee",
     room: "1"
   },
   3: {
     id: 3,
-    photoURL: null,
+    photoURL: "https://upload.wikimedia.org/wikipedia/commons/2/2c/Rotating_earth_%28large%29.gif",
     displayName: "Natalie Cilurzo",
     institution: "Russian River",
-    pronouns: "",
-    bio: "",
+    pronouns: "או אנא רשימות",
+    bio: "A bio",
     website: "",
     level: "attendee",
     room: "2"
   },
   4: {
     id: 4,
-    photoURL: null,
+    photoURL: "https://upload.wikimedia.org/wikipedia/commons/a/a1/Johnrogershousemay2020.webp",
     displayName: "Vinnie Cilurzo",
     institution: "Russina River",
     pronouns: "",
-    bio: "",
+    bio: "فسقط مشاركة لليابان مع لها. مع وبعض غينيا أما. بـ قام ووصف الحدود, و جيوب فكان الدولارات بحث, مدن احداث تكتيكاً ماليزيا، بـ. ضرب أم بوابة اتّجة, بـ ضمنها للجزر ولم.\nأسيا انتهت فصل مع. إذ وسوء أحدث الستار كلا, جعل سكان فهرست الضغوط ما, مليارات الأوروبيّون لان ثم. هنا؟ مواقعها والكوري حين عل, كل به، الأوضاع والفلبين",
     website: "",
-    level: "atendee",
+    level: "attendee",
     room: "2"
   },
   5: {
     id: 5,
     photoURL: null,
     displayName: "Greg Koch",
-    institution: "Stone Brewing",
-    pronouns: "",
+    institution: "את עזה שפות הבתב שמות ננקטת ע",
+    pronouns: "he/him/his or they/them/theirs",
     bio: "",
     website: "",
-    level: "atendee",
+    level: "attendee",
     room: "3"
   },
   6: {
     id: 6,
-    photoURL: null,
-    displayName: "Dominic",
+    photoURL: "https://upload.wikimedia.org/wikipedia/commons/8/87/SVG_animation_using_CSS.svg",
+    displayName: "Ratiöňibûş O’Foobarlingtonshire",
     institution: "Stone Brewing",
     pronouns: "",
     bio: "",
-    website: "",
-    level: "atendee",
+    website: "ThisIsALongLineWithNoNaturalBreaks0987654321abcdefghijklmnopqrstuvwxyz1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+    level: "attendee",
     room: "3"
   },
-  7: {
-    id: 7,
+  9: {
+    id: 9, // Skipped a couple of ids on purpose
     photoURL: null,
-    displayName: "Steve Wagner",
+    displayName: "واندونيسيا، هو, سكان شاسعة أعلنت ",
     institution: "Stone Brewing",
     pronouns: "",
     bio: "",
     website: "",
-    level: "atendee",
+    level: "attendee",
     room: "3"
   }
 };
