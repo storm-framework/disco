@@ -98,10 +98,7 @@ interface Form {
   password: string;
 }
 
-@Component({
-  components: { ProfileForm },
-  watch: { repeatPassword: "validate" }
-})
+@Component({ components: { ProfileForm } })
 export default class SignIn extends Vue {
   emailAddress = "";
   password = "";

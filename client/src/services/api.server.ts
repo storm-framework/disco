@@ -125,8 +125,15 @@ class ApiService {
 
   // Files
 
-  presignURL(code?: string): Promise<string> {
-    return this.get(`/signurl?code=${code}`);
+  presignURL(param?: string): Promise<string> {
+    if (param) {
+      const [id, code] = _.split(param, ".");
+      return axios
+        .get(`${API_URL}/signurl?code=${code}&id=${id}`)
+        .then(r => r.data);
+    } else {
+      return this.get("/signurl");
+    }
   }
 
   async uploadFile(file: File, code?: string): Promise<string> {
@@ -155,7 +162,7 @@ class ApiService {
       return response.data;
     } catch (error) {
       if (error?.response?.status == 401) {
-        router.replace({ name: "SignIn" });
+        await this.unauthorized();
       }
       throw error;
     }
@@ -171,7 +178,7 @@ class ApiService {
       return response.data;
     } catch (error) {
       if (error?.response?.status == 401) {
-        router.replace({ name: "SignIn" });
+        await this.unauthorized();
       }
       throw error;
     }
@@ -191,7 +198,7 @@ class ApiService {
       return response.data;
     } catch (error) {
       if (error?.response?.status == 401) {
-        router.replace({ name: "SignIn" });
+        await this.unauthorized();
       }
       throw error;
     }
@@ -203,6 +210,11 @@ class ApiService {
     } else {
       return {};
     }
+  }
+
+  async unauthorized() {
+    await this.signOut();
+    router.replace({ name: "signIn" });
   }
 }
 
