@@ -9,9 +9,9 @@
     bg-color="#f5f5f5"
   >
     <b-container>
-      <b-alert :show="error" variant="danger" :dismissible="!fatalError">{{
-        errorMsg
-      }}</b-alert>
+      <b-alert :show="error" variant="danger" :dismissible="!fatalError">
+        {{ errorMsg }}
+      </b-alert>
       <b-form @submit.prevent="onSubmit">
         <b-form-group
           label-cols-lg="3"
@@ -45,7 +45,7 @@
           <b-form-group
             label="Repeat password*"
             label-for="repeat-password"
-            :state="!invalid"
+            :state="validRepeatPassword && null"
             invalid-feedback="Password doesn't match"
           >
             <b-form-input
@@ -67,12 +67,16 @@
           label-class="font-weight-bold pt-0"
           class="mb-0"
         >
-          <profile-form :disabled="fatalError" v-model="profile" />
+          <profile-form
+            :disabled="fatalError"
+            v-model="profile"
+            @state="validProfile = $event"
+          />
         </b-form-group>
 
         <b-form-group label-cols-lg="3">
           <b-button
-            :disabled="fatalError || invalid"
+            :disabled="fatalError || !valid"
             variant="primary"
             size="lg"
             type="submit"
@@ -115,15 +119,20 @@ export default class SignIn extends Vue {
     website: "",
     bio: ""
   };
+  validProfile = true;
   loading = false;
   fatalError = false;
   error = false;
   errorMsg = "";
   sending = false;
 
-  get invalid() {
-    if (_.isEmpty(this.password) || _.isEmpty(this.repeatPassword)) return null;
-    return this.password != this.repeatPassword ? true : null;
+  get validRepeatPassword() {
+    if (_.isEmpty(this.password) || _.isEmpty(this.repeatPassword)) return true;
+    return this.password == this.repeatPassword;
+  }
+
+  get valid() {
+    return this.validRepeatPassword && this.validProfile;
   }
 
   mounted() {
@@ -164,7 +173,7 @@ export default class SignIn extends Vue {
 
   onSubmit() {
     const code = this.code();
-    if (this.sending || !code || this.invalid) {
+    if (this.sending || !code || !this.valid) {
       return;
     }
     this.sending = true;
@@ -172,6 +181,8 @@ export default class SignIn extends Vue {
       .catch(error => {
         if (error.response?.status == 403) {
           this.setError("Invalid invitation code", true);
+        } else if (error.response?.status == 400) {
+          this.setError("The form contains errors");
         } else {
           this.setError("There was an unexpected error");
         }

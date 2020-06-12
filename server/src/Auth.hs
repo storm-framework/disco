@@ -11,7 +11,9 @@ import           Data.Aeson
 import           Control.Monad.Trans.Class      ( lift )
 import           Control.Monad.Time             ( MonadTime(..) )
 import           Control.Monad.Except           ( runExceptT )
-import           Control.Monad                  ( replicateM )
+import           Control.Monad                  ( replicateM
+                                                , when
+                                                )
 import           Control.Lens.Operators         ( (?~)
                                                 , (^.)
                                                 , (^?)
@@ -133,7 +135,8 @@ instance ToJSON AuthRes where
 {-@ ignore signUp @-}
 signUp :: Controller ()
 signUp = do
-  (SignUpReq (InvitationCode id code) UserCreate {..}) <- decodeBody
+  (SignUpReq (InvitationCode id code) uc@UserCreate {..}) <- decodeBody
+  validateUser uc
   EncryptedPass encrypted <- encryptPassTIO' (Pass (T.encodeUtf8 password))
   let user = mkUser emailAddress
                     encrypted
@@ -159,6 +162,13 @@ signUp = do
   token    <- genJwt userId
   userData <- extractUserData user
   respondJSON status201 $ AuthRes (unpackLazy8 token) userData
+
+validateUser :: UserCreate -> Controller ()
+validateUser UserCreate {..} = do
+  when (T.length emailAddress == 0) $ respondError status400 (Just "missing email address")
+  when (T.length password == 0) $ respondError status400 (Just "missing password")
+  when (T.length displayName == 0) $ respondError status400 (Just "missing displayName")
+  when (T.length bio > 300) $ respondError status400 (Just "bio too long")
 
 data SignUpReq = SignUpReq
   { signUpReqInvitationCode :: InvitationCode

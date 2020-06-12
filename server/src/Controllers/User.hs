@@ -7,6 +7,7 @@
 module Controllers.User where
 
 import           Data.Text                      ( Text )
+import qualified Data.Text                     as T
 import           Data.Int                       ( Int64 )
 import           Data.Maybe
 import           Database.Persist.Sql           ( fromSqlKey
@@ -28,6 +29,7 @@ import           Controllers
 import           Controllers.Invitation         ( InvitationCode(..) )
 import           Model
 import           JSON
+import           Control.Monad                  ( when )
 
 ----------------------------------------------------------------------------------------------------
 -- | User List
@@ -93,9 +95,10 @@ userGet uid = do
 {-@ userUpdateMe :: TaggedT<{\_ -> False}, {\_ -> True}> _ _ @-}
 userUpdateMe :: Controller ()
 userUpdateMe = do
-  user            <- requireAuthUser
-  userId          <- project userId' user
-  UserUpdate {..} <- decodeBody
+  user               <- requireAuthUser
+  userId             <- project userId' user
+  uu@UserUpdate {..} <- decodeBody
+  validateUser uu
   let up =
         (userPhotoURL' `assign` userUpdatePhotoURL)
           `combine` (userDisplayName' `assign` userUpdateDisplayName)
@@ -108,6 +111,10 @@ userUpdateMe = do
   userData <- extractUserData user
   respondJSON status200 userData
 
+validateUser :: UserUpdate -> Controller ()
+validateUser UserUpdate {..} = do
+  when (T.length userUpdateDisplayName == 0) $ respondError status400 (Just "missing displayName")
+  when (T.length userUpdateBio > 300) $ respondError status400 (Just "bio too long")
 
 data UserUpdate = UserUpdate
   { userUpdatePhotoURL :: Maybe Text

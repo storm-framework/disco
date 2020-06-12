@@ -61,7 +61,12 @@
       />
     </b-form-group>
 
-    <b-form-group label="Bio" label-for="website">
+    <b-form-group
+      label="Bio"
+      label-for="website"
+      :invalid-feedback="`Your bio cannot exceed ${maxBioSize} characters.`"
+      :state="validBio && null"
+    >
       <b-form-textarea
         id="bio"
         trim
@@ -69,13 +74,14 @@
         :value="value.bio"
         @input="updateInput('bio', $event)"
         :disabled="disabled"
+        :state="validBio && null"
       />
     </b-form-group>
   </div>
 </template>
 
 <script lang="ts">
-import { Component, Vue, Prop } from "vue-property-decorator";
+import { Component, Vue, Prop, Watch } from "vue-property-decorator";
 import PhotoInput from "@/components/PhotoInput.vue";
 
 type ValidField =
@@ -100,8 +106,21 @@ export interface ProfileFormData {
 
 @Component({ components: { PhotoInput } })
 export default class ProfileForm extends Vue {
+  readonly maxBioSize = 300;
+
   @Prop({ required: true }) value!: ProfileFormData;
   @Prop({ default: false }) disabled!: boolean;
+
+  get validBio() {
+    return this.value.bio.length <= this.maxBioSize;
+  }
+
+  @Watch("validBio", { immediate: true })
+  emitValid(newValue: boolean, oldValue: boolean) {
+    if (newValue != oldValue) {
+      this.$emit("state", newValue);
+    }
+  }
 
   updateInput(field: ValidField, value: any) {
     const updated = { ...this.value };
