@@ -19,22 +19,22 @@
         </router-link>
       </heading>
       <dl>
-        <div class="info-item">
+        <div v-if="pronouns" class="info-item">
           <dt>Pronouns</dt>
           <dd>{{ pronouns }}</dd>
         </div>
-        <div class="info-item">
+        <div v-if="affiliation" class="info-item">
           <dt>Affiliation</dt>
           <dd>{{ institution }}</dd>
         </div>
-        <div class="info-item">
+        <div v-if="website" class="info-item">
           <dt>Website</dt>
           <dd>
             <a :href="website">{{ website }}</a>
           </dd>
         </div>
       </dl>
-      <p class="bio">{{ bio }}</p>
+      <p v-if="bio" class="bio">{{ bio }}</p>
     </b-media>
   </div>
 </template>
