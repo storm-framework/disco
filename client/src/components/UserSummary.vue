@@ -4,30 +4,29 @@
       <b-avatar class="photo" :src="photoURL" :text="avatarText" size="2em" />
       <p class="name">{{ displayName }}</p>
     </div>
-    <b-media v-else>
-      <template v-slot:aside>
-        <b-avatar class="photo" :src="photoURL" :text="avatarText" size="6em" />
-      </template>
-      <heading :level="1" :context="headingContext">
+    <div class="user-long" v-else>
+      <b-avatar class="photo" :src="photoURL" :text="avatarText" size="6em" />
+      <div class="text">
+      <heading class="name" :level="1" :context="headingContext">
         {{ displayName }}
-        <router-link
-          class="edit-profile"
-          :to="{ name: 'Profile' }"
-          v-if="editable"
-        >
-          <font-awesome-icon icon="edit" />
-        </router-link>
       </heading>
+      <icon-button
+        v-if="editable"
+        icon="edit"
+        :to="{ name: 'Profile' }"
+      >
+        Edit profile
+      </icon-button>
       <dl>
         <div v-if="pronouns" class="info-item">
           <dt>Pronouns</dt>
           <dd>{{ pronouns }}</dd>
         </div>
-        <div v-if="affiliation" class="info-item">
+        <div v-if="institution" class="info-item">
           <dt>Affiliation</dt>
           <dd>{{ institution }}</dd>
         </div>
-        <div v-if="website" class="info-item">
+        <div v-if="website" class="info-item website">
           <dt>Website</dt>
           <dd>
             <a :href="website">{{ website }}</a>
@@ -35,7 +34,8 @@
         </div>
       </dl>
       <p v-if="bio" class="bio">{{ bio }}</p>
-    </b-media>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -86,6 +86,9 @@ export default class UserSummary extends Mixins(HeadingContext) {
 
 <style lang="scss" scoped>
 .info-item {
+  overflow: hidden;
+  text-overflow: ellipsis;
+
   dt,
   dd {
     display: inline;
@@ -100,14 +103,41 @@ export default class UserSummary extends Mixins(HeadingContext) {
   max-width: 20em;
 }
 
+.website {
+  white-space: nowrap;
+}
+
+.user-long {
+    display: flex;
+    overflow: hidden;
+}
+
+.photo {
+    flex-shrink: 0;
+    margin-right: 1em;
+}
+
+.text {
+    overflow: hidden;
+    flex-shrink: 1;
+}
+
 .user-brief {
   display: flex;
   align-items: center;
 
   .name {
-    margin-bottom: 0;
-    margin-left: 1em;
+    font-size: 1rem;
+    margin: 0;
   }
+}
+
+.user-long .name {
+    font-size: 1.125rem;
+}
+
+.name {
+    font-weight: normal;
 }
 
 .edit-profile {
