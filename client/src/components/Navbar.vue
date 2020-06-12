@@ -1,6 +1,6 @@
 <template>
   <b-navbar toggleable="lg" type="dark" variant="info">
-    <b-navbar-brand to="/">Community Video</b-navbar-brand>
+    <b-navbar-brand to="/">Distant Socialing</b-navbar-brand>
     <b-navbar-nav class="ml-auto">
       <b-nav-item-dropdown text="Admin" right v-if="isOrganizer">
         <b-dropdown-item :to="{ name: 'Admin' }">Rooms</b-dropdown-item>
