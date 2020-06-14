@@ -229,13 +229,13 @@ export default class SendInvitations extends Vue {
     return headers;
   }
 
-  someHeaderInRange() {
-    const ncols: number = _.get(this.importFileRows, "0.length") || 0;
+  someHeaderIsInRange() {
+    const ncols = (this.importFileRows && this.importFileRows[0]?.length) || 3;
     return _.some(this.importFileHeaderIdxs, idx => _.inRange(idx, 0, ncols));
   }
 
   get importFileShowPreview(): boolean {
-    return this.importFileRows !== null && this.someHeaderInRange();
+    return this.importFileRows !== null && this.someHeaderIsInRange();
   }
 
   get importFilePreviewData(): string[][] {
