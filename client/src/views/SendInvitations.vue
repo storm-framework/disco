@@ -129,7 +129,7 @@ export default class SendInvitations extends Vue {
     { title: "Email address", validator: "email-address", key: "emailAddress" },
     { title: "First name", key: "firstName" },
     { title: "Last name", key: "lastName" },
-    { title: "Institution", key: "institution" }
+    { title: "Affiliation", key: "institution" }
   ];
 
   hotSettings = {
@@ -166,7 +166,7 @@ export default class SendInvitations extends Vue {
         const invitations: InvitationInsert[] = this.rows.map(
           r =>
             Object.fromEntries(
-              this.columns.map((c, i) => [c.key, r[i] || ""])
+              this.columns.map((c, i) => [c.key, _.trim(r[i] || "")])
             ) as any
         );
         // Pop the empty row

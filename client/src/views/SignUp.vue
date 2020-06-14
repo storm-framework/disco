@@ -36,7 +36,6 @@
               type="password"
               v-model="password"
               required
-              trim
               placeholder="Password"
               :disabled="fatalError"
             />
@@ -53,7 +52,6 @@
               type="password"
               v-model="repeatPassword"
               required
-              trim
               placeholder="Password"
               :disabled="fatalError"
             />

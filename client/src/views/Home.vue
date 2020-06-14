@@ -78,18 +78,6 @@ export default class Home extends Vue {
     return this.$store.getters.availableRooms;
   }
 
-  get fullName() {
-    const sessionUser = this.$store.getters.sessionUser;
-    return _.trim(_.join([sessionUser?.firstName, sessionUser?.lastName], " "));
-  }
-
-  get initials() {
-    const sessionUser = this.$store.getters.sessionUser;
-    const fn = sessionUser?.firstName[0] || "";
-    const ln = sessionUser?.lastName[0] || "";
-    return _.trim(fn + ln);
-  }
-
   mounted() {
     this.sync();
   }
