@@ -3,6 +3,7 @@ import Home from "@/views/Home.vue";
 import Profile from "@/views/Profile.vue";
 import SignIn from "@/views/SignIn.vue";
 import SignUp from "@/views/SignUp.vue";
+import Call from "@/views/Call.vue";
 import _ from "lodash";
 import Vue from "vue";
 import VueRouter, { RouteConfig } from "vue-router";
@@ -46,6 +47,11 @@ const routes: Array<RouteConfig> = [
     path: "/admin",
     name: "Admin",
     component: () => import(/* webpackChunkName: "admin" */ "@/views/Admin.vue")
+  },
+  {
+    path: "/callTest",
+    name: "CallTest",
+    component: Call
   }
 ];
 
