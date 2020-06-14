@@ -8,8 +8,10 @@
         </span>
       </heading>
 
-      <div class="mb-3 d-flex flex-row align-items-center">
-        <b-badge variant="info" class="mr-2">Topic</b-badge>
+      <b-row class="mb-3 align-items-center" no-gutters>
+        <b-col cols="auto" class="mr-2">
+          <b-badge variant="info">Topic</b-badge>
+        </b-col>
         <div v-if="editingTopic" class="form-inline edit-topic">
           <b-form-input
             size="sm"
@@ -17,6 +19,7 @@
             v-model="topic"
             autofocus
             :disabled="saving"
+            :state="isValidTopic && null"
           />
           <font-awesome-icon
             icon="save"
@@ -31,7 +34,7 @@
             class="text-secondary action"
           />
         </div>
-        <div v-else>
+        <div v-else class="col">
           <span v-if="hasTopic">{{ room.topic }}</span>
           <span class="font-italic" v-else>No topic</span>
           <a
@@ -43,7 +46,7 @@
             <font-awesome-icon icon="edit" />
           </a>
         </div>
-      </div>
+      </b-row>
 
       <b-card-text v-if="isCurrentRoom">
         You are in this room. If you accidentally left the chat,
@@ -121,12 +124,17 @@ library.add(faComments, faDoorOpen, faEdit, faExternalLinkAlt, faSave, faTimes);
 
 @Component({ components: { UserSummary, Heading } })
 export default class RoomCard extends Mixins(HeadingContext) {
+  readonly topicMaxLength = 50;
   @Prop() readonly room!: Room;
   selectedUserId: number | null = null;
 
   editingTopic = false;
   saving = false;
   topic = "";
+
+  get isValidTopic() {
+    return this.topic.length <= this.topicMaxLength;
+  }
 
   get empty() {
     return this.users.length === 0;
@@ -169,7 +177,7 @@ export default class RoomCard extends Mixins(HeadingContext) {
     if (this.saving) {
       return;
     }
-    const topic = _.trim(this.topic);
+    const topic = _.trim(this.topic).substring(0, this.topicMaxLength);
     const data = { ...this.room, topic };
     this.saving = true;
     this.$store

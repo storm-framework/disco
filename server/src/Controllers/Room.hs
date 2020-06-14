@@ -8,6 +8,7 @@
 module Controllers.Room where
 
 import           Data.Text                      ( Text )
+import qualified Data.Text                     as T
 import           Data.Text.Encoding             ( encodeUtf8 )
 import           Data.Int                       ( Int64 )
 import           Data.Maybe
@@ -29,6 +30,7 @@ import           Binah.Frankie
 import           Controllers
 import           Model
 import           JSON
+import           Control.Monad                  ( when )
 
 -------------------------------------------------------------------------------
 -- | Room Update
@@ -38,7 +40,8 @@ import           JSON
 roomUpdate :: Int64 -> Controller ()
 roomUpdate rid = do
   let roomId = toSqlKey rid
-  RoomInsert {..} <- decodeBody
+  r@RoomInsert {..} <- decodeBody
+  validateRoom r
   let up =
         (roomColor' `assign` insertColor)
           `combine` (roomName' `assign` insertName)
@@ -48,6 +51,10 @@ roomUpdate rid = do
   room     <- selectFirstOr notFoundJSON (roomId' ==. roomId)
   roomData <- extractRoomData room
   respondJSON status200 roomData
+
+validateRoom :: RoomInsert -> Controller ()
+validateRoom RoomInsert {..} = do
+  when (T.length insertTopic > 50) $ respondError status400 (Just "Topic too long")
 
 
 -------------------------------------------------------------------------------
