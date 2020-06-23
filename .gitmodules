@@ -1,0 +1,3 @@
+[submodule "server/src/Binah"]
+	path = server/src/Binah
+	url = https://github.com/PLSysSec/binah.git
