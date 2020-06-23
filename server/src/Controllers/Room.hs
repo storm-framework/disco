@@ -39,6 +39,7 @@ import           Control.Monad                  ( when )
 {-@ updateTopic :: _ -> TaggedT<{\_ -> False}, {\_ -> True}> _ _ @-}
 updateTopic :: RoomId -> Controller ()
 updateTopic roomId = do
+  viewer   <- requireAuthUser
   topic    <- decodeBody
   _        <- validateTopic topic
   _        <- updateWhere (roomId' ==. roomId) (roomTopic' `assign` topic)
@@ -57,6 +58,8 @@ validateTopic topic = whenT (T.length topic > 50) $ respondError status400 (Just
 {-@ roomUpdate :: _ -> TaggedT<{\_ -> False}, {\_ -> True}> _ _ @-}
 roomUpdate :: RoomId -> Controller ()
 roomUpdate roomId = do
+  viewer            <- requireAuthUser
+  _                 <- checkOrganizer viewer
   r@RoomInsert {..} <- decodeBody
   _                 <- validateRoom r
   let up =
@@ -81,7 +84,7 @@ validateRoom RoomInsert {..} = validateTopic insertTopic
 roomBatchUpdate :: Controller ()
 roomBatchUpdate = do
   viewer                    <- requireAuthUser
-  _                         <- requireOrganizer viewer
+  _                         <- checkOrganizer viewer
   (PostReq inserts updates) <- decodeBody
 
   let rooms =
@@ -147,13 +150,13 @@ roomGet = do
 
 {-@ extractRoomData :: _ -> TaggedT<{\_ -> True}, {\_ -> False}> _ _ @-}
 extractRoomData :: Entity Room -> Controller RoomData
-extractRoomData room =
-  RoomData
-    <$> project roomId'       room
-    <*> project roomColor'    room
-    <*> project roomName'     room
-    <*> project roomTopic'    room
-    <*> project roomZoomLink' room
+extractRoomData room = do
+  id       <- project roomId' room
+  color    <- project roomColor' room
+  name     <- project roomName' room
+  topic    <- project roomTopic' room
+  zoomLink <- project roomZoomLink' room
+  return $ RoomData id color name topic zoomLink
 
 -- | RoomInsert
 

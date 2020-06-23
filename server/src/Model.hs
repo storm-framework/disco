@@ -124,6 +124,8 @@ data EntityFieldWrapper record typ = EntityFieldWrapper (Persist.EntityField rec
 -- | Policies
 --------------------------------------------------------------------------------
 
+{-@ predicate IsInRoom VIEWER ROOM = userRoom (entityVal VIEWER) == Just (entityKey ROOM) @-}
+
 {-@ predicate IsSelf USER VIEWER = USER == VIEWER @-}
 
 {-@ predicate IsOrganizer USER = userLevel (entityVal USER) == "organizer" @-}
@@ -570,7 +572,7 @@ roomName' = EntityFieldWrapper RoomName
   , {\row field  -> field == roomTopic (entityVal row)}
   , {\field row  -> field == roomTopic (entityVal row)}
   , {\old -> roomTopicCap old}
-  , {\old _ _ -> roomTopicCap old}
+  , {\x_0 x_1 x_2 -> ((False) || (IsOrganizer x_2)) => (roomTopicCap x_0)}
   > _ _
 @-}
 roomTopic' :: EntityFieldWrapper Room Text

@@ -123,11 +123,11 @@ decodeBody = do
     Left  s -> respondError status400 (Just s)
     Right a -> return a
 
-{-@ requireOrganizer ::
+{-@ checkOrganizer ::
   u: _ -> TaggedT<{\_ -> True}, {\v -> v == currentUser}> _ {v: () | IsOrganizer u}
 @-}
-requireOrganizer :: Entity User -> Controller ()
-requireOrganizer user = do
+checkOrganizer :: Entity User -> Controller ()
+checkOrganizer user = do
   level <- project userLevel' user
   if level == "organizer" then return () else respondError status403 Nothing
 

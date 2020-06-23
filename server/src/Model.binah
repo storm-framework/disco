@@ -63,7 +63,11 @@ Room
 
   insert {\_ viewer -> IsOrganizer viewer}
 
-  update [ name, capacity, zoomLink ] {\_ _ viewer -> IsOrganizer viewer}
+  update [ topic ] {\old _ viewer -> IsInRoom viewer old}
+  update [ name, capacity, zoomLink, topic ] {\_ _ viewer -> IsOrganizer viewer}
+
+policy IsInRoom = \viewer room ->
+  userRoom viewer == Just (entityKey room)
 
 policy IsSelf = \user viewer ->
   user == viewer
