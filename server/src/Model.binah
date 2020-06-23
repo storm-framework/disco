@@ -15,16 +15,16 @@ Invitation
   insert {\invitation viewer ->
     not (invitationAccepted invitation)
     && IsOrganizer viewer
-    && emailStatus invitation == "not_sent"
+    && invitationEmailStatus invitation == "not_sent"
   }
 
   update [ accepted ] {\old new _ ->
     not (invitationAccepted old) && invitationAccepted new
   }
 
-  update [ emailStatus ] {\_ new _ ->
+  update [ emailStatus ] {\_ new viewer ->
      IsOrganizer viewer
-     && (emailStatus new == "sent" || emailStatus new == "error")
+     && (invitationEmailStatus new == "sent" || invitationEmailStatus new == "error")
   }
 
 User

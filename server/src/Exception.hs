@@ -6,8 +6,9 @@ module Exception
 where
 
 import           Control.Exception
-
 import           Binah.Infrastructure
+import           Binah.Core
+import           Model
 
 
 tryT

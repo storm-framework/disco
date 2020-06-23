@@ -43,6 +43,7 @@ userList = do
   users <- mapMC extractUserData users
   respondJSON status200 users
 
+{-@ extractUserData :: TaggedT<{\_ -> True}, {\_ -> False}> _ _ @-}
 extractUserData :: Entity User -> Controller UserData
 extractUserData u = do
   id           <- project userId' u

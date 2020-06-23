@@ -160,7 +160,7 @@ persistentRecord (BinahRecord record) = record
   -> x_7: (Maybe String)
   -> BinahRecord <
        {\row -> invitationCode (entityVal row) == x_0 && invitationEmailAddress (entityVal row) == x_1 && invitationFirstName (entityVal row) == x_2 && invitationLastName (entityVal row) == x_3 && invitationInstitution (entityVal row) == x_4 && invitationAccepted (entityVal row) == x_5 && invitationEmailStatus (entityVal row) == x_6 && invitationEmailError (entityVal row) == x_7}
-     , {\invitation viewer -> not (invitationAccepted (entityVal invitation)) && IsOrganizer viewer && emailStatus invitation == "not_sent"}
+     , {\invitation viewer -> not (invitationAccepted (entityVal invitation)) && IsOrganizer viewer && invitationEmailStatus (entityVal invitation) == "not_sent"}
      , {\x_0 x_1 -> False}
      > Invitation
 @-}
@@ -280,7 +280,7 @@ invitationAccepted' = EntityFieldWrapper InvitationAccepted
   , {\row field  -> field == invitationEmailStatus (entityVal row)}
   , {\field row  -> field == invitationEmailStatus (entityVal row)}
   , {\old -> invitationEmailStatusCap old}
-  , {\x_0 x_1 x_2 -> ((IsOrganizer viewer && (emailStatus x_1 == "sent" || emailStatus x_1 == "error"))) => (invitationEmailStatusCap x_0)}
+  , {\x_0 x_1 x_2 -> ((IsOrganizer x_2 && (invitationEmailStatus (entityVal x_1) == "sent" || invitationEmailStatus (entityVal x_1) == "error"))) => (invitationEmailStatusCap x_0)}
   > _ _
 @-}
 invitationEmailStatus' :: EntityFieldWrapper Invitation String
