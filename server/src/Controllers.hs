@@ -12,6 +12,7 @@ import           Control.Monad.Reader           ( MonadReader(..)
                                                 , ReaderT(..)
                                                 , runReaderT
                                                 )
+import           Control.Monad                  ( when )
 import           Database.Persist.Sqlite        ( SqlBackend )
 import qualified Control.Concurrent.MVar       as MVar
 import qualified Text.Mustache.Types           as Mustache
@@ -131,14 +132,23 @@ requireOrganizer user = do
   if level == "organizer" then return () else respondError status403 Nothing
 
 {-@ ignore mapMC @-}
-{-@ mapMC :: forall <inn :: Entity User -> Bool, out :: Entity User -> Bool>.
-(a -> TaggedT<inn, out> _ b) -> [a] -> TaggedT<inn, out> _ [b]
+{-@
+mapMC :: forall <inn :: Entity User -> Bool, out :: Entity User -> Bool>.
+  (a -> TaggedT<inn, out> _ b) -> [a] -> TaggedT<inn, out> _ [b]
 @-}
 mapMC :: MonadTIO m => (a -> TaggedT m b) -> [a] -> TaggedT m [b]
 mapMC = mapM
 
-{-@ forMC :: forall <inn :: Entity User -> Bool, out :: Entity User -> Bool>.
+{-@
+forMC :: forall <inn :: Entity User -> Bool, out :: Entity User -> Bool>.
 [a] -> (a -> TaggedT<inn, out> _ b) -> TaggedT<inn, out> _ [b]
 @-}
 forMC :: MonadTIO m => [a] -> (a -> TaggedT m b) -> TaggedT m [b]
 forMC = flip mapMC
+
+{-@
+assume whenT :: forall <inn :: Entity User -> Bool, out :: Entity User -> Bool>.
+  b:Bool -> TaggedT<inn, out> m () -> TaggedT<inn, out> m {v: () | not b}
+@-}
+whenT :: Applicative m => Bool -> TaggedT m () -> TaggedT m ()
+whenT = when

@@ -43,7 +43,7 @@ userList = do
   users <- mapMC extractUserData users
   respondJSON status200 users
 
-{-@ extractUserData :: TaggedT<{\_ -> True}, {\_ -> False}> _ _ @-}
+{-@ extractUserData :: _ -> TaggedT<{\_ -> True}, {\_ -> False}> _ _ @-}
 extractUserData :: Entity User -> Controller UserData
 extractUserData u = do
   id           <- project userId' u
@@ -80,7 +80,7 @@ instance ToJSON UserData where
 -- | User Get
 ----------------------------------------------------------------------------------------------------
 
-{-@ userGet :: TaggedT<{\_ -> False}, {\_ -> True}> _ _ @-}
+{-@ userGet :: _ -> TaggedT<{\_ -> False}, {\_ -> True}> _ _ @-}
 userGet :: UserId -> Controller ()
 userGet userId = do
   _        <- requireAuthUser
@@ -111,10 +111,11 @@ userUpdateMe = do
   userData <- extractUserData user
   respondJSON status200 userData
 
+{-@ validateUser :: _ -> TaggedT<{\_ -> True}, {\v -> v == currentUser}> _ _ @-}
 validateUser :: UserUpdate -> Controller ()
 validateUser UserUpdate {..} = do
-  when (T.length userUpdateDisplayName == 0) $ respondError status400 (Just "missing displayName")
-  when (T.length userUpdateBio > 300) $ respondError status400 (Just "bio too long")
+  whenT (T.length userUpdateDisplayName == 0) $ respondError status400 (Just "missing displayName")
+  whenT (T.length userUpdateBio > 300) $ respondError status400 (Just "bio too long")
 
 data UserUpdate = UserUpdate
   { userUpdatePhotoURL :: Maybe Text
