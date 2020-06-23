@@ -36,6 +36,7 @@ interface ApiService {
 
   rooms(): Promise<Room[]>;
   updateRoom(roomId: number, data: RoomData): Promise<Room>;
+  updateTopic(roomId: number, topic: string): Promise<Room>;
   updateRooms(updates: Room[], inserts: RoomData[]): Promise<number[]>;
   joinRoom(roomId: string): Promise<string>;
   leaveRoom(): Promise<void>;

@@ -225,6 +225,10 @@ class ApiService {
     return Promise.resolve({ ...data, id });
   }
 
+  updateTopic(id: number, topic: string): Promise<Room> {
+    return Promise.resolve({ ...ROOMS[id], topic });
+  }
+
   updateRooms(updates: Room[], inserts: RoomData[]): Promise<number[]> {
     return Promise.reject("Not implemented");
   }

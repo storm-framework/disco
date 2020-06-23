@@ -32,15 +32,33 @@ import           Model
 import           JSON
 import           Control.Monad                  ( when )
 
--------------------------------------------------------------------------------
--- | Room Update
--------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
+-- | Update Topic
+----------------------------------------------------------------------------------------------------
 
-{-@ roomUpdate :: TaggedT<{\_ -> False}, {\_ -> True}> _ _ @-}
+{-@ updateTopic :: _ -> TaggedT<{\_ -> False}, {\_ -> True}> _ _ @-}
+updateTopic :: RoomId -> Controller ()
+updateTopic roomId = do
+  topic    <- decodeBody
+  _        <- validateTopic topic
+  _        <- updateWhere (roomId' ==. roomId) (roomTopic' `assign` topic)
+  room     <- selectFirstOr notFoundJSON (roomId' ==. roomId)
+  roomData <- extractRoomData room
+  respondJSON status200 roomData
+
+{-@ validateTopic :: _ -> TaggedT<{\_ -> True}, {\v -> v == currentUser}> _ _ @-}
+validateTopic :: Text -> Controller ()
+validateTopic topic = whenT (T.length topic > 50) $ respondError status400 (Just "Topic too long")
+
+----------------------------------------------------------------------------------------------------
+-- | Room Update
+----------------------------------------------------------------------------------------------------
+
+{-@ roomUpdate :: _ -> TaggedT<{\_ -> False}, {\_ -> True}> _ _ @-}
 roomUpdate :: RoomId -> Controller ()
 roomUpdate roomId = do
   r@RoomInsert {..} <- decodeBody
-  validateRoom r
+  _                 <- validateRoom r
   let up =
         (roomColor' `assign` insertColor)
           `combine` (roomName' `assign` insertName)
@@ -51,14 +69,13 @@ roomUpdate roomId = do
   roomData <- extractRoomData room
   respondJSON status200 roomData
 
+{-@ validateRoom :: _ -> TaggedT<{\_ -> True}, {\v -> v == currentUser}> _ _ @-}
 validateRoom :: RoomInsert -> Controller ()
-validateRoom RoomInsert {..} = do
-  when (T.length insertTopic > 50) $ respondError status400 (Just "Topic too long")
+validateRoom RoomInsert {..} = validateTopic insertTopic
 
-
--------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
 -- | Room Batch Update
--------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
 
 {-@ roomBatchUpdate :: TaggedT<{\_ -> False}, {\_ -> True}> _ _ @-}
 roomBatchUpdate :: Controller ()
@@ -71,11 +88,11 @@ roomBatchUpdate = do
         map (\RoomInsert {..} -> mkRoom insertColor insertName insertTopic insertZoomLink) inserts
   ids <- insertMany rooms
   _   <- forMC updates $ \RoomData {..} -> do
-    let up1 = roomColor' `assign` roomColor
-    let up2 = roomName' `assign` roomName
-    let up3 = roomTopic' `assign` roomTopic
-    let up4 = roomZoomLink' `assign` roomZoomLink
-    let up  = up1 `combine` up2 `combine` up3 `combine` up4
+    let up =
+          (roomColor' `assign` roomColor)
+            `combine` (roomName' `assign` roomName)
+            `combine` (roomTopic' `assign` roomTopic)
+            `combine` (roomZoomLink' `assign` roomZoomLink)
     updateWhere (roomId' ==. roomId) up
 
   respondJSON status200 ids
@@ -89,10 +106,9 @@ data PostReq = PostReq
 instance FromJSON PostReq where
   parseJSON = genericParseJSON (stripPrefix "postReq")
 
-
--------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
 -- | Join Room
--------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
 
 {-@ joinRoom :: _ -> TaggedT<{\_ -> False}, {\_ -> True}> _ _ @-}
 joinRoom :: RoomId -> Controller ()
@@ -104,9 +120,9 @@ joinRoom roomId = do
   zoomLink <- project roomZoomLink' room
   respondJSON status200 zoomLink
 
--------------------------------------------------------------------------------
--- | Room Get
--------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
+-- | Leave Room
+----------------------------------------------------------------------------------------------------
 
 {-@ leaveRoom :: TaggedT<{\_ -> False}, {\_ -> True}> _ _ @-}
 leaveRoom :: Controller ()
@@ -116,9 +132,9 @@ leaveRoom = do
   _        <- updateWhere (userId' ==. viewerId) (userRoom' `assign` Nothing)
   respondJSON status200 (object [])
 
--------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
 -- | Room Get
--------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
 
 {-@ roomGet :: TaggedT<{\_ -> False}, {\_ -> True}> _ _ @-}
 roomGet :: Controller ()
@@ -129,6 +145,7 @@ roomGet = do
   respondJSON status200 rooms
 
 
+{-@ extractRoomData :: _ -> TaggedT<{\_ -> True}, {\_ -> False}> _ _ @-}
 extractRoomData :: Entity Room -> Controller RoomData
 extractRoomData room =
   RoomData
