@@ -146,9 +146,8 @@ instance FromJSON PutReq where
 --------------------------------------------------------------------------------
 
 {-@ invitationGet :: _ -> TaggedT<{\_ -> False}, {\_ -> True}> _ _ @-}
-invitationGet :: Int64 -> Controller ()
-invitationGet iid = do
-  let id = toSqlKey iid :: InvitationId
+invitationGet :: InvitationId -> Controller ()
+invitationGet id = do
   code <- listToMaybe <$> queryParams "code"
   case code of
     Nothing   -> respondError status400 (Just "missing code")

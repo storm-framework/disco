@@ -80,9 +80,8 @@ instance ToJSON UserData where
 ----------------------------------------------------------------------------------------------------
 
 {-@ userGet :: TaggedT<{\_ -> False}, {\_ -> True}> _ _ @-}
-userGet :: Int64 -> Controller ()
-userGet uid = do
-  let userId = toSqlKey uid
+userGet :: UserId -> Controller ()
+userGet userId = do
   _        <- requireAuthUser
   user     <- selectFirstOr notFoundJSON (userId' ==. userId)
   userData <- extractUserData user

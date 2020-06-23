@@ -37,9 +37,8 @@ import           Control.Monad                  ( when )
 -------------------------------------------------------------------------------
 
 {-@ roomUpdate :: TaggedT<{\_ -> False}, {\_ -> True}> _ _ @-}
-roomUpdate :: Int64 -> Controller ()
-roomUpdate rid = do
-  let roomId = toSqlKey rid
+roomUpdate :: RoomId -> Controller ()
+roomUpdate roomId = do
   r@RoomInsert {..} <- decodeBody
   validateRoom r
   let up =
@@ -96,9 +95,8 @@ instance FromJSON PostReq where
 -------------------------------------------------------------------------------
 
 {-@ joinRoom :: _ -> TaggedT<{\_ -> False}, {\_ -> True}> _ _ @-}
-joinRoom :: Int64 -> Controller ()
-joinRoom rid = do
-  let roomId = toSqlKey rid
+joinRoom :: RoomId -> Controller ()
+joinRoom roomId = do
   viewer   <- requireAuthUser
   viewerId <- project userId' viewer
   room     <- selectFirstOr notFoundJSON (roomId' ==. roomId)
