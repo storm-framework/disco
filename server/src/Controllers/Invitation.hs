@@ -88,6 +88,8 @@ data EmailRender = EmailRender
 instance FromJSON EmailRender where
   parseJSON = genericParseJSON (stripPrefix "emailRender")
 
+{-@ ignore sendEmails @-}
+{-@ sendEmails :: _ -> TaggedT<{\_ -> True}, {\_ -> True}> _ () @-}
 sendEmails :: [InvitationId] -> Task ()
 sendEmails ids = do
   SMTPConfig {..} <- configSMTP <$> getConfig
@@ -98,6 +100,8 @@ sendEmails ids = do
   mapMC (sendEmail' conn) invitations
   return ()
 
+{-@ ignore sendEmail @-}
+{-@ sendEmail :: _ -> TaggedT<{\_ -> True}, {\_ -> True}> _ () @-}
 sendEmail :: Int64 -> Task ()
 sendEmail iid = do
   let invitationId = toSqlKey iid
@@ -111,6 +115,8 @@ sendEmail iid = do
       sendEmail' conn invitation
     Nothing -> return ()
 
+{-@ ignore sendEmail' @-}
+{-@ sendEmail' :: _ -> _ -> TaggedT<{\_ -> True}, {\_ -> True}> _ () @-}
 sendEmail' :: SMTPConnection -> Entity Invitation -> Task ()
 sendEmail' conn invitation = do
   id                        <- project invitationId' invitation
@@ -118,11 +124,13 @@ sendEmail' conn invitation = do
   res                       <- tryT $ sendPlainTextMail to from subject body conn
   case res of
     Left (SomeException e) -> do
-      let up1 = invitationEmailError' `assign` Just (show e)
-      let up2 = invitationEmailStatus' `assign` "error"
-      updateWhere (invitationId' ==. id) (up1 `combine` up2)
+      let up =
+            (invitationEmailError' `assign` Just (show e))
+              `combine` (invitationEmailStatus' `assign` "error")
+      updateWhere (invitationId' ==. id) up
     Right _ -> updateWhere (invitationId' ==. id) (invitationEmailStatus' `assign` "sent")
 
+{-@ renderEmail :: _ -> TaggedT<{\_ -> True}, {\_ -> True}> _ _ @-}
 renderEmail :: Entity Invitation -> Task (Address, Address, String, LT.Text)
 renderEmail invitation = do
   id           <- project invitationId' invitation
@@ -196,6 +204,8 @@ data InvitationData = InvitationData
   }
   deriving Generic
 
+{-@ ignore extractInvitationData @-}
+{-@ extractInvitationData :: _ -> TaggedT<{\_ -> True}, {\_ -> False}> _ _ @-}
 extractInvitationData :: Entity Invitation -> Controller InvitationData
 extractInvitationData invitation =
   InvitationData
