@@ -148,7 +148,7 @@ forMC = flip mapMC
 
 {-@
 assume whenT :: forall <inn :: Entity User -> Bool, out :: Entity User -> Bool>.
-  b:Bool -> TaggedT<inn, out> m () -> TaggedT<inn, out> m {v: () | not b}
+  b:Bool -> TaggedT<inn, out> m () -> TaggedT<inn, out> m ()
 @-}
 whenT :: Applicative m => Bool -> TaggedT m () -> TaggedT m ()
 whenT = when

@@ -178,7 +178,7 @@ mkInvitation x_0 x_1 x_2 x_3 x_4 x_5 x_6 x_7 = BinahRecord (Invitation x_0 x_1 x
   , {\field row  -> field == entityKey row}
   , {\_ -> False}
   , {\_ _ _ -> True}
-  > _ _
+  > Invitation InvitationId
 @-}
 invitationId' :: EntityFieldWrapper Invitation InvitationId
 invitationId' = EntityFieldWrapper InvitationId
@@ -189,11 +189,11 @@ invitationId' = EntityFieldWrapper InvitationId
 
 {-@ assume invitationCode' :: EntityFieldWrapper <
     {\_ _ -> True}
-  , {\row field  -> field == invitationCode (entityVal row)}
-  , {\field row  -> field == invitationCode (entityVal row)}
+  , {\row field -> field == invitationCode (entityVal row)}
+  , {\field row -> field == invitationCode (entityVal row)}
   , {\old -> invitationCodeCap old}
   , {\old _ _ -> invitationCodeCap old}
-  > _ _
+  > Invitation Text
 @-}
 invitationCode' :: EntityFieldWrapper Invitation Text
 invitationCode' = EntityFieldWrapper InvitationCode
@@ -204,11 +204,11 @@ invitationCode' = EntityFieldWrapper InvitationCode
 
 {-@ assume invitationEmailAddress' :: EntityFieldWrapper <
     {\_ _ -> True}
-  , {\row field  -> field == invitationEmailAddress (entityVal row)}
-  , {\field row  -> field == invitationEmailAddress (entityVal row)}
+  , {\row field -> field == invitationEmailAddress (entityVal row)}
+  , {\field row -> field == invitationEmailAddress (entityVal row)}
   , {\old -> invitationEmailAddressCap old}
   , {\old _ _ -> invitationEmailAddressCap old}
-  > _ _
+  > Invitation Text
 @-}
 invitationEmailAddress' :: EntityFieldWrapper Invitation Text
 invitationEmailAddress' = EntityFieldWrapper InvitationEmailAddress
@@ -219,11 +219,11 @@ invitationEmailAddress' = EntityFieldWrapper InvitationEmailAddress
 
 {-@ assume invitationFirstName' :: EntityFieldWrapper <
     {\_ _ -> True}
-  , {\row field  -> field == invitationFirstName (entityVal row)}
-  , {\field row  -> field == invitationFirstName (entityVal row)}
+  , {\row field -> field == invitationFirstName (entityVal row)}
+  , {\field row -> field == invitationFirstName (entityVal row)}
   , {\old -> invitationFirstNameCap old}
   , {\old _ _ -> invitationFirstNameCap old}
-  > _ _
+  > Invitation Text
 @-}
 invitationFirstName' :: EntityFieldWrapper Invitation Text
 invitationFirstName' = EntityFieldWrapper InvitationFirstName
@@ -234,11 +234,11 @@ invitationFirstName' = EntityFieldWrapper InvitationFirstName
 
 {-@ assume invitationLastName' :: EntityFieldWrapper <
     {\_ _ -> True}
-  , {\row field  -> field == invitationLastName (entityVal row)}
-  , {\field row  -> field == invitationLastName (entityVal row)}
+  , {\row field -> field == invitationLastName (entityVal row)}
+  , {\field row -> field == invitationLastName (entityVal row)}
   , {\old -> invitationLastNameCap old}
   , {\old _ _ -> invitationLastNameCap old}
-  > _ _
+  > Invitation Text
 @-}
 invitationLastName' :: EntityFieldWrapper Invitation Text
 invitationLastName' = EntityFieldWrapper InvitationLastName
@@ -249,11 +249,11 @@ invitationLastName' = EntityFieldWrapper InvitationLastName
 
 {-@ assume invitationInstitution' :: EntityFieldWrapper <
     {\_ _ -> True}
-  , {\row field  -> field == invitationInstitution (entityVal row)}
-  , {\field row  -> field == invitationInstitution (entityVal row)}
+  , {\row field -> field == invitationInstitution (entityVal row)}
+  , {\field row -> field == invitationInstitution (entityVal row)}
   , {\old -> invitationInstitutionCap old}
   , {\old _ _ -> invitationInstitutionCap old}
-  > _ _
+  > Invitation Text
 @-}
 invitationInstitution' :: EntityFieldWrapper Invitation Text
 invitationInstitution' = EntityFieldWrapper InvitationInstitution
@@ -264,11 +264,11 @@ invitationInstitution' = EntityFieldWrapper InvitationInstitution
 
 {-@ assume invitationAccepted' :: EntityFieldWrapper <
     {\_ _ -> True}
-  , {\row field  -> field == invitationAccepted (entityVal row)}
-  , {\field row  -> field == invitationAccepted (entityVal row)}
+  , {\row field -> field == invitationAccepted (entityVal row)}
+  , {\field row -> field == invitationAccepted (entityVal row)}
   , {\old -> invitationAcceptedCap old}
   , {\x_0 x_1 x_2 -> ((not (invitationAccepted (entityVal x_0)) && invitationAccepted (entityVal x_1))) => (invitationAcceptedCap x_0)}
-  > _ _
+  > Invitation Bool
 @-}
 invitationAccepted' :: EntityFieldWrapper Invitation Bool
 invitationAccepted' = EntityFieldWrapper InvitationAccepted
@@ -279,11 +279,11 @@ invitationAccepted' = EntityFieldWrapper InvitationAccepted
 
 {-@ assume invitationEmailStatus' :: EntityFieldWrapper <
     {\_ _ -> True}
-  , {\row field  -> field == invitationEmailStatus (entityVal row)}
-  , {\field row  -> field == invitationEmailStatus (entityVal row)}
+  , {\row field -> field == invitationEmailStatus (entityVal row)}
+  , {\field row -> field == invitationEmailStatus (entityVal row)}
   , {\old -> invitationEmailStatusCap old}
   , {\x_0 x_1 x_2 -> ((IsOrganizer x_2 && (invitationEmailStatus (entityVal x_1) == "sent" || invitationEmailStatus (entityVal x_1) == "error"))) => (invitationEmailStatusCap x_0)}
-  > _ _
+  > Invitation String
 @-}
 invitationEmailStatus' :: EntityFieldWrapper Invitation String
 invitationEmailStatus' = EntityFieldWrapper InvitationEmailStatus
@@ -294,11 +294,11 @@ invitationEmailStatus' = EntityFieldWrapper InvitationEmailStatus
 
 {-@ assume invitationEmailError' :: EntityFieldWrapper <
     {\_ _ -> True}
-  , {\row field  -> field == invitationEmailError (entityVal row)}
-  , {\field row  -> field == invitationEmailError (entityVal row)}
+  , {\row field -> field == invitationEmailError (entityVal row)}
+  , {\field row -> field == invitationEmailError (entityVal row)}
   , {\old -> invitationEmailErrorCap old}
   , {\old _ _ -> invitationEmailErrorCap old}
-  > _ _
+  > Invitation (Maybe String)
 @-}
 invitationEmailError' :: EntityFieldWrapper Invitation (Maybe String)
 invitationEmailError' = EntityFieldWrapper InvitationEmailError
@@ -334,7 +334,7 @@ mkUser x_0 x_1 x_2 x_3 x_4 x_5 x_6 x_7 x_8 x_9 x_10 = BinahRecord (User x_0 x_1 
   , {\field row  -> field == entityKey row}
   , {\_ -> False}
   , {\_ _ _ -> True}
-  > _ _
+  > User UserId
 @-}
 userId' :: EntityFieldWrapper User UserId
 userId' = EntityFieldWrapper UserId
@@ -345,11 +345,11 @@ userId' = EntityFieldWrapper UserId
 
 {-@ assume userEmailAddress' :: EntityFieldWrapper <
     {\_ _ -> True}
-  , {\row field  -> field == userEmailAddress (entityVal row)}
-  , {\field row  -> field == userEmailAddress (entityVal row)}
+  , {\row field -> field == userEmailAddress (entityVal row)}
+  , {\field row -> field == userEmailAddress (entityVal row)}
   , {\old -> userEmailAddressCap old}
   , {\x_0 x_1 x_2 -> ((False)) => (userEmailAddressCap x_0)}
-  > _ _
+  > User Text
 @-}
 userEmailAddress' :: EntityFieldWrapper User Text
 userEmailAddress' = EntityFieldWrapper UserEmailAddress
@@ -360,11 +360,11 @@ userEmailAddress' = EntityFieldWrapper UserEmailAddress
 
 {-@ assume userPassword' :: EntityFieldWrapper <
     {\x_0 x_1 -> (x_0 == x_1)}
-  , {\row field  -> field == userPassword (entityVal row)}
-  , {\field row  -> field == userPassword (entityVal row)}
+  , {\row field -> field == userPassword (entityVal row)}
+  , {\field row -> field == userPassword (entityVal row)}
   , {\old -> userPasswordCap old}
   , {\x_0 x_1 x_2 -> ((False)) => (userPasswordCap x_0)}
-  > _ _
+  > User ByteString
 @-}
 userPassword' :: EntityFieldWrapper User ByteString
 userPassword' = EntityFieldWrapper UserPassword
@@ -375,11 +375,11 @@ userPassword' = EntityFieldWrapper UserPassword
 
 {-@ assume userPhotoURL' :: EntityFieldWrapper <
     {\_ _ -> True}
-  , {\row field  -> field == userPhotoURL (entityVal row)}
-  , {\field row  -> field == userPhotoURL (entityVal row)}
+  , {\row field -> field == userPhotoURL (entityVal row)}
+  , {\field row -> field == userPhotoURL (entityVal row)}
   , {\old -> userPhotoURLCap old}
   , {\x_0 x_1 x_2 -> ((IsSelf x_0 x_2)) => (userPhotoURLCap x_0)}
-  > _ _
+  > User (Maybe Text)
 @-}
 userPhotoURL' :: EntityFieldWrapper User (Maybe Text)
 userPhotoURL' = EntityFieldWrapper UserPhotoURL
@@ -390,11 +390,11 @@ userPhotoURL' = EntityFieldWrapper UserPhotoURL
 
 {-@ assume userDisplayName' :: EntityFieldWrapper <
     {\_ _ -> True}
-  , {\row field  -> field == userDisplayName (entityVal row)}
-  , {\field row  -> field == userDisplayName (entityVal row)}
+  , {\row field -> field == userDisplayName (entityVal row)}
+  , {\field row -> field == userDisplayName (entityVal row)}
   , {\old -> userDisplayNameCap old}
   , {\x_0 x_1 x_2 -> ((IsSelf x_0 x_2)) => (userDisplayNameCap x_0)}
-  > _ _
+  > User Text
 @-}
 userDisplayName' :: EntityFieldWrapper User Text
 userDisplayName' = EntityFieldWrapper UserDisplayName
@@ -405,11 +405,11 @@ userDisplayName' = EntityFieldWrapper UserDisplayName
 
 {-@ assume userInstitution' :: EntityFieldWrapper <
     {\_ _ -> True}
-  , {\row field  -> field == userInstitution (entityVal row)}
-  , {\field row  -> field == userInstitution (entityVal row)}
+  , {\row field -> field == userInstitution (entityVal row)}
+  , {\field row -> field == userInstitution (entityVal row)}
   , {\old -> userInstitutionCap old}
   , {\x_0 x_1 x_2 -> ((IsSelf x_0 x_2)) => (userInstitutionCap x_0)}
-  > _ _
+  > User Text
 @-}
 userInstitution' :: EntityFieldWrapper User Text
 userInstitution' = EntityFieldWrapper UserInstitution
@@ -420,11 +420,11 @@ userInstitution' = EntityFieldWrapper UserInstitution
 
 {-@ assume userPronouns' :: EntityFieldWrapper <
     {\_ _ -> True}
-  , {\row field  -> field == userPronouns (entityVal row)}
-  , {\field row  -> field == userPronouns (entityVal row)}
+  , {\row field -> field == userPronouns (entityVal row)}
+  , {\field row -> field == userPronouns (entityVal row)}
   , {\old -> userPronounsCap old}
   , {\old _ _ -> userPronounsCap old}
-  > _ _
+  > User Text
 @-}
 userPronouns' :: EntityFieldWrapper User Text
 userPronouns' = EntityFieldWrapper UserPronouns
@@ -435,11 +435,11 @@ userPronouns' = EntityFieldWrapper UserPronouns
 
 {-@ assume userWebsite' :: EntityFieldWrapper <
     {\_ _ -> True}
-  , {\row field  -> field == userWebsite (entityVal row)}
-  , {\field row  -> field == userWebsite (entityVal row)}
+  , {\row field -> field == userWebsite (entityVal row)}
+  , {\field row -> field == userWebsite (entityVal row)}
   , {\old -> userWebsiteCap old}
   , {\old _ _ -> userWebsiteCap old}
-  > _ _
+  > User Text
 @-}
 userWebsite' :: EntityFieldWrapper User Text
 userWebsite' = EntityFieldWrapper UserWebsite
@@ -450,11 +450,11 @@ userWebsite' = EntityFieldWrapper UserWebsite
 
 {-@ assume userBio' :: EntityFieldWrapper <
     {\_ _ -> True}
-  , {\row field  -> field == userBio (entityVal row)}
-  , {\field row  -> field == userBio (entityVal row)}
+  , {\row field -> field == userBio (entityVal row)}
+  , {\field row -> field == userBio (entityVal row)}
   , {\old -> userBioCap old}
   , {\old _ _ -> userBioCap old}
-  > _ _
+  > User Text
 @-}
 userBio' :: EntityFieldWrapper User Text
 userBio' = EntityFieldWrapper UserBio
@@ -465,11 +465,11 @@ userBio' = EntityFieldWrapper UserBio
 
 {-@ assume userLevel' :: EntityFieldWrapper <
     {\_ _ -> True}
-  , {\row field  -> field == userLevel (entityVal row)}
-  , {\field row  -> field == userLevel (entityVal row)}
+  , {\row field -> field == userLevel (entityVal row)}
+  , {\field row -> field == userLevel (entityVal row)}
   , {\old -> userLevelCap old}
   , {\x_0 x_1 x_2 -> ((False)) => (userLevelCap x_0)}
-  > _ _
+  > User String
 @-}
 userLevel' :: EntityFieldWrapper User String
 userLevel' = EntityFieldWrapper UserLevel
@@ -480,11 +480,11 @@ userLevel' = EntityFieldWrapper UserLevel
 
 {-@ assume userVisibility' :: EntityFieldWrapper <
     {\_ _ -> True}
-  , {\row field  -> field == userVisibility (entityVal row)}
-  , {\field row  -> field == userVisibility (entityVal row)}
+  , {\row field -> field == userVisibility (entityVal row)}
+  , {\field row -> field == userVisibility (entityVal row)}
   , {\old -> userVisibilityCap old}
   , {\old _ _ -> userVisibilityCap old}
-  > _ _
+  > User String
 @-}
 userVisibility' :: EntityFieldWrapper User String
 userVisibility' = EntityFieldWrapper UserVisibility
@@ -495,11 +495,11 @@ userVisibility' = EntityFieldWrapper UserVisibility
 
 {-@ assume userRoom' :: EntityFieldWrapper <
     {\x_0 x_1 -> (userVisibility (entityVal x_0) == "public" || IsSelf x_0 x_1)}
-  , {\row field  -> field == userRoom (entityVal row)}
-  , {\field row  -> field == userRoom (entityVal row)}
+  , {\row field -> field == userRoom (entityVal row)}
+  , {\field row -> field == userRoom (entityVal row)}
   , {\old -> userRoomCap old}
   , {\x_0 x_1 x_2 -> ((IsSelf x_0 x_2)) => (userRoomCap x_0)}
-  > _ _
+  > User (Maybe RoomId)
 @-}
 userRoom' :: EntityFieldWrapper User (Maybe RoomId)
 userRoom' = EntityFieldWrapper UserRoom
@@ -528,7 +528,7 @@ mkRoom x_0 x_1 x_2 x_3 = BinahRecord (Room x_0 x_1 x_2 x_3)
   , {\field row  -> field == entityKey row}
   , {\_ -> False}
   , {\_ _ _ -> True}
-  > _ _
+  > Room RoomId
 @-}
 roomId' :: EntityFieldWrapper Room RoomId
 roomId' = EntityFieldWrapper RoomId
@@ -539,11 +539,11 @@ roomId' = EntityFieldWrapper RoomId
 
 {-@ assume roomColor' :: EntityFieldWrapper <
     {\_ _ -> True}
-  , {\row field  -> field == roomColor (entityVal row)}
-  , {\field row  -> field == roomColor (entityVal row)}
+  , {\row field -> field == roomColor (entityVal row)}
+  , {\field row -> field == roomColor (entityVal row)}
   , {\old -> roomColorCap old}
   , {\old _ _ -> roomColorCap old}
-  > _ _
+  > Room Text
 @-}
 roomColor' :: EntityFieldWrapper Room Text
 roomColor' = EntityFieldWrapper RoomColor
@@ -554,11 +554,11 @@ roomColor' = EntityFieldWrapper RoomColor
 
 {-@ assume roomName' :: EntityFieldWrapper <
     {\_ _ -> True}
-  , {\row field  -> field == roomName (entityVal row)}
-  , {\field row  -> field == roomName (entityVal row)}
+  , {\row field -> field == roomName (entityVal row)}
+  , {\field row -> field == roomName (entityVal row)}
   , {\old -> roomNameCap old}
   , {\x_0 x_1 x_2 -> ((IsOrganizer x_2)) => (roomNameCap x_0)}
-  > _ _
+  > Room Text
 @-}
 roomName' :: EntityFieldWrapper Room Text
 roomName' = EntityFieldWrapper RoomName
@@ -569,11 +569,11 @@ roomName' = EntityFieldWrapper RoomName
 
 {-@ assume roomTopic' :: EntityFieldWrapper <
     {\_ _ -> True}
-  , {\row field  -> field == roomTopic (entityVal row)}
-  , {\field row  -> field == roomTopic (entityVal row)}
+  , {\row field -> field == roomTopic (entityVal row)}
+  , {\field row -> field == roomTopic (entityVal row)}
   , {\old -> roomTopicCap old}
-  , {\x_0 x_1 x_2 -> ((False) || (IsOrganizer x_2)) => (roomTopicCap x_0)}
-  > _ _
+  , {\x_0 x_1 x_2 -> ((IsInRoom x_2 x_0) || (IsOrganizer x_2)) => (roomTopicCap x_0)}
+  > Room Text
 @-}
 roomTopic' :: EntityFieldWrapper Room Text
 roomTopic' = EntityFieldWrapper RoomTopic
@@ -584,11 +584,11 @@ roomTopic' = EntityFieldWrapper RoomTopic
 
 {-@ assume roomZoomLink' :: EntityFieldWrapper <
     {\_ _ -> True}
-  , {\row field  -> field == roomZoomLink (entityVal row)}
-  , {\field row  -> field == roomZoomLink (entityVal row)}
+  , {\row field -> field == roomZoomLink (entityVal row)}
+  , {\field row -> field == roomZoomLink (entityVal row)}
   , {\old -> roomZoomLinkCap old}
   , {\x_0 x_1 x_2 -> ((IsOrganizer x_2)) => (roomZoomLinkCap x_0)}
-  > _ _
+  > Room Text
 @-}
 roomZoomLink' :: EntityFieldWrapper Room Text
 roomZoomLink' = EntityFieldWrapper RoomZoomLink

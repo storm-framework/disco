@@ -3,6 +3,7 @@
 {-# LANGUAGE DeriveGeneric #-}
 
 {-@ LIQUID "--no-pattern-inline" @-}
+{-@ LIQUID "--exact-data-con" @-}
 
 
 module Controllers.Room where
@@ -36,16 +37,22 @@ import           Control.Monad                  ( when )
 -- | Update Topic
 ----------------------------------------------------------------------------------------------------
 
-{-@ updateTopic :: _ -> TaggedT<{\_ -> False}, {\_ -> True}> _ _ @-}
+{-@ updateTopic :: _ -> TaggedT<{\_ -> False}, {\_ -> True}> _ () @-}
 updateTopic :: RoomId -> Controller ()
 updateTopic roomId = do
   viewer   <- requireAuthUser
-  topic    <- decodeBody
-  _        <- validateTopic topic
-  _        <- updateWhere (roomId' ==. roomId) (roomTopic' `assign` topic)
-  room     <- selectFirstOr notFoundJSON (roomId' ==. roomId)
-  roomData <- extractRoomData room
-  respondJSON status200 roomData
+  userRoom <- project userRoom' viewer
+  vis      <- project userVisibility' viewer
+  case userRoom == Just roomId of
+    True | vis == "public" -> do
+      topic    <- decodeBody
+      _        <- validateTopic topic
+      _        <- updateWhere (roomId' ==. roomId) (roomTopic' `assign` topic)
+      room     <- selectFirstOr notFoundJSON (roomId' ==. roomId)
+      roomData <- extractRoomData room
+      respondJSON status200 roomData
+    True  -> respondError status409 (Just "This operation may leak information")
+    False -> respondError status403 Nothing
 
 {-@ validateTopic :: _ -> TaggedT<{\_ -> True}, {\v -> v == currentUser}> _ _ @-}
 validateTopic :: Text -> Controller ()
