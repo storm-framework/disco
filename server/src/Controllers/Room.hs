@@ -157,13 +157,13 @@ roomGet = do
 
 {-@ extractRoomData :: _ -> TaggedT<{\_ -> True}, {\_ -> False}> _ _ @-}
 extractRoomData :: Entity Room -> Controller RoomData
-extractRoomData room = do
-  id       <- project roomId' room
-  color    <- project roomColor' room
-  name     <- project roomName' room
-  topic    <- project roomTopic' room
-  zoomLink <- project roomZoomLink' room
-  return $ RoomData id color name topic zoomLink
+extractRoomData room =
+  RoomData
+    `fmap` project roomId'       room
+    <*>    project roomColor'    room
+    <*>    project roomName'     room
+    <*>    project roomTopic'    room
+    <*>    project roomZoomLink' room
 
 -- | RoomInsert
 

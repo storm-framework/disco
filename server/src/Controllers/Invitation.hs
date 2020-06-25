@@ -204,17 +204,16 @@ data InvitationData = InvitationData
   }
   deriving Generic
 
-{-@ ignore extractInvitationData @-}
 {-@ extractInvitationData :: _ -> TaggedT<{\_ -> True}, {\_ -> False}> _ _ @-}
 extractInvitationData :: Entity Invitation -> Controller InvitationData
 extractInvitationData invitation =
   InvitationData
-    <$> project invitationId'           invitation
-    <*> project invitationEmailAddress' invitation
-    <*> project invitationFirstName'    invitation
-    <*> project invitationLastName'     invitation
-    <*> project invitationInstitution'  invitation
-    <*> project invitationAccepted'     invitation
+    `fmap` project invitationId'           invitation
+    <*>    project invitationEmailAddress' invitation
+    <*>    project invitationFirstName'    invitation
+    <*>    project invitationLastName'     invitation
+    <*>    project invitationInstitution'  invitation
+    <*>    project invitationAccepted'     invitation
 
 instance ToJSON InvitationData where
   toEncoding = genericToEncoding (stripPrefix "invitation")

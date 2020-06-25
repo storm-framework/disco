@@ -46,18 +46,18 @@ userList = do
 {-@ extractUserData :: _ -> TaggedT<{\_ -> True}, {\_ -> False}> _ _ @-}
 extractUserData :: Entity User -> Controller UserData
 extractUserData u = do
-  id           <- project userId' u
-  emailAddress <- project userEmailAddress' u
-  photoURL     <- project userPhotoURL' u
-  displayName  <- project userDisplayName' u
-  institution  <- project userInstitution' u
-  pronouns     <- project userPronouns' u
-  website      <- project userWebsite' u
-  bio          <- project userBio' u
-  level        <- project userLevel' u
-  visibility   <- project userVisibility' u
-  room         <- if visibility == "public" then project userRoom' u else return Nothing
-  return $ UserData id emailAddress photoURL displayName institution pronouns website bio level room
+  visibility <- project userVisibility' u
+  UserData
+    `fmap` project userId'           u
+    <*>    project userEmailAddress' u
+    <*>    project userPhotoURL'     u
+    <*>    project userDisplayName'  u
+    <*>    project userInstitution'  u
+    <*>    project userPronouns'     u
+    <*>    project userWebsite'      u
+    <*>    project userBio'          u
+    <*>    project userLevel'        u
+    <*>    if visibility == "public" then project userRoom' u else return Nothing
 
 data UserData = UserData
   { userId :: UserId
