@@ -97,7 +97,7 @@ roomBatchUpdate = do
   let rooms =
         map (\RoomInsert {..} -> mkRoom insertColor insertName insertTopic insertZoomLink) inserts
   ids <- insertMany rooms
-  _   <- forMC updates $ \RoomData {..} -> do
+  _   <- forT updates $ \RoomData {..} -> do
     let up =
           (roomColor' `assign` roomColor)
             `combine` (roomName' `assign` roomName)
@@ -151,7 +151,7 @@ roomGet :: Controller ()
 roomGet = do
   _     <- requireAuthUser
   rooms <- selectList trueF
-  rooms <- mapMC extractRoomData rooms
+  rooms <- mapT extractRoomData rooms
   respondJSON status200 rooms
 
 

@@ -131,20 +131,20 @@ checkOrganizer user = do
   level <- project userLevel' user
   if level == "organizer" then return () else respondError status403 Nothing
 
-{-@ ignore mapMC @-}
+{-@ ignore mapT @-}
 {-@
-mapMC :: forall <inn :: Entity User -> Bool, out :: Entity User -> Bool>.
+mapT :: forall <inn :: Entity User -> Bool, out :: Entity User -> Bool>.
   (a -> TaggedT<inn, out> _ b) -> [a] -> TaggedT<inn, out> _ [b]
 @-}
-mapMC :: MonadTIO m => (a -> TaggedT m b) -> [a] -> TaggedT m [b]
-mapMC = mapM
+mapT :: MonadTIO m => (a -> TaggedT m b) -> [a] -> TaggedT m [b]
+mapT = mapM
 
 {-@
-forMC :: forall <inn :: Entity User -> Bool, out :: Entity User -> Bool>.
+forT :: forall <inn :: Entity User -> Bool, out :: Entity User -> Bool>.
 [a] -> (a -> TaggedT<inn, out> _ b) -> TaggedT<inn, out> _ [b]
 @-}
-forMC :: MonadTIO m => [a] -> (a -> TaggedT m b) -> TaggedT m [b]
-forMC = flip mapMC
+forT :: MonadTIO m => [a] -> (a -> TaggedT m b) -> TaggedT m [b]
+forT = flip mapT
 
 {-@
 assume whenT :: forall <inn :: Entity User -> Bool, out :: Entity User -> Bool>.

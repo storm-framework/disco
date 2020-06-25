@@ -97,7 +97,7 @@ sendEmails ids = do
   let settings = defaultSettingsSMTPSSL { sslPort = smtpPort }
   conn <- connectSMTPSSLWithSettings smtpHost settings
   _    <- authenticate LOGIN smtpUser smtpPass conn
-  mapMC (sendEmail' conn) invitations
+  mapT (sendEmail' conn) invitations
   return ()
 
 {-@ ignore sendEmail @-}
@@ -176,7 +176,7 @@ invitationList = do
   viewer      <- requireAuthUser
   _           <- checkOrganizer viewer
   invitations <- selectList trueF
-  res         <- mapMC extractInvitationData invitations
+  res         <- mapT extractInvitationData invitations
   respondJSON status200 res
 
 --------------------------------------------------------------------------------
