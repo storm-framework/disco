@@ -23,8 +23,7 @@ Invitation
   }
 
   update [ emailStatus ] {\_ new viewer ->
-     IsOrganizer viewer
-     && (invitationEmailStatus new == "sent" || invitationEmailStatus new == "error")
+      (invitationEmailStatus new == "sent" || invitationEmailStatus new == "error")
   }
 
 User

@@ -282,7 +282,7 @@ invitationAccepted' = EntityFieldWrapper InvitationAccepted
   , {\row field -> field == invitationEmailStatus (entityVal row)}
   , {\field row -> field == invitationEmailStatus (entityVal row)}
   , {\old -> invitationEmailStatusCap old}
-  , {\x_0 x_1 x_2 -> ((IsOrganizer x_2 && (invitationEmailStatus (entityVal x_1) == "sent" || invitationEmailStatus (entityVal x_1) == "error"))) => (invitationEmailStatusCap x_0)}
+  , {\x_0 x_1 x_2 -> (((invitationEmailStatus (entityVal x_1) == "sent" || invitationEmailStatus (entityVal x_1) == "error"))) => (invitationEmailStatusCap x_0)}
   > Invitation String
 @-}
 invitationEmailStatus' :: EntityFieldWrapper Invitation String

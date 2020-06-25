@@ -88,7 +88,6 @@ data EmailRender = EmailRender
 instance FromJSON EmailRender where
   parseJSON = genericParseJSON (stripPrefix "emailRender")
 
-{-@ ignore sendEmails @-}
 {-@ sendEmails :: _ -> TaggedT<{\_ -> True}, {\_ -> True}> _ () @-}
 sendEmails :: [InvitationId] -> Task ()
 sendEmails ids = do
@@ -100,7 +99,6 @@ sendEmails ids = do
   mapT (sendEmail' conn) invitations
   return ()
 
-{-@ ignore sendEmail @-}
 {-@ sendEmail :: _ -> TaggedT<{\_ -> True}, {\_ -> True}> _ () @-}
 sendEmail :: Int64 -> Task ()
 sendEmail iid = do
@@ -115,7 +113,6 @@ sendEmail iid = do
       sendEmail' conn invitation
     Nothing -> return ()
 
-{-@ ignore sendEmail' @-}
 {-@ sendEmail' :: _ -> _ -> TaggedT<{\_ -> True}, {\_ -> True}> _ () @-}
 sendEmail' :: SMTPConnection -> Entity Invitation -> Task ()
 sendEmail' conn invitation = do
@@ -130,7 +127,7 @@ sendEmail' conn invitation = do
       updateWhere (invitationId' ==. id) up
     Right _ -> updateWhere (invitationId' ==. id) (invitationEmailStatus' `assign` "sent")
 
-{-@ renderEmail :: _ -> TaggedT<{\_ -> True}, {\_ -> True}> _ _ @-}
+{-@ renderEmail :: _ -> TaggedT<{\_ -> True}, {\_ -> False}> _ _ @-}
 renderEmail :: Entity Invitation -> Task (Address, Address, String, LT.Text)
 renderEmail invitation = do
   id           <- project invitationId' invitation
