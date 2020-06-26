@@ -13,6 +13,7 @@ import           Control.Monad.Reader           ( MonadReader(..)
                                                 , runReaderT
                                                 )
 import           Control.Monad                  ( when )
+import           Control.Monad.Trans            ( MonadTrans(..) )
 import           Database.Persist.Sqlite        ( SqlBackend )
 import qualified Control.Concurrent.MVar       as MVar
 import qualified Text.Mustache.Types           as Mustache
@@ -39,7 +40,6 @@ data Config = Config
   , configAWS :: AWSConfig
   , configSMTP :: SMTPConfig
   , configSecretKey :: JWT.JWK
-  , configBackend :: SqlBackend
   }
 
 data SMTPConfig = SMTPConfig
@@ -60,23 +60,19 @@ type Controller = TaggedT (ReaderT SqlBackend (ConfigT Config (ControllerT TIO))
 instance Frankie.Auth.HasAuthMethod (Entity User) Controller Config where
   getAuthMethod = configAuthMethod
 
-instance HasSqlBackend Config where
-  getSqlBackend = configBackend
-
 instance HasTemplateCache Config where
   getTemplateCache = configTemplateCache
 
 type Task = TaggedT (ReaderT SqlBackend (ConfigT Config TIO))
 
+
 runTask :: Task () -> Controller ()
 runTask task = do
-  b      <- backend
-  config <- getConfig
-  let t = mapTaggedT (\t -> runReaderT (unConfigT (runReaderT t b)) config) task
-  flip mapTaggedT (forkTIO t) $ \m -> do
-    liftTIO m
-    return ()
-
+  backend <- lift ask
+  cfg     <- getConfig
+  flip mapTaggedT task $ \t -> do
+    forkTIO $ configure cfg (t `runReaderT` backend)
+  return ()
 
 --------------------------------------------------------------------------------
 -- | Responses

@@ -86,13 +86,13 @@ data ServerOpts = ServerOpts
 runServer :: ServerOpts -> IO ()
 runServer ServerOpts {..} = runNoLoggingT $ do
     liftIO $ initDB optsDBPath
-    mkConfig <- liftIO readConfig
-    pool     <- createSqlitePool optsDBPath optsPool
+    cfg  <- liftIO readConfig
+    pool <- createSqlitePool optsDBPath optsPool
     liftIO . runFrankieServer "dev" $ do
         mode "dev" $ do
             host optsHost
             port optsPort
-            initWith $ initFromPool mkConfig pool
+            initWith $ initFromPool cfg pool
         dispatch $ do
             post "/api/signin" signIn
             post "/api/signup" signUp
@@ -120,12 +120,11 @@ runServer ServerOpts {..} = runNoLoggingT $ do
 
 runTask' :: T.Text -> Task a -> IO a
 runTask' dbpath task = runSqlite dbpath $ do
-    mkConfig <- liftIO readConfig
-    backend  <- ask
-    liftIO . runTIO $ runReaderT (unConfigT (runReaderT (unTag task) backend)) (mkConfig backend)
+    cfg     <- liftIO readConfig
+    backend <- ask
+    liftIO . runTIO $ configure cfg (runReaderT (unTag task) backend)
 
-
-readConfig :: IO (SqlBackend -> Config)
+readConfig :: IO Config
 readConfig =
     Config authMethod <$> MVar.newMVar mempty <*> readAWSConfig <*> readSMTPConfig <*> readSecretKey
 
@@ -181,9 +180,9 @@ sendFile path = do
 
 -- TODO find a way to provide this without exposing the instance of MonadBaseControl
 
-initFromPool :: (SqlBackend -> Config) -> Pool SqlBackend -> Controller () -> ControllerT TIO ()
-initFromPool mkConfig pool controller = Pool.withResource pool
-    $ \sqlBackend -> configure (mkConfig sqlBackend) . reading backend . unTag $ controller
+initFromPool :: Config -> Pool SqlBackend -> Controller () -> ControllerT TIO ()
+initFromPool cfg pool controller =
+    Pool.withResource pool $ \sqlBackend -> configure cfg $ runReaderT (unTag controller) sqlBackend
 
 instance MonadBase IO TIO where
     liftBase = TIO
