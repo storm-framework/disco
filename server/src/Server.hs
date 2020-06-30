@@ -92,7 +92,7 @@ runServer ServerOpts {..} = runNoLoggingT $ do
         mode "dev" $ do
             host optsHost
             port optsPort
-            initWith $ initFromPool cfg pool
+            initWithT $ initFromPool cfg pool
         dispatch $ do
             post "/api/signin" signIn
             post "/api/signup" signUp
@@ -180,9 +180,9 @@ sendFile path = do
 
 -- TODO find a way to provide this without exposing the instance of MonadBaseControl
 
-initFromPool :: Config -> Pool SqlBackend -> Controller () -> ControllerT TIO ()
-initFromPool cfg pool controller =
-    Pool.withResource pool $ \sqlBackend -> configure cfg $ runReaderT (unTag controller) sqlBackend
+initFromPool :: Config -> Pool SqlBackend -> Controller () -> TaggedT (ControllerT TIO) ()
+initFromPool cfg pool = mapTaggedT run
+    where run act = Pool.withResource pool $ configure cfg . runReaderT act
 
 instance MonadBase IO TIO where
     liftBase = TIO
