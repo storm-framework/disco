@@ -59,7 +59,6 @@ import           Controllers
 import           Controllers.User               ( extractUserData
                                                 , UserData
                                                 )
-import           Controllers.Invitation         ( InvitationCode(..) )
 import           Model
 import           JSON
 import           Crypto
@@ -89,7 +88,7 @@ addOrganizer UserCreate {..} = do
 -- | SignIn
 --------------------------------------------------------------------------------
 
-{-@ ignore signIn @-}
+{-@ signIn :: TaggedT<{\_ -> False}, {\_ -> True}> _ () @-}
 signIn :: Controller ()
 signIn = do
   (SignInReq emailAddress password) <- decodeBody
@@ -101,6 +100,7 @@ signIn = do
   respondJSON status200 $ AuthRes (unpackLazy8 token) userData
 
 {-@ ignore authUser @-}
+{-@ authUser :: _ -> _ -> TaggedT<{\_ -> True}, {\v -> v == currentUser}> _ _ @-}
 authUser :: Text -> Text -> Controller (Entity User)
 authUser emailAddress password = do
   user <- selectFirstOr (errorResponse status401 (Just "Incorrect credentials"))
@@ -132,7 +132,7 @@ instance ToJSON AuthRes where
 -- | SignUp
 -------------------------------------------------------------------------------
 
-{-@ ignore signUp @-}
+{-@ signUp :: TaggedT<{\_ -> False}, {\_ -> True}> _ () @-}
 signUp :: Controller ()
 signUp = do
   (SignUpReq (InvitationCode id code) uc@UserCreate {..}) <- decodeBody
@@ -170,6 +170,22 @@ validateUser UserCreate {..} = do
   when (T.length displayName == 0) $ respondError status400 (Just "missing displayName")
   when (T.length bio > 300) $ respondError status400 (Just "bio too long")
 
+data InvitationCode = InvitationCode InvitationId Text deriving Generic
+
+instance FromJSON InvitationCode where
+  parseJSON = withText "InvitationCode" parse
+   where
+    parse t = case parseCode t of
+      Nothing -> fail "Invalid invitation id"
+      Just id -> return id
+
+parseCode :: Text -> Maybe InvitationCode
+parseCode text = case readMaybe (T.unpack h) of
+  Nothing -> Nothing
+  Just id -> Just $ InvitationCode (toSqlKey id) (T.drop 1 t)
+  where (h, t) = T.breakOn "." text
+
+
 data SignUpReq = SignUpReq
   { signUpReqInvitationCode :: InvitationCode
   , signUpReqUser :: UserCreate
@@ -198,7 +214,7 @@ instance FromJSON UserCreate where
 -- | SignIn
 --------------------------------------------------------------------------------
 
-
+{-@ presignS3URL :: TaggedT<{\_ -> False}, {\_ -> True}> _ _ @-}
 presignS3URL :: Controller ()
 presignS3URL = do
   code         <- listToMaybe <$> queryParams "code"

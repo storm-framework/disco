@@ -48,7 +48,7 @@ import           System.IO.Unsafe               ( unsafePerformIO )
 
 {-@ invitationPut :: TaggedT<{\_ -> False}, {\_ -> True}> _ _ @-}
 invitationPut :: Controller ()
-invitationPut = do
+invitationPut = requireAuth $ \viewer -> do
   viewer           <- requireAuthUser
   _                <- checkOrganizer viewer
   (PutReq reqData) <- decodeBody
@@ -214,18 +214,3 @@ extractInvitationData invitation =
 
 instance ToJSON InvitationData where
   toEncoding = genericToEncoding (stripPrefix "invitation")
-
-data InvitationCode = InvitationCode InvitationId Text deriving Generic
-
-instance FromJSON InvitationCode where
-  parseJSON = withText "InvitationCode" parse
-   where
-    parse t = case parseCode t of
-      Nothing -> fail "Invalid invitation id"
-      Just id -> return id
-
-parseCode :: Text -> Maybe InvitationCode
-parseCode text = case readMaybe (T.unpack h) of
-  Nothing -> Nothing
-  Just id -> Just $ InvitationCode (toSqlKey id) (T.drop 1 t)
-  where (h, t) = T.breakOn "." text

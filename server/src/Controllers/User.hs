@@ -26,7 +26,6 @@ import           Binah.Templates
 import           Binah.Frankie
 
 import           Controllers
-import           Controllers.Invitation         ( InvitationCode(..) )
 import           Model
 import           JSON
 import           Control.Monad                  ( when )
