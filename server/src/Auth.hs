@@ -270,7 +270,7 @@ checkIfAuth = do
 {-@ genJwt :: _ -> TaggedT<{\_ -> True}, {\v -> v == currentUser}> _ _ @-}
 genJwt :: UserId -> Controller L.ByteString
 genJwt userId = do
-  key    <- configSecretKey `fmap` getConfig
+  key    <- configSecretKey `fmap` getConfigT
   claims <- liftTIO $ mkClaims userId
   jwt    <- liftTIO $ doJwtSign key claims
   case jwt of
