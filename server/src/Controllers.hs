@@ -12,9 +12,6 @@ import           Control.Monad.Reader           ( MonadReader(..)
                                                 , ReaderT(..)
                                                 , runReaderT
                                                 )
-import           Control.Monad                  ( when
-                                                , replicateM
-                                                )
 import           Control.Monad.Trans            ( MonadTrans(..) )
 import           Database.Persist.Sqlite        ( SqlBackend )
 import qualified Control.Concurrent.MVar       as MVar
@@ -125,32 +122,3 @@ checkOrganizer :: Entity User -> Controller ()
 checkOrganizer user = do
   level <- project userLevel' user
   if level == "organizer" then return () else respondError status403 Nothing
-
-{-@ ignore mapT @-}
-{-@
-mapT :: forall <inn :: Entity User -> Bool, out :: Entity User -> Bool>.
-  (a -> TaggedT<inn, out> _ b) -> [a] -> TaggedT<inn, out> _ [b]
-@-}
-mapT :: MonadTIO m => (a -> TaggedT m b) -> [a] -> TaggedT m [b]
-mapT = mapM
-
-{-@
-forT :: forall <inn :: Entity User -> Bool, out :: Entity User -> Bool>.
-[a] -> (a -> TaggedT<inn, out> _ b) -> TaggedT<inn, out> _ [b]
-@-}
-forT :: MonadTIO m => [a] -> (a -> TaggedT m b) -> TaggedT m [b]
-forT = flip mapT
-
-{-@
-assume whenT :: forall <inn :: Entity User -> Bool, out :: Entity User -> Bool>.
-  Bool -> TaggedT<inn, out> m () -> TaggedT<inn, out> m ()
-@-}
-whenT :: Applicative m => Bool -> TaggedT m () -> TaggedT m ()
-whenT = when
-
-{-@
-assume replicateT :: forall <source :: Entity User -> Bool, sink :: Entity User -> Bool>.
-  Int -> TaggedT<source, sink> m a -> TaggedT<source, sink> m [a]
-@-}
-replicateT :: Applicative m => Int -> TaggedT m a -> TaggedT m [a]
-replicateT = replicateM
