@@ -1,10 +1,10 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.34.1.
+-- This file has been generated from package.yaml by hpack version 0.34.2.
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 571674e1e5053cc92cb26c42488ede51354c7136349f149616f5b2ca6014aef7
+-- hash: 5ec8aa5c1b5beabdad3cfbfb2950dca7cae5156e7cef434f2fd5b00c6c109aa8
 
 name:           server
 version:        0.1.0.0
@@ -64,6 +64,7 @@ library
     , base64-bytestring
     , bytestring
     , cmdargs
+    , cryptonite
     , directory
     , either
     , filepath
@@ -110,6 +111,7 @@ executable disco
     , base64-bytestring
     , bytestring
     , cmdargs
+    , cryptonite
     , directory
     , either
     , filepath
@@ -158,6 +160,7 @@ test-suite server-test
     , base64-bytestring
     , bytestring
     , cmdargs
+    , cryptonite
     , directory
     , either
     , filepath

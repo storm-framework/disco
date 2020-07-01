@@ -12,7 +12,9 @@ import           Control.Monad.Reader           ( MonadReader(..)
                                                 , ReaderT(..)
                                                 , runReaderT
                                                 )
-import           Control.Monad                  ( when )
+import           Control.Monad                  ( when
+                                                , replicateM
+                                                )
 import           Control.Monad.Trans            ( MonadTrans(..) )
 import           Database.Persist.Sqlite        ( SqlBackend )
 import qualified Control.Concurrent.MVar       as MVar
@@ -65,11 +67,10 @@ instance HasTemplateCache Config where
 
 type Task = TaggedT (ReaderT SqlBackend (ConfigT Config TIO))
 
-
 runTask :: Task () -> Controller ()
 runTask task = do
   backend <- lift ask
-  cfg     <- getConfig
+  cfg     <- getConfigT
   flip mapTaggedT task $ \t -> do
     forkTIO $ configure cfg (t `runReaderT` backend)
   return ()
@@ -108,12 +109,10 @@ notFoundJSON = errorResponse status404 Nothing
 hAccessControlAllowOrigin :: HeaderName
 hAccessControlAllowOrigin = "Access-Control-Allow-Origin"
 
--- TODO refine liftTIO
-{-@ ignore decodeBody @-}
 {-@ decodeBody :: TaggedT<{\_ -> True}, {\v -> v == currentUser}> _ _ @-}
 decodeBody :: FromJSON a => Controller a
 decodeBody = do
-  req  <- request
+  req  <- requestT
   body <- liftTIO $ reqBody req
   case eitherDecode body of
     Left  s -> respondError status400 (Just s)
@@ -144,7 +143,14 @@ forT = flip mapT
 
 {-@
 assume whenT :: forall <inn :: Entity User -> Bool, out :: Entity User -> Bool>.
-  b:Bool -> TaggedT<inn, out> m () -> TaggedT<inn, out> m ()
+  Bool -> TaggedT<inn, out> m () -> TaggedT<inn, out> m ()
 @-}
 whenT :: Applicative m => Bool -> TaggedT m () -> TaggedT m ()
 whenT = when
+
+{-@
+assume replicateT :: forall <source :: Entity User -> Bool, sink :: Entity User -> Bool>.
+  Int -> TaggedT<source, sink> m a -> TaggedT<source, sink> m [a]
+@-}
+replicateT :: Applicative m => Int -> TaggedT m a -> TaggedT m [a]
+replicateT = replicateM

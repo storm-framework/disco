@@ -267,10 +267,10 @@ checkIfAuth = do
 -- | JWT
 -------------------------------------------------------------------------------
 
-{-@ ignore genJwt @-}
+{-@ genJwt :: _ -> TaggedT<{\_ -> True}, {\v -> v == currentUser}> _ _ @-}
 genJwt :: UserId -> Controller L.ByteString
 genJwt userId = do
-  key    <- configSecretKey <$> getConfig
+  key    <- configSecretKey `fmap` getConfig
   claims <- liftTIO $ mkClaims userId
   jwt    <- liftTIO $ doJwtSign key claims
   case jwt of
@@ -279,6 +279,7 @@ genJwt userId = do
     Left  (JWTClaimsSetDecodeError s) -> respondError status400 (Just s)
     Left  JWTExpired                  -> respondError status401 (Just "expired token")
     Left  _                           -> respondError status401 Nothing
+
 
 mkClaims :: UserId -> TIO ClaimsSet
 mkClaims userId = do

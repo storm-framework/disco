@@ -22,6 +22,7 @@ import           Text.Mustache                  ( (~>) )
 import qualified Text.Mustache.Types           as Mustache
 import qualified Network.Mail.Mime             as M
 import           Frankie.Config
+import qualified Data.ByteString.Base64.URL    as B64Url
 
 import           Binah.Core
 import           Binah.Actions
@@ -36,11 +37,11 @@ import           Binah.Frankie
 import           Controllers
 import           Model
 import           JSON
-import           Crypto                         ( genRandomCodes )
 import           Text.Read                      ( readMaybe )
 import           SMTP
 import           Exception
-import           System.IO.Unsafe               ( unsafePerformIO )
+import           Crypto.Random                  ( getRandomBytes )
+import           Crypto
 
 --------------------------------------------------------------------------------
 -- | Invitation Put (create invitations)
@@ -48,11 +49,11 @@ import           System.IO.Unsafe               ( unsafePerformIO )
 
 {-@ invitationPut :: TaggedT<{\_ -> False}, {\_ -> True}> _ _ @-}
 invitationPut :: Controller ()
-invitationPut = requireAuth $ \viewer -> do
+invitationPut = do
   viewer           <- requireAuthUser
   _                <- checkOrganizer viewer
   (PutReq reqData) <- decodeBody
-  codes            <- genRandomCodes (length reqData)
+  codes            <- replicateT (length reqData) genRandomCode
   let invitations = zipWith
         (\InvitationInsert {..} code -> mkInvitation code
                                                      insertEmailAddress
@@ -68,6 +69,13 @@ invitationPut = requireAuth $ \viewer -> do
   ids <- insertMany invitations
   _   <- runTask (sendEmails ids)
   respondJSON status201 (object ["keys" .= map fromSqlKey ids])
+
+{-@ genRandomCode :: TaggedT<{\_ -> True}, {\_ -> False}> _ _@-}
+genRandomCode :: Controller Text
+genRandomCode = do
+  bytes <- liftTIO (getRandomBytes 24)
+  return $ T.decodeUtf8 $ B64Url.encode bytes
+
 
 data EmailData = EmailData
   { emailDataInvitationId :: InvitationId
