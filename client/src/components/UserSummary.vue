@@ -7,33 +7,29 @@
     <div class="user-long" v-else>
       <b-avatar class="photo" :src="photoURL" :text="avatarText" size="6em" />
       <div class="text">
-      <heading class="name" :level="1" :context="headingContext">
-        {{ displayName }}
-      </heading>
-      <icon-button
-        v-if="editable"
-        icon="edit"
-        :to="{ name: 'Profile' }"
-      >
-        Edit profile
-      </icon-button>
-      <dl>
-        <div v-if="pronouns" class="info-item">
-          <dt>Pronouns</dt>
-          <dd>{{ pronouns }}</dd>
-        </div>
-        <div v-if="institution" class="info-item">
-          <dt>Affiliation</dt>
-          <dd>{{ institution }}</dd>
-        </div>
-        <div v-if="website" class="info-item website">
-          <dt>Website</dt>
-          <dd>
-            <a :href="website">{{ website }}</a>
-          </dd>
-        </div>
-      </dl>
-      <p v-if="bio" class="bio">{{ bio }}</p>
+        <heading class="name" :level="1" :context="headingContext">
+          {{ displayName }}
+        </heading>
+        <icon-button v-if="editable" icon="edit" :to="{ name: 'Profile' }">
+          Edit profile
+        </icon-button>
+        <dl>
+          <div v-if="pronouns" class="info-item">
+            <dt>Pronouns</dt>
+            <dd>{{ pronouns }}</dd>
+          </div>
+          <div v-if="institution" class="info-item">
+            <dt>Affiliation</dt>
+            <dd>{{ institution }}</dd>
+          </div>
+          <div v-if="website" class="info-item website">
+            <dt>Website</dt>
+            <dd>
+              <a :href="website">{{ website }}</a>
+            </dd>
+          </div>
+        </dl>
+        <p v-if="bio" class="bio">{{ bio }}</p>
       </div>
     </div>
   </div>
@@ -108,18 +104,18 @@ export default class UserSummary extends Mixins(HeadingContext) {
 }
 
 .user-long {
-    display: flex;
-    overflow: hidden;
+  display: flex;
+  overflow: hidden;
 }
 
 .photo {
-    flex-shrink: 0;
-    margin-right: 1em;
+  flex-shrink: 0;
+  margin-right: 1em;
 }
 
 .text {
-    overflow: hidden;
-    flex-shrink: 1;
+  overflow: hidden;
+  flex-shrink: 1;
 }
 
 .user-brief {
@@ -133,11 +129,11 @@ export default class UserSummary extends Mixins(HeadingContext) {
 }
 
 .user-long .name {
-    font-size: 1.125rem;
+  font-size: 1.125rem;
 }
 
 .name {
-    font-weight: normal;
+  font-weight: normal;
 }
 
 .edit-profile {

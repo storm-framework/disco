@@ -75,7 +75,6 @@ declare global {
   }
 }
 
-
 @Component
 export default class JitsiCall extends Vue {
   @Prop() roomName?: string;

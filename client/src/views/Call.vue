@@ -1,6 +1,9 @@
 <template>
   <main>
-    <jitsi-call room-name="avsbtlnwvcdmvjerwhbkjalkasdncb" display-name="Foo Barlington"/>
+    <jitsi-call
+      room-name="avsbtlnwvcdmvjerwhbkjalkasdncb"
+      display-name="Foo Barlington"
+    />
   </main>
 </template>
 
