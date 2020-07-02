@@ -1,12 +1,7 @@
-const BundleAnalyzerPlugin = require("webpack-bundle-analyzer")
-  .BundleAnalyzerPlugin;
+/* eslint-disable @typescript-eslint/no-var-requires */
+const { BundleAnalyzerPlugin } = require("webpack-bundle-analyzer");
 const LodashModuleReplacementPlugin = require("lodash-webpack-plugin");
-
-const plugins = [new LodashModuleReplacementPlugin()];
-
-if (process.env.BUNDLE_ANALYZER) {
-  plugins.push(new BundleAnalyzerPlugin());
-}
+const ScriptExtHtmlPlugin = require("script-ext-html-webpack-plugin");
 
 module.exports = {
   productionSourceMap: false,
@@ -19,6 +14,26 @@ module.exports = {
     }
   },
   configureWebpack: {
-    plugins
+    externals: {
+      "jitsi-meet-external-api": "JitsiMeetExternalAPI"
+    }
+  },
+  chainWebpack(config) {
+    if (process.env.BUNDLE_ANALYZER) {
+      config.plugin("bundle-analyzer").use(BundleAnalyzerPlugin);
+    }
+
+    // prettier-ignore
+    config
+      .plugin("lodash")
+        .use(LodashModuleReplacementPlugin)
+        .end()
+      .plugin("script-ext")
+        .use(ScriptExtHtmlPlugin, [
+          {
+            defaultAttribute: "defer"
+          }
+        ])
+        .after("html");
   }
 };

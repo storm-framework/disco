@@ -39,7 +39,6 @@
 import { Component, Prop, Mixins } from "vue-property-decorator";
 import HeadingContext from "@/mixins/HeadingContext";
 import Heading from "@/components/Heading";
-import _ from "lodash";
 
 import { library } from "@fortawesome/fontawesome-svg-core";
 import {

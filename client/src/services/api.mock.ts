@@ -141,6 +141,7 @@ const USERS: { [id: string]: User } = {
 
 const SESSION_USER_ID = "1";
 
+/* eslint-disable @typescript-eslint/no-unused-vars */
 class ApiService {
   constructor(private accessToken: string | null) {}
 

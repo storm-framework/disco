@@ -4,13 +4,17 @@
 
 <script lang="ts">
 import { Vue, Component, Prop } from "vue-property-decorator";
+import JitsiMeetExternalAPI, {
+  JitsiConfig,
+  JitsiInterfaceConfig
+} from "jitsi-meet-external-api";
 
-const JITSI_CONFIG = {
+const JITSI_CONFIG: JitsiConfig = {
   disableInviteFunctions: true,
   doNotStoreRoom: true
 };
 
-const JITSI_INTERFACE_CONFIG = {
+const JITSI_INTERFACE_CONFIG: JitsiInterfaceConfig = {
   TOOLBAR_BUTTONS: [
     "microphone",
     "camera",
@@ -34,46 +38,6 @@ const JITSI_INTERFACE_CONFIG = {
   SETTINGS_SECTIONS: ["devices", "language"],
   RECENT_LIST_ENABLED: false
 };
-
-interface JitsiMeetConfig {
-  disableInviteFunctions: boolean;
-  doNotStoreRoom: boolean;
-  // ...
-}
-
-interface JitsiMeetInterfaceConfig {
-  TOOLBAR_BUTTONS: string[];
-  SETTINGS_SECTIONS: string[];
-  RECENT_LIST_ENABLED: boolean;
-  // ...
-}
-
-interface JitsiMeetUserInfo {
-  displayName: string;
-  email: string;
-  avatarURL: string;
-}
-
-interface JitsiMeetApiOptions {
-  roomName?: string;
-  width?: number | string;
-  height?: number | string;
-  parentNode?: Element;
-  configOverwrite?: Partial<Config>;
-  interfaceConfigOverwrite?: Partial<InterfaceConfig>;
-  noSSL?: boolean;
-  jwt?: string;
-  onload?: EventHandlerNonNull;
-  invitees?: object[];
-  devices?: object;
-  userInfo?: Partial<UserInfo>;
-}
-
-declare global {
-  class JitsiMeetExternalAPI {
-    constructor(domain: string, options: JitsiMeetApiOptions);
-  }
-}
 
 @Component
 export default class JitsiCall extends Vue {
