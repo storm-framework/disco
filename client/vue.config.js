@@ -14,6 +14,10 @@ module.exports = {
     }
   },
   configureWebpack: {
+    // Plugins loaded unconditionally which don't require any special
+    // configuration
+    plugins: [new LodashModuleReplacementPlugin()],
+    devtool: "source-map",
     externals: {
       "jitsi-meet-external-api": "JitsiMeetExternalAPI"
     }
@@ -23,17 +27,13 @@ module.exports = {
       config.plugin("bundle-analyzer").use(BundleAnalyzerPlugin);
     }
 
-    // prettier-ignore
     config
-      .plugin("lodash")
-        .use(LodashModuleReplacementPlugin)
-        .end()
       .plugin("script-ext")
-        .use(ScriptExtHtmlPlugin, [
-          {
-            defaultAttribute: "defer"
-          }
-        ])
-        .after("html");
+      .use(ScriptExtHtmlPlugin, [
+        {
+          defaultAttribute: "defer"
+        }
+      ])
+      .after("html");
   }
 };
