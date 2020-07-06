@@ -27,6 +27,18 @@ module.exports = {
       config.plugin("bundle-analyzer").use(BundleAnalyzerPlugin);
     }
 
+    const cert = process.env.WEBPACK_DEV_SERVER_HTTPS_CERT;
+    const key = process.env.WEBPACK_DEV_SERVER_HTTPS_KEY;
+    const ca = process.env.WEBPACK_DEV_SERVER_HTTPS_CA;
+
+    if (cert && key) {
+      config.devServer.https({
+        cert,
+        key,
+        ca
+      });
+    }
+
     config
       .plugin("script-ext")
       .use(ScriptExtHtmlPlugin, [
