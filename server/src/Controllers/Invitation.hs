@@ -17,6 +17,7 @@ import           Data.Aeson.Types
 import           Database.Persist.Sql           ( fromSqlKey
                                                 , toSqlKey
                                                 )
+import           Control.Exception              ( SomeException(..) )
 import           GHC.Generics
 import           Text.Mustache                  ( (~>) )
 import qualified Text.Mustache.Types           as Mustache
@@ -39,7 +40,6 @@ import           Model
 import           JSON
 import           Text.Read                      ( readMaybe )
 import           SMTP
-import           Exception
 import           Crypto.Random                  ( getRandomBytes )
 import           Crypto
 
@@ -126,11 +126,11 @@ sendEmail' :: SMTPConnection -> Entity Invitation -> Task ()
 sendEmail' conn invitation = do
   id                        <- project invitationId' invitation
   (to, from, subject, body) <- renderEmail invitation
-  res                       <- tryT $ sendPlainTextMail to from subject body conn
+  res                       <- sendPlainTextMail to from subject body conn
   case res of
-    Left (SomeException e) -> do
+    Left err -> do
       let up =
-            (invitationEmailError' `assign` Just (show e))
+            (invitationEmailError' `assign` Just (show err))
               `combine` (invitationEmailStatus' `assign` "error")
       updateWhere (invitationId' ==. id) up
     Right _ -> updateWhere (invitationId' ==. id) (invitationEmailStatus' `assign` "sent")
