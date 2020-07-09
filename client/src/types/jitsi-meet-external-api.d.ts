@@ -1,4 +1,6 @@
 declare module "jitsi-meet-external-api" {
+  import { EventEmitter } from "events";
+
   export interface JitsiConfig {
     disableInviteFunctions?: boolean;
     doNotStoreRoom?: boolean;
@@ -33,7 +35,9 @@ declare module "jitsi-meet-external-api" {
     userInfo?: Partial<JitsiUserInfo>;
   }
 
-  export default class JitsiMeetExternalAPI {
+  export default class JitsiMeetExternalAPI extends EventEmitter {
     constructor(domain: string, options: JitsiOptions);
+
+    dispose(): void;
   }
 }
