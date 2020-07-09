@@ -48,13 +48,6 @@
         </div>
       </b-row>
 
-      <b-card-text v-if="isCurrentRoom">
-        You are in this room. If you accidentally left the chat,
-        <a :href="room.zoomLink" target="_blank">
-          click here to rejoin. <font-awesome-icon icon="external-link-alt" />
-        </a>
-      </b-card-text>
-
       <b-card-text v-if="empty">
         The room is empty.
       </b-card-text>
@@ -81,20 +74,10 @@
       </template>
 
       <icon-button
-        v-if="isCurrentRoom"
-        icon="door-open"
-        @click="leaveRoom"
-        variant="danger"
-      >
-        Leave
-      </icon-button>
-      <icon-button
-        v-else
-        icon="external-link-alt"
+        v-if="!isCurrentRoom"
+        icon="phone"
         variant="primary"
-        @click.passive="joinRoom"
-        :href="room.zoomLink"
-        target="_blank"
+        @click="joinRoom"
       >
         Join
       </icon-button>
@@ -113,14 +96,14 @@ import _ from "lodash";
 import { library } from "@fortawesome/fontawesome-svg-core";
 import {
   faComments,
-  faDoorOpen,
+  faPhone,
   faEdit,
   faExternalLinkAlt,
   faSave,
   faTimes
 } from "@fortawesome/free-solid-svg-icons";
 
-library.add(faComments, faDoorOpen, faEdit, faExternalLinkAlt, faSave, faTimes);
+library.add(faComments, faPhone, faEdit, faExternalLinkAlt, faSave, faTimes);
 
 @Component({ components: { UserSummary, Heading } })
 export default class RoomCard extends Mixins(HeadingContext) {
@@ -162,10 +145,6 @@ export default class RoomCard extends Mixins(HeadingContext) {
 
   joinRoom() {
     this.$store.dispatch("joinRoom", this.room.id);
-  }
-
-  leaveRoom() {
-    this.$store.dispatch("leaveRoom");
   }
 
   editTopic() {
