@@ -54,7 +54,6 @@ export default class JitsiCall extends Vue {
   onTopicChanged(topic: string) {
     this.call.subject = topic;
   }
-
 }
 </script>
 

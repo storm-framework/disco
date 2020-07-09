@@ -136,7 +136,9 @@ export default class Call extends TypedEmitter<Events> {
         this.joined = false;
       });
 
-      api.on("readyToClose", () => { api.dispose(); });
+      api.on("readyToClose", () => {
+        api.dispose();
+      });
 
       this.api = api;
       this.isOpen = true;
