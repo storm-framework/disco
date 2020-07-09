@@ -7,6 +7,8 @@
       class="call"
       :room="currentRoom"
       :user="sessionUser"
+      @room-joined="joinRoom"
+      @room-left="leaveRoom"
     />
     <h2 class="sr-only">Your status</h2>
     <section v-if="sessionUser" class="container row">
@@ -105,6 +107,14 @@ export default class Home extends Vue {
       this.syncing = false;
       this.syncTimerHandler = setTimeout(this.sync, SYNC_INTERVAL);
     });
+  }
+
+  joinRoom(roomId: string) {
+    this.$store.dispatch("joinRoom", roomId);
+  }
+
+  leaveRoom() {
+    this.$store.dispatch("leaveRoom");
   }
 
   joinRandomRoom() {

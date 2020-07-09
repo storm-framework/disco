@@ -43,13 +43,13 @@ export interface CallOptions {
 }
 
 interface Events {
-  iframeChanged(iframe: HTMLIFrameElement): void;
   roomJoined(roomName: string): void;
   roomLeft(roomName: string): void;
 }
 
 export default class Call extends TypedEmitter<Events> {
   private readonly domain: string;
+  parent: Element | null = null;
   private api: JitsiMeetExternalAPI | null = null;
   private isOpen = false;
   private joined = false;
@@ -114,10 +114,9 @@ export default class Call extends TypedEmitter<Events> {
   }
 
   open() {
-    if (this.roomName) {
-      const wrapper = document.createElement("div");
+    if (this.roomName && this.parent) {
       const api = new JitsiMeetExternalAPI(this.domain, {
-        parentNode: wrapper,
+        parentNode: this.parent,
         configOverwrite: APP_CONFIG,
         interfaceConfigOverwrite: INTERFACE_CONFIG,
         roomName: this.roomName,
@@ -134,16 +133,13 @@ export default class Call extends TypedEmitter<Events> {
       });
       api.on("videoConferenceLeft", ({ roomName }) => {
         this.emit("roomLeft", roomName);
-        api.dispose();
         this.joined = false;
       });
 
+      api.on("readyToClose", () => { api.dispose(); });
+
       this.api = api;
       this.isOpen = true;
-
-      const iframe = api.getIFrame();
-      wrapper.removeChild(iframe);
-      this.emit("iframeChanged", iframe);
     } else {
       this.close();
     }
@@ -152,8 +148,6 @@ export default class Call extends TypedEmitter<Events> {
   close() {
     if (this.joined) {
       this.api?.executeCommand("hangup");
-    } else {
-      this.api?.dispose();
     }
     this.api = null;
     this.isOpen = false;

@@ -16,16 +16,18 @@ export default class JitsiCall extends Vue {
 
   created() {
     this.call.on("roomJoined", () => {
+      console.log(`emitting room-joined ${this.room.id}`);
       this.$emit("room-joined", this.room.id);
     });
 
     this.call.on("roomLeft", () => {
+      console.log(`emitting room-left ${this.room.id}`);
       this.$emit("room-left", this.room.id);
     });
   }
 
   mounted() {
-    this.call.on("iframeChanged", this.injectIframe);
+    this.call.parent = this.$refs.callContainer as Element;
     this.call.open();
   }
 
@@ -53,13 +55,6 @@ export default class JitsiCall extends Vue {
     this.call.subject = topic;
   }
 
-  private injectIframe(iframe: HTMLIFrameElement) {
-    const callContainer: Element = this.$refs.callContainer as Element;
-    while (callContainer.firstChild) {
-      callContainer.removeChild(callContainer.firstChild);
-    }
-    callContainer.appendChild(iframe);
-  }
 }
 </script>
 
