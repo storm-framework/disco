@@ -1,8 +1,15 @@
 <template>
-  <b-container v-if="sessionUser" tag="main">
+  <main v-if="sessionUser" tag="main">
     <h1 class="sr-only">Overview</h1>
+    <h2 class="sr-only" v-if="currentRoom">Current Call</h2>
+    <jitsi-call
+      v-if="currentRoom"
+      class="call"
+      :room="currentRoom"
+      :user="sessionUser"
+    />
     <h2 class="sr-only">Your status</h2>
-    <section v-if="sessionUser" class="row">
+    <section v-if="sessionUser" class="container row">
       <user-summary
         long
         editable
@@ -35,7 +42,7 @@
         </icon-button>
       </b-col>
     </section>
-    <section v-if="roomsAreAvailable">
+    <section v-if="roomsAreAvailable" class="container">
       <h2 v-if="currentRoom" class="mt-5">Other Rooms</h2>
       <h2 v-else class="mt-5">All Rooms</h2>
       <ul class="row list-unstyled mt-4">
@@ -48,13 +55,14 @@
         </li>
       </ul>
     </section>
-  </b-container>
+  </main>
 </template>
 
 <script lang="ts">
 import { Component, Vue } from "vue-property-decorator";
 import RoomCard from "@/components/RoomCard.vue";
 import UserSummary from "@/components/UserSummary.vue";
+import JitsiCall from "@/components/JitsiCall.vue";
 import { Room } from "@/models";
 import { mapGetters } from "vuex";
 import _ from "lodash";
@@ -62,7 +70,7 @@ import _ from "lodash";
 const SYNC_INTERVAL = 10000;
 
 @Component({
-  components: { RoomCard, UserSummary },
+  components: { RoomCard, UserSummary, JitsiCall },
   computed: mapGetters(["sessionUser", "currentRoom"])
 })
 export default class Home extends Vue {
@@ -109,4 +117,10 @@ export default class Home extends Vue {
 }
 </script>
 
-<style lang="scss" scoped></style>
+<style lang="scss" scoped>
+.call {
+  width: calc(100% - 3rem);
+  height: calc(100vh - 3rem);
+  margin: 0 auto 1.5rem auto;
+}
+</style>

@@ -1,72 +1,70 @@
 <template>
-  <article class="callContainer" ref="callContainer"></article>
+  <article class="call-container" ref="callContainer"></article>
 </template>
 
 <script lang="ts">
-import { Vue, Component, Prop } from "vue-property-decorator";
-import JitsiMeetExternalAPI, {
-  JitsiConfig,
-  JitsiInterfaceConfig
-} from "jitsi-meet-external-api";
-
-const JITSI_CONFIG: JitsiConfig = {
-  disableInviteFunctions: true,
-  doNotStoreRoom: true
-};
-
-const JITSI_INTERFACE_CONFIG: JitsiInterfaceConfig = {
-  TOOLBAR_BUTTONS: [
-    "microphone",
-    "camera",
-    "closedcaptions",
-    "desktop",
-    "fullscreen",
-    "fodeviceselection",
-    "hangup",
-    "chat",
-    "settings",
-    "raisehand",
-    "videoquality",
-    "feedback",
-    "stats",
-    "shortcuts",
-    "tileview",
-    "videobackgroundblur",
-    "help"
-  ],
-  SETTINGS_SECTIONS: ["devices", "language"],
-  RECENT_LIST_ENABLED: false
-};
+import { Vue, Component, Prop, Watch } from "vue-property-decorator";
+import { Room, User } from "@/models";
+import Call from "./Call";
 
 @Component
 export default class JitsiCall extends Vue {
-  @Prop() roomName?: string;
-  @Prop() displayName?: string;
-  @Prop() avatarURL?: string;
+  @Prop() room!: Room;
+  @Prop() user!: User;
 
-  private api?: JitsiMeetExternalAPI;
+  private call: Call = new Call();
 
-  mounted() {
-    this.createCall();
+  created() {
+    this.call.on("roomJoined", () => {
+      this.$emit("room-joined", this.room.id);
+    });
+
+    this.call.on("roomLeft", () => {
+      this.$emit("room-left", this.room.id);
+    });
   }
 
-  private createCall() {
-    this.api = new JitsiMeetExternalAPI("meet.jit.si", {
-      roomName: this.roomName,
-      parentNode: this.$refs.callContainer as Element,
-      configOverwrite: JITSI_CONFIG,
-      interfaceConfigOverwrite: JITSI_INTERFACE_CONFIG,
-      userInfo: {
-        displayName: this.displayName,
-        avatarURL: this.avatarURL
-      }
-    });
+  mounted() {
+    this.call.on("iframeChanged", this.injectIframe);
+    this.call.open();
+  }
+
+  beforeDestroy() {
+    this.call.close();
+  }
+
+  @Watch("room.zoomLink", { immediate: true })
+  onLinkChanged(zoomLink: string) {
+    this.call.roomName = zoomLink.split("/")[3];
+  }
+
+  @Watch("user.displayName", { immediate: true })
+  onDisplayNameChanged(displayName: string) {
+    this.call.displayName = displayName;
+  }
+
+  @Watch("user.photoURL", { immediate: true })
+  onAvatarUrlChanged(avatarUrl: string | null) {
+    this.call.avatarUrl = avatarUrl || "";
+  }
+
+  @Watch("room.topic", { immediate: true })
+  onTopicChanged(topic: string) {
+    this.call.subject = topic;
+  }
+
+  private injectIframe(iframe: HTMLIFrameElement) {
+    const callContainer: Element = this.$refs.callContainer as Element;
+    while (callContainer.firstChild) {
+      callContainer.removeChild(callContainer.firstChild);
+    }
+    callContainer.appendChild(iframe);
   }
 }
 </script>
 
 <style lang="scss" scoped>
-.callContainer {
+.call-container {
   position: relative;
   overflow: hidden;
 
