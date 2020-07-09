@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 5ec8aa5c1b5beabdad3cfbfb2950dca7cae5156e7cef434f2fd5b00c6c109aa8
+-- hash: 8c613f73ea31a252184f6a58a3db6c7d6c80b594e2eecbd9b38f711ccd9fad59
 
 name:           server
 version:        0.1.0.0
@@ -44,7 +44,6 @@ library
       Controllers.Room
       Controllers.User
       Crypto
-      Exception
       JSON
       Lib
       Model
