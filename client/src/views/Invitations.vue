@@ -1,5 +1,5 @@
 <template>
-  <div class="invitations">
+  <div class="invitations mt-4">
     <b-container>
       <hot-table
         ref="table"

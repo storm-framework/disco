@@ -1,6 +1,6 @@
 <template>
   <div id="app">
-    <header class="mb-4">
+    <header>
       <navbar />
     </header>
     <router-view />
@@ -22,6 +22,11 @@ export default class App extends Vue {}
 </script>
 
 <style lang="scss">
+// Use the same blue and gray used by Jitsi.
+$blue: #0376da !default;
+$primary: $blue !default;
+$dark: rgb(71, 71, 71) !default;
+
 @import "~bootstrap/scss/bootstrap";
 @import "~bootstrap-vue/src/index.scss";
 @import "~handsontable/dist/handsontable.full.css";

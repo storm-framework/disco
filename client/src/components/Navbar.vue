@@ -1,5 +1,5 @@
 <template>
-  <b-navbar toggleable="lg" type="dark" variant="info">
+  <b-navbar toggleable="lg" type="dark" variant="primary">
     <b-navbar-brand to="/">Distant Socialing</b-navbar-brand>
     <b-navbar-nav class="ml-auto">
       <b-nav-item-dropdown text="Admin" right v-if="isOrganizer">

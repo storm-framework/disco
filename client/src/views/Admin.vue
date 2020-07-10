@@ -1,5 +1,5 @@
 <template>
-  <main>
+  <main class="mt-4">
     <h1>Manage rooms</h1>
     <b-form class="form-send-invitations" @submit.prevent="onSubmit">
       <b-alert :show="fatalError" variant="danger">{{ errorMsg }}</b-alert>
