@@ -1,5 +1,5 @@
 <template>
-  <div class="send-invitations">
+  <div class="send-invitations mt-4">
     <b-container>
       <b-row class="justify-content-end align-items-center mb-3">
         <b-col>

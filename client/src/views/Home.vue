@@ -2,47 +2,51 @@
   <main v-if="sessionUser" tag="main">
     <h1 class="sr-only">Overview</h1>
     <h2 class="sr-only" v-if="currentRoom">Current Call</h2>
-    <jitsi-call
-      v-if="currentRoom"
-      class="call"
-      :room="currentRoom"
-      :user="sessionUser"
-      @joined="joinRoom"
-      @left="leaveRoom"
-    />
-    <h2 class="sr-only">Your status</h2>
-    <section v-if="sessionUser" class="container row">
-      <user-summary
-        long
-        editable
-        v-bind="sessionUser"
-        :h-context="3"
-        class="col-6"
-      />
-      <room-card
+    <transition name="appear">
+      <jitsi-call
         v-if="currentRoom"
+        class="call"
         :room="currentRoom"
-        :h-context="4"
-        class="col-6"
+        :user="sessionUser"
+        @joined="joinRoom"
+        @left="leaveRoom"
       />
-      <b-col
-        v-else
-        cols="4"
-        class="align-items-center d-flex flex-column justify-content-center"
-      >
-        <p class="h5">
-          You have not joined a room
-        </p>
-        <icon-button
-          v-if="roomsAreAvailable"
-          icon="external-link-alt"
-          variant="primary"
-          @click="joinRandomRoom"
-          target="_blank"
+    </transition>
+    <h2 class="sr-only">Your status</h2>
+    <section v-if="sessionUser" class="container mt-4">
+      <b-row>
+        <user-summary
+          long
+          editable
+          v-bind="sessionUser"
+          :h-context="3"
+          class="col-6"
+        />
+        <room-card
+          v-if="currentRoom"
+          :room="currentRoom"
+          :h-context="4"
+          class="col-6"
+        />
+        <b-col
+          v-else
+          cols="4"
+          class="align-items-center d-flex flex-column justify-content-center"
         >
-          Random room
-        </icon-button>
-      </b-col>
+          <p class="h5">
+            You have not joined a room
+          </p>
+          <icon-button
+            v-if="roomsAreAvailable"
+            icon="external-link-alt"
+            variant="primary"
+            @click="joinRandomRoom"
+            target="_blank"
+          >
+            Random room
+          </icon-button>
+        </b-col>
+      </b-row>
     </section>
     <section v-if="roomsAreAvailable" class="container">
       <h2 v-if="currentRoom" class="mt-5">Other Rooms</h2>
@@ -129,8 +133,10 @@ export default class Home extends Vue {
 
 <style lang="scss" scoped>
 .call {
-  width: calc(100% - 3rem);
-  height: calc(100vh - 3rem);
-  margin: 0 auto 1.5rem auto;
+  // Copied from youtube's theater mode
+  width: 100%;
+  height: calc((9 / 16) * 100vw);
+  max-height: calc(100vh - 169px);
+  min-height: 480px;
 }
 </style>

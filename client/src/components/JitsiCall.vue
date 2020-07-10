@@ -58,6 +58,7 @@ export default class JitsiCall extends Vue {
 
 <style lang="scss" scoped>
 .call-container {
+  background: var(--dark);
   position: relative;
   overflow: hidden;
 
