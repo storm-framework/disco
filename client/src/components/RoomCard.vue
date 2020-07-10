@@ -74,7 +74,7 @@
       </template>
 
       <icon-button
-        v-if="!isCurrentRoom"
+        v-if="inLobby"
         icon="phone"
         variant="primary"
         @click="joinRoom"
@@ -129,6 +129,10 @@ export default class RoomCard extends Mixins(HeadingContext) {
 
   get isCurrentRoom() {
     return this.$store.getters.currentRoom?.id === this.room.id;
+  }
+
+  get inLobby() {
+    return !this.$store.getters.currentRoom;
   }
 
   isExpanded(user: User) {

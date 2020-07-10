@@ -38,10 +38,9 @@
           </p>
           <icon-button
             v-if="roomsAreAvailable"
-            icon="external-link-alt"
+            icon="dice"
             variant="primary"
             @click="joinRandomRoom"
-            target="_blank"
           >
             Random room
           </icon-button>
@@ -72,6 +71,10 @@ import JitsiCall from "@/components/JitsiCall.vue";
 import { Room } from "@/models";
 import { mapGetters } from "vuex";
 import _ from "lodash";
+
+import { faDice } from "@fortawesome/free-solid-svg-icons";
+import { library } from "@fortawesome/fontawesome-svg-core";
+library.add(faDice);
 
 const SYNC_INTERVAL = 10000;
 
@@ -124,7 +127,6 @@ export default class Home extends Vue {
   joinRandomRoom() {
     const random = _.sample(this.availableRooms);
     if (random) {
-      window.open(random.zoomLink, "_blank");
       this.$store.dispatch("joinRoom", random.id);
     }
   }
