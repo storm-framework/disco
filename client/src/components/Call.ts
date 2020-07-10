@@ -1,6 +1,9 @@
 import JitsiMeetExternalAPI, {
   AppConfig,
-  InterfaceConfig
+  InterfaceConfig,
+  ParticipantId,
+  Events as ApiEvents,
+  UserInfo
 } from "jitsi-meet-external-api";
 import { TypedEmitter } from "tiny-typed-emitter";
 
@@ -34,124 +37,246 @@ const INTERFACE_CONFIG: InterfaceConfig = {
   RECENT_LIST_ENABLED: false
 };
 
-export interface CallOptions {
-  domain?: string;
-  roomName?: string;
-  displayName?: string;
-  avatarUrl?: string;
-  subject?: string;
+interface Events {
+  joined(): void;
+  left(): void;
 }
 
-interface Events {
-  roomJoined(roomName: string): void;
-  roomLeft(roomName: string): void;
+interface StateDisabled {
+  state: "disabled";
+}
+
+interface StateSetup {
+  state: "setup";
+  api: JitsiMeetExternalAPI;
+}
+
+interface StateActive {
+  state: "active";
+  participantId: ParticipantId;
+  api: JitsiMeetExternalAPI;
+}
+
+interface StateTeardown {
+  state: "teardown";
+  api: JitsiMeetExternalAPI;
+}
+
+type State = StateDisabled | StateSetup | StateActive | StateTeardown;
+
+function expectEvent<ApiEvent extends keyof ApiEvents>(
+  api: JitsiMeetExternalAPI,
+  event: ApiEvent,
+  predicate?: (...args: Parameters<ApiEvents[ApiEvent]>) => boolean
+): Promise<void> {
+  return new Promise(resolve => {
+    const test = predicate || (() => true);
+
+    const listener = ((...args: Parameters<ApiEvents[ApiEvent]>) => {
+      if (test(...args)) {
+        api.removeListener(event, listener);
+        resolve();
+      }
+    }) as ApiEvents[ApiEvent];
+
+    api.addListener(event, listener);
+  });
 }
 
 export default class Call extends TypedEmitter<Events> {
   private readonly domain: string;
-  parent: Element | null = null;
-  private api: JitsiMeetExternalAPI | null = null;
-  private isOpen = false;
-  private joined = false;
-  private currentDisplayName: string;
-  private currentAvatarUrl: string;
-  private currentRoomName: string;
-  private currentSubject: string;
 
-  constructor(options?: CallOptions) {
+  private state: State = { state: "disabled" };
+
+  private parent: Element | null = null;
+  private displayName: string | null = null;
+  private avatarUrl: string | null = null;
+  private room: string | null = null;
+  private topic: string | null = null;
+
+  constructor(domain?: string) {
     super();
-    this.domain = options?.domain || "meet.jit.si";
-    this.currentDisplayName = options?.displayName || "";
-    this.currentAvatarUrl = options?.avatarUrl || "";
-    this.currentRoomName = options?.roomName || "";
-    this.currentSubject = options?.subject || "";
+    this.domain = domain || "meet.jit.si";
   }
 
-  get displayName(): string {
-    return this.currentDisplayName;
-  }
-
-  set displayName(displayName: string) {
-    if (displayName !== this.currentDisplayName) {
-      this.currentDisplayName = displayName;
-      this.api?.executeCommand("displayName", displayName);
+  setParent(parent: Element): void {
+    if (parent !== this.parent) {
+      this.parent = parent;
+      this.updateParent();
     }
   }
 
-  get avatarUrl(): string {
-    return this.currentAvatarUrl;
-  }
-
-  set avatarUrl(avatarUrl: string) {
-    if (avatarUrl !== this.currentAvatarUrl) {
-      this.currentAvatarUrl = avatarUrl;
-      this.api?.executeCommand("avatarUrl", avatarUrl);
-    }
-  }
-
-  get roomName(): string {
-    return this.currentRoomName;
-  }
-
-  set roomName(roomName: string) {
-    if (roomName !== this.currentRoomName) {
-      this.currentRoomName = roomName;
-      if (this.isOpen) {
-        this.open();
+  updateParent(): void {
+    if (this.state.state !== "disabled") {
+      if (!this.parent) {
+        this.disable();
+      } else {
+        const iframe = this.state.api.getIFrame();
+        this.parent.appendChild(iframe);
       }
     }
   }
 
-  get subject(): string {
-    return this.currentSubject;
-  }
-
-  set subject(subject: string) {
-    if (subject !== this.currentSubject) {
-      this.currentSubject = subject;
-      this.api?.executeCommand("subject", subject);
+  async setDisplayName(displayName: string) {
+    if (displayName !== this.displayName) {
+      this.displayName = displayName;
+      await this.updateDisplayName();
     }
   }
 
-  open() {
-    if (this.roomName && this.parent) {
-      const api = new JitsiMeetExternalAPI(this.domain, {
-        parentNode: this.parent,
-        configOverwrite: APP_CONFIG,
-        interfaceConfigOverwrite: INTERFACE_CONFIG,
-        roomName: this.roomName,
-        userInfo: {
-          displayName: this.displayName,
-          avatarURL: this.avatarUrl
+  async updateDisplayName() {
+    if (this.state.state === "active") {
+      const { api, participantId } = this.state;
+      const updated = expectEvent(
+        api,
+        "displayNameChange",
+        ({ id, displayname }) =>
+          id === participantId && displayname === this.displayName
+      );
+      api.executeCommand("displayName", this.displayName || "");
+      await updated;
+    }
+  }
+
+  async setAvatarUrl(avatarUrl: string | null) {
+    if (avatarUrl !== this.avatarUrl) {
+      this.avatarUrl = avatarUrl;
+      await this.updateAvatarUrl();
+    }
+  }
+
+  async updateAvatarUrl() {
+    if (this.state.state === "active") {
+      const { api, participantId } = this.state;
+      const updated = expectEvent(
+        api,
+        "avatarChanged",
+        ({ id, avatarURL }) =>
+          id === participantId && avatarURL === this.avatarUrl
+      );
+      api.executeCommand("avatarUrl", this.avatarUrl || "");
+      await updated;
+    }
+  }
+
+  async setTopic(topic: string) {
+    if (topic !== this.topic) {
+      this.topic = topic;
+      await this.updateTopic();
+    }
+  }
+
+  async updateTopic() {
+    if (this.state.state === "active") {
+      const { api } = this.state;
+      const updated = expectEvent(
+        api,
+        "subjectChange",
+        ({ subject }) => subject === this.topic
+      );
+      api.executeCommand("subject", this.topic || "");
+      await updated;
+    }
+  }
+
+  async setRoom(room: string) {
+    if (room !== this.room) {
+      this.room = room;
+      this.updateRoom();
+    }
+  }
+
+  async updateRoom() {
+    if (this.state.state !== "disabled") {
+      await this.disable();
+      await this.enable();
+    }
+  }
+
+  async enable() {
+    if (this.state.state !== "disabled") {
+      return;
+    }
+
+    if (!this.room || !this.parent) {
+      throw new Error(
+        "You need to set a room and a parent before you can enable the call"
+      );
+    }
+
+    const userInfo: Partial<UserInfo> = {};
+
+    if (this.displayName) {
+      userInfo.displayName = this.displayName;
+    }
+
+    if (this.avatarUrl) {
+      userInfo.avatarURL = this.avatarUrl;
+    }
+
+    const api = new JitsiMeetExternalAPI(this.domain, {
+      parentNode: this.parent,
+      configOverwrite: APP_CONFIG,
+      interfaceConfigOverwrite: INTERFACE_CONFIG,
+      roomName: this.room,
+      userInfo
+    });
+
+    api.once(
+      "videoConferenceJoined",
+      ({ roomName, id, displayName, avatarURL }) => {
+        this.emit("joined");
+
+        this.state = {
+          state: "active",
+          participantId: id,
+          api
+        };
+
+        if (roomName !== this.room) {
+          this.updateRoom();
+        } else {
+          if (displayName !== this.displayName) {
+            this.updateDisplayName();
+          }
+
+          if (avatarURL !== this.avatarUrl) {
+            this.updateAvatarUrl();
+          }
         }
-      });
+      }
+    );
 
-      api.on("videoConferenceJoined", ({ roomName }) => {
-        this.emit("roomJoined", roomName);
-        api.executeCommand("subject", this.subject);
-        this.joined = true;
-      });
-      api.on("videoConferenceLeft", ({ roomName }) => {
-        this.emit("roomLeft", roomName);
-        this.joined = false;
-      });
+    api.once("videoConferenceLeft", () => {
+      this.emit("left");
 
-      api.on("readyToClose", () => {
-        api.dispose();
-      });
+      this.state = {
+        state: "teardown",
+        api
+      };
+    });
 
-      this.api = api;
-      this.isOpen = true;
-    } else {
-      this.close();
-    }
+    api.once("readyToClose", () => {
+      this.disable();
+    });
   }
 
-  close() {
-    if (this.joined) {
-      this.api?.executeCommand("hangup");
+  async disable() {
+    if (this.state.state === "disabled") {
+      return;
     }
-    this.api = null;
-    this.isOpen = false;
+
+    if (this.state.state === "active") {
+      const left = expectEvent(
+        this.state.api,
+        "videoConferenceLeft",
+        () => true
+      );
+      this.state.api.executeCommand("hangup");
+      await left;
+    }
+
+    this.state.api.dispose();
+    this.state = { state: "disabled" };
   }
 }

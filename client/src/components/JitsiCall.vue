@@ -15,44 +15,43 @@ export default class JitsiCall extends Vue {
   private call: Call = new Call();
 
   created() {
-    this.call.on("roomJoined", () => {
-      console.log(`emitting room-joined ${this.room.id}`);
-      this.$emit("room-joined", this.room.id);
+    this.call.on("joined", () => {
+      this.$emit("joined", this.room.id);
     });
 
-    this.call.on("roomLeft", () => {
-      console.log(`emitting room-left ${this.room.id}`);
-      this.$emit("room-left", this.room.id);
+    this.call.on("left", () => {
+      this.$emit("left", this.room.id);
     });
   }
 
   mounted() {
-    this.call.parent = this.$refs.callContainer as Element;
-    this.call.open();
+    this.call.setParent(this.$refs.callContainer as Element);
+    this.call.enable();
   }
 
   beforeDestroy() {
-    this.call.close();
+    this.call.disable();
   }
 
   @Watch("room.zoomLink", { immediate: true })
   onLinkChanged(zoomLink: string) {
-    this.call.roomName = zoomLink.split("/")[3];
+    const roomName = zoomLink.split("/")[3];
+    this.call.setRoom(roomName);
   }
 
   @Watch("user.displayName", { immediate: true })
   onDisplayNameChanged(displayName: string) {
-    this.call.displayName = displayName;
+    this.call.setDisplayName(displayName);
   }
 
   @Watch("user.photoURL", { immediate: true })
   onAvatarUrlChanged(avatarUrl: string | null) {
-    this.call.avatarUrl = avatarUrl || "";
+    this.call.setAvatarUrl(avatarUrl);
   }
 
   @Watch("room.topic", { immediate: true })
   onTopicChanged(topic: string) {
-    this.call.subject = topic;
+    this.call.setTopic(topic);
   }
 }
 </script>

@@ -7,8 +7,8 @@
       class="call"
       :room="currentRoom"
       :user="sessionUser"
-      @room-joined="joinRoom"
-      @room-left="leaveRoom"
+      @joined="joinRoom"
+      @left="leaveRoom"
     />
     <h2 class="sr-only">Your status</h2>
     <section v-if="sessionUser" class="container row">
