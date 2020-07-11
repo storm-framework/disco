@@ -42,3 +42,12 @@ For example, assuming you built the code with `build.sh` you can run the server 
 ```bash
 $ dist/disco --static=dist/static
 ```
+
+
+### TODO
+
+**Feature: Alert**
+
+1. console.log every heartbeat
+2. alert on every 10 heartbeats using bvModal
+

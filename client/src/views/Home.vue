@@ -78,12 +78,28 @@ library.add(faDice);
 
 const SYNC_INTERVAL = 10000;
 
+function alertOption(sender: string) {
+  return {
+    title: "Message from " + sender,
+    size: "sm",
+    buttonSize: "sm",
+    okVariant: "success",
+    okTitle: "Ok",
+    cancelTitle: "NO",
+    footerClass: "p-2",
+    hideHeaderClose: true,
+    centered: true
+  };
+}
+
 @Component({
   components: { RoomCard, UserSummary, JitsiCall },
   computed: mapGetters(["sessionUser", "currentRoom"])
 })
 export default class Home extends Vue {
   syncing = false;
+  syncCount = 0;
+  showAlert = true;
   currentRoom!: Room;
   syncTimerHandler: number | null = null;
 
@@ -100,9 +116,27 @@ export default class Home extends Vue {
   }
 
   beforeDestroy() {
+    console.log("ABOUT TO DESTROY");
     if (this.syncTimerHandler) {
       clearTimeout(this.syncTimerHandler);
     }
+  }
+
+  showAlerts() {
+    if (!this.showAlert) return;
+
+    this.showAlert = false;
+    const msg = "Are you sure? " + this.syncCount;
+    this.$bvModal
+      .msgBoxOk(msg, alertOption("Ranjit"))
+      .then(value => {
+        this.showAlert = true;
+        console.log("click-value", value);
+      })
+      .catch(err => {
+        console.log("click-error", err);
+      });
+    this.syncCount = this.syncCount + 1;
   }
 
   sync() {
@@ -114,6 +148,7 @@ export default class Home extends Vue {
       this.syncing = false;
       this.syncTimerHandler = setTimeout(this.sync, SYNC_INTERVAL);
     });
+    this.showAlerts();
   }
 
   joinRoom(roomId: string) {
