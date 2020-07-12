@@ -91,6 +91,11 @@ function alertOption(sender: string) {
   };
 }
 
+function timeStampString(timeStamp: number) {
+  const date = new Date(timeStamp);
+  return date.toString().split(" GMT")[0];
+}
+
 @Component({
   components: { RoomCard, UserSummary, JitsiCall },
   computed: mapGetters(["sessionUser", "currentRoom"])
@@ -157,14 +162,13 @@ export default class Home extends Vue {
     } else {
       this.msgPending = true;
       const sender = this.$store.getters.userById(msg.senderId).displayName;
-      this.$bvModal
-        .msgBoxOk(msg.messageText, alertOption(sender))
-        .then(value => {
-          // console.log("markRead-START", msg.messageId);
-          this.$store.dispatch("markRead", msg.messageId);
-          this.msgPending = false;
-          this.showMessages();
-        });
+      const body = timeStampString(msg.timestamp) + " : " + msg.messageText;
+      this.$bvModal.msgBoxOk(body, alertOption(sender)).then(value => {
+        // console.log("markRead-START", msg.messageId);
+        this.$store.dispatch("markRead", msg.messageId);
+        this.msgPending = false;
+        this.showMessages();
+      });
     }
   }
 

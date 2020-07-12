@@ -7,7 +7,8 @@ import {
   UserData,
   UserSignUp,
   RecvMessage,
-  MessageId
+  MessageId,
+  SendMessage
 } from "@/models";
 import router from "@/router";
 import axios, { AxiosRequestConfig } from "axios";
@@ -173,6 +174,10 @@ class ApiService {
     return Promise.resolve();
   }
 
+  sendMessage(msg: SendMessage): Promise<string> {
+    alert("FIXME:api.server.sendMessage");
+    return Promise.resolve("TODO");
+  }
 
   // Raw Requests
 
