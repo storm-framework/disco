@@ -9,7 +9,6 @@ import {
   RecvMessage,
   MessageId
 } from "@/models";
-import { max } from 'lodash';
 
 function delay(ms = 1000) {
   if (process.env.NODE_ENV === "development") {
@@ -160,7 +159,7 @@ class ApiService {
   constructor(private accessToken: string | null) {}
 
   readUpto: MessageId = 0;
-  currentClock: number = 0;
+  currentClock = 0;
 
   get sessionUserId(): string | null {
     if (!this.accessToken) {

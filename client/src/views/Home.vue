@@ -71,7 +71,6 @@ import JitsiCall from "@/components/JitsiCall.vue";
 import { Room, RecvMessage } from "@/models";
 import { mapGetters } from "vuex";
 import _ from "lodash";
-import ApiService from "@/services/api";
 import { faDice } from "@fortawesome/free-solid-svg-icons";
 import { library } from "@fortawesome/fontawesome-svg-core";
 library.add(faDice);
@@ -99,7 +98,8 @@ function alertOption(sender: string) {
 export default class Home extends Vue {
   syncing = false;
   syncCount = 0;
-  showAlert = true;
+  msgPending = false;
+  msgQueue: RecvMessage[] = [];
   currentRoom!: Room;
   syncTimerHandler: number | null = null;
 
@@ -122,32 +122,59 @@ export default class Home extends Vue {
     }
   }
 
-  showMessage(recvMsg: RecvMessage) {
-    const sender = this.$store.getters.userById(recvMsg.senderId);
-    const msg = recvMsg.messageText;
-    this.$bvModal
-      .msgBoxOk(msg, alertOption(sender))
-      .then(value => {
-        ApiService.markRead(recvMsg.messageId);
-        console.log("markRead", recvMsg.messageId);
-      })
-      .catch(err => {
-        console.log("modal-error", err);
-      });
+  // update msgQueue with messages
+  getMessages() {
+    this.$store.dispatch("recvMessages").then(msgs => {
+      if (msgs.length > 0) {
+        console.log("getMessages", msgs);
+        this.msgQueue = msgs;
+      }
+    });
   }
 
   showMessages() {
-    if (!this.showAlert) return;
-    this.showAlert = false;
-    this.$store
-      .dispatch("recvMessages")
-      .then(msgs => Promise.all(msgs.map(this.showMessage)))
-      .then(value => {
-        this.showAlert = true;
-      });
+    if (this.msgPending) return;
+    if (this.msgQueue.length == 0) return;
+
+    // pop first msg
+    const msg = this.msgQueue[0];
+    this.msgQueue.shift();
+
+    // display it
+    this.showMessage(msg);
+
+    // if (!this.showAlert) return;
+    // this.showAlert = false;
+    // this.$store
+    //   .dispatch("recvMessages")
+    //   .then(msgs => {
+    //     console.log("showMessages-B", msgs, this.showAlert);
+    //     return Promise.all(msgs.map(this.showMessage));
+    //   })
+    //   .then(value => {
+    //     this.showAlert = true;
+    //   });
   }
 
-  // showAlerts() {
+  showMessage(msg: RecvMessage) {
+    const isRead = this.$store.getters.isRead(msg.messageId);
+    if (isRead) {
+      this.showMessages();
+    } else {
+      this.msgPending = true;
+      const sender = this.$store.getters.userById(msg.senderId).displayName;
+      this.$bvModal
+        .msgBoxOk(msg.messageText, alertOption(sender))
+        .then(value => {
+          // console.log("markRead-START", msg.messageId);
+          this.$store.dispatch("markRead", msg.messageId);
+          this.msgPending = false;
+          this.showMessages();
+        });
+    }
+  }
+
+  // showAlerts() {e.log
   //   if (!this.showAlert) return;
   //   this.showAlert = false;
   //   const msg = "Are you sure? " + this.syncCount;
@@ -172,7 +199,7 @@ export default class Home extends Vue {
       this.syncing = false;
       this.syncTimerHandler = setTimeout(this.sync, SYNC_INTERVAL);
     });
-    this.showMessages();
+    this.getMessages();
   }
 
   joinRoom(roomId: string) {

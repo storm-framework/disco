@@ -1,4 +1,4 @@
-import { Room, User, RecvMessage } from "@/models";
+import { Room, User, RecvMessage, MessageId } from "@/models";
 import ApiService from "@/services/api";
 import _ from "lodash";
 import Vue from "vue";
@@ -10,14 +10,16 @@ interface State {
   sessionUserId: string | null;
   users: { [key: string]: User };
   rooms: { [key: string]: Room };
-  messages: RecvMessage[];
+  newMessages: RecvMessage[];
+  readMessages: { [key: number]: boolean }; 
 }
 
 const initialState: State = {
   sessionUserId: ApiService.sessionUserId,
   users: {},
   rooms: {},
-  messages: []
+  newMessages: [],
+  readMessages: {}
 };
 
 function addUsersToRoom(room: Room, users: User[]) {
@@ -33,7 +35,7 @@ export default new Vuex.Store({
     sync(state, { rooms, users, rcvMsgs }: { rooms: Room[]; users: User[], rcvMsgs: RecvMessage[] }) {
       state.rooms = Object.fromEntries(rooms.map(r => [r.id, r]));
       state.users = Object.fromEntries(users.map(u => [u.id, u]));
-      state.messages = rcvMsgs;
+      state.newMessages = rcvMsgs;
     },
     updateRoom({ rooms }, room: Room) {
       // We assume the room is already in the store. if it's not this won't trigger reactivity
@@ -60,7 +62,10 @@ export default new Vuex.Store({
       }
     },
     clearMessages(state) {
-      state.messages = [];
+      state.newMessages = [];
+    },
+    markRead(state, msgId: MessageId) {
+      state.readMessages[msgId] = true;
     }
   },
   actions: {
@@ -112,10 +117,15 @@ export default new Vuex.Store({
     leaveRoom: ({ commit }) =>
       ApiService.leaveRoom().then(() => commit("leaveRoom")),
     recvMessages: ({ commit, state }) => {
-      const curMessages = state.messages;
+      const curMessages = state.newMessages.filter(m => !state.readMessages[m.messageId]);
       commit("clearMessages");
       return curMessages;
-    }
+    },
+    markRead: ({ commit }, msgId: MessageId) => {
+      commit("markRead", msgId);
+      ApiService.markRead(msgId);
+    },
+    isRead: ({ state}, msgId: MessageId) => state.readMessages[msgId] 
   },
   getters: {
     loggedIn: ({ sessionUserId }) => !!sessionUserId,
