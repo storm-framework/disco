@@ -124,8 +124,7 @@ export default new Vuex.Store({
     markRead: ({ commit }, msgId: MessageId) => {
       commit("markRead", msgId);
       ApiService.markRead(msgId);
-    },
-    isRead: ({ state}, msgId: MessageId) => state.readMessages[msgId] 
+    }
   },
   getters: {
     loggedIn: ({ sessionUserId }) => !!sessionUserId,
@@ -150,8 +149,9 @@ export default new Vuex.Store({
       const currentRoomId = getters.sessionUser?.room;
       return currentRoomId && getters.room(currentRoomId);
     },
-    userById: ({ users }) => (userId: string) => 
-      users[userId]
+    userById: ({ users }) => (userId: string) => users[userId],
+
+    isRead: ({ readMessages }) => (msgId: MessageId) => readMessages[msgId] 
   },
   modules: {},
   strict: process.env.NODE_ENV !== "production"

@@ -64,7 +64,7 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue } from "vue-property-decorator";
+import { Component, Vue, Watch } from "vue-property-decorator";
 import RoomCard from "@/components/RoomCard.vue";
 import UserSummary from "@/components/UserSummary.vue";
 import JitsiCall from "@/components/JitsiCall.vue";
@@ -132,7 +132,13 @@ export default class Home extends Vue {
     });
   }
 
+  // trigger message alerts when msgQueue changes, by popping first message
+  // and displaying it as a modal: the handler for the 'ok' will recursively
+  // retrigger to drain more messages.
+  @Watch("msgQueue")
   showMessages() {
+    console.log("showMessages", this.msgQueue);
+
     if (this.msgPending) return;
     if (this.msgQueue.length == 0) return;
 
@@ -142,18 +148,6 @@ export default class Home extends Vue {
 
     // display it
     this.showMessage(msg);
-
-    // if (!this.showAlert) return;
-    // this.showAlert = false;
-    // this.$store
-    //   .dispatch("recvMessages")
-    //   .then(msgs => {
-    //     console.log("showMessages-B", msgs, this.showAlert);
-    //     return Promise.all(msgs.map(this.showMessage));
-    //   })
-    //   .then(value => {
-    //     this.showAlert = true;
-    //   });
   }
 
   showMessage(msg: RecvMessage) {
@@ -173,22 +167,6 @@ export default class Home extends Vue {
         });
     }
   }
-
-  // showAlerts() {e.log
-  //   if (!this.showAlert) return;
-  //   this.showAlert = false;
-  //   const msg = "Are you sure? " + this.syncCount;
-  //   this.$bvModal
-  //     .msgBoxOk(msg, alertOption("Ranjit"))
-  //     .then(value => {
-  //       this.showAlert = true;
-  //       console.log("click-value", value);
-  //     })
-  //     .catch(err => {
-  //       console.log("click-error", err);
-  //     });
-  //   this.syncCount = this.syncCount + 1;
-  // }
 
   sync() {
     if (this.syncing) {
