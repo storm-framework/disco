@@ -1,4 +1,4 @@
-import { Room, User } from "@/models";
+import { Room, User, RecvMessage } from "@/models";
 import ApiService from "@/services/api";
 import _ from "lodash";
 import Vue from "vue";
@@ -10,12 +10,14 @@ interface State {
   sessionUserId: string | null;
   users: { [key: string]: User };
   rooms: { [key: string]: Room };
+  messages: RecvMessage[];
 }
 
 const initialState: State = {
   sessionUserId: ApiService.sessionUserId,
   users: {},
-  rooms: {}
+  rooms: {},
+  messages: []
 };
 
 function addUsersToRoom(room: Room, users: User[]) {
@@ -28,9 +30,10 @@ function addUsersToRoom(room: Room, users: User[]) {
 export default new Vuex.Store({
   state: initialState,
   mutations: {
-    sync(state, { rooms, users }: { rooms: Room[]; users: User[] }) {
+    sync(state, { rooms, users, rcvMsgs }: { rooms: Room[]; users: User[], rcvMsgs: RecvMessage[] }) {
       state.rooms = Object.fromEntries(rooms.map(r => [r.id, r]));
       state.users = Object.fromEntries(users.map(u => [u.id, u]));
+      state.messages = rcvMsgs;
     },
     updateRoom({ rooms }, room: Room) {
       // We assume the room is already in the store. if it's not this won't trigger reactivity
@@ -55,6 +58,9 @@ export default new Vuex.Store({
       if (sessionUserId) {
         users[sessionUserId].room = null;
       }
+    },
+    clearMessages(state) {
+      state.messages = [];
     }
   },
   actions: {
@@ -88,8 +94,12 @@ export default new Vuex.Store({
     signOut: ({ commit }) =>
       ApiService.signOut().then(() => commit("removeSessionUser")),
     sync: ({ commit }) =>
-      Promise.all([ApiService.rooms(), ApiService.users()]).then(r =>
-        commit("sync", { rooms: r[0], users: r[1] })
+      Promise.all([
+        ApiService.rooms(),
+        ApiService.users(),
+        ApiService.messages()
+      ]).then(r =>
+        commit("sync", { rooms: r[0], users: r[1], rcvMsgs: r[2]})
       ),
     selectRoom: ({ commit }, roomId: string) => {
       commit("changeActiveRoom", roomId);
@@ -100,7 +110,11 @@ export default new Vuex.Store({
       return zoomLink;
     },
     leaveRoom: ({ commit }) =>
-      ApiService.leaveRoom().then(() => commit("leaveRoom"))
+      ApiService.leaveRoom().then(() => commit("leaveRoom")),
+    getMessages: ({ commit, state }) => {
+      const curMessages = state.messages;
+      commit("clearMessages")
+    }
   },
   getters: {
     loggedIn: ({ sessionUserId }) => !!sessionUserId,

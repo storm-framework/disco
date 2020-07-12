@@ -5,8 +5,11 @@ import {
   RoomData,
   User,
   UserData,
-  UserSignUp
+  UserSignUp,
+  SendMessage,
+  MessageId
 } from "@/models";
+import { max } from 'lodash';
 
 function delay(ms = 1000) {
   if (process.env.NODE_ENV === "development") {
@@ -15,6 +18,17 @@ function delay(ms = 1000) {
     return Promise.resolve();
   }
 }
+
+const MESSAGES: SendMessage[] = [
+  { senderId: 1, messageText: "1 The FIRST message"  , timestamp: 12 },
+  { senderId: 2, messageText: "2 The SECOND message" , timestamp: 19 },
+  { senderId: 3, messageText: "3 The THIRD message"  , timestamp: 49 },
+  { senderId: 4, messageText: "4 The FOURTH message" , timestamp: 106 },
+  { senderId: 3, messageText: "5 The FIFTH message"  , timestamp: 200 },
+  { senderId: 1, messageText: "6 The SIXTH message"  , timestamp: 2234 },
+  { senderId: 2, messageText: "7 The SEVENTH message", timestamp: 8124 },
+];
+
 
 const INVITATION: Invitation = {
   id: 1,
@@ -145,6 +159,8 @@ const SESSION_USER_ID = "1";
 class ApiService {
   constructor(private accessToken: string | null) {}
 
+  readUpto: MessageId = 0;
+
   get sessionUserId(): string | null {
     if (!this.accessToken) {
       return null;
@@ -249,6 +265,22 @@ class ApiService {
     return Promise.resolve(
       "https://upload.wikimedia.org/wikipedia/commons/thumb/7/77/Avatar_cat.png/120px-Avatar_cat.png"
     );
+  }
+
+  // Messages
+  
+  messages(): Promise<SendMessage[]> {
+    // the "from:MessageId" should be obtained from local-storage
+    alert("FIXME:api.mock.getMessages");
+    return Promise.resolve([]);
+  }
+
+  markRead(msgId: MessageId): Promise<void> {
+    const alreadyReadUpto = this.readUpto;
+    if (alreadyReadUpto < msgId) {
+      this.readUpto = msgId;
+    }
+    return Promise.resolve();
   }
 
   // Errors

@@ -5,7 +5,9 @@ import {
   RoomData,
   User,
   UserData,
-  UserSignUp
+  UserSignUp,
+  MessageId,
+  SendMessage
 } from "@/models";
 import Mock from "./api.mock";
 import Server from "./api.server";
@@ -41,9 +43,13 @@ interface ApiService {
   joinRoom(roomId: string): Promise<string>;
   leaveRoom(): Promise<void>;
 
-  //  Upload Files
+  // Upload Files
 
   uploadFile(file: File, code?: string): Promise<string>;
+
+  // Messages
+  messages(): Promise<SendMessage[]>;
+  markRead(msgId: MessageId): Promise<void>;
 }
 
 let module: ApiService;

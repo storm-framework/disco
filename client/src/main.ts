@@ -14,17 +14,11 @@ import IconButton from "./components/IconButton.vue";
 import "./plugins/bootstrap-vue";
 import "./plugins/vue-fontawesome";
 
-
 import BootstrapVue from 'bootstrap-vue'
-// import store from './store/store'
 import 'bootstrap/dist/css/bootstrap.css'
 import 'bootstrap-vue/dist/bootstrap-vue.css'
-// import Modal from 'bootstrap-vue/es/components/modal'
-
 
 Vue.use(BootstrapVue);
-// Vue.use(Modal)
-
 
 Vue.config.productionTip = false;
 Vue.component("icon-button", IconButton);

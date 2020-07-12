@@ -5,7 +5,9 @@ import {
   RoomData,
   User,
   UserData,
-  UserSignUp
+  UserSignUp,
+  SendMessage,
+  MessageId
 } from "@/models";
 import router from "@/router";
 import axios, { AxiosRequestConfig } from "axios";
@@ -22,7 +24,9 @@ function delay(ms = 1000) {
 }
 
 class ApiService {
-  constructor(private accessToken: string | null) {}
+  constructor(private accessToken: string | null) { }
+  
+  readUpto: MessageId = 0;
 
   get sessionUserId(): string | null {
     if (!this.accessToken) {
@@ -148,6 +152,27 @@ class ApiService {
     const u = new URL(presigned);
     return `${u.protocol}//${u.host}${u.pathname}`;
   }
+
+  // Messages
+
+  messages(): Promise<SendMessage[]> {
+    // the "from:MessageId" should be obtained from local-storage
+    alert("FIXME:api.server.getMessages");
+    return Promise.resolve([]);
+  }
+
+  markRead(msgId: MessageId): Promise<void> {
+    const readToStr = localStorage.getItem("readUpto");
+    var readTo = 0;
+    if (readToStr) { 
+      readTo = +readToStr;
+    }
+    if (readTo < msgId) {
+      localStorage.setItem("readUpto", msgId.toString());
+    }
+    return Promise.resolve();
+  }
+
 
   // Raw Requests
 
