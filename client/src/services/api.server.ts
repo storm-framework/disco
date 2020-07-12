@@ -163,7 +163,7 @@ class ApiService {
 
   markRead(msgId: MessageId): Promise<void> {
     const readToStr = localStorage.getItem("readUpto");
-    var readTo = 0;
+    let readTo = 0;
     if (readToStr) { 
       readTo = +readToStr;
     }

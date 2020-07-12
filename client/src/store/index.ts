@@ -111,9 +111,10 @@ export default new Vuex.Store({
     },
     leaveRoom: ({ commit }) =>
       ApiService.leaveRoom().then(() => commit("leaveRoom")),
-    getMessages: ({ commit, state }) => {
+    recvMessages: ({ commit, state }) => {
       const curMessages = state.messages;
-      commit("clearMessages")
+      commit("clearMessages");
+      return curMessages;
     }
   },
   getters: {
