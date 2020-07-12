@@ -68,10 +68,10 @@ import { Component, Vue } from "vue-property-decorator";
 import RoomCard from "@/components/RoomCard.vue";
 import UserSummary from "@/components/UserSummary.vue";
 import JitsiCall from "@/components/JitsiCall.vue";
-import { Room } from "@/models";
+import { Room, RecvMessage } from "@/models";
 import { mapGetters } from "vuex";
 import _ from "lodash";
-
+import ApiService from "@/services/api";
 import { faDice } from "@fortawesome/free-solid-svg-icons";
 import { library } from "@fortawesome/fontawesome-svg-core";
 library.add(faDice);
@@ -122,22 +122,46 @@ export default class Home extends Vue {
     }
   }
 
-  showAlerts() {
-    if (!this.showAlert) return;
-
-    this.showAlert = false;
-    const msg = "Are you sure? " + this.syncCount;
+  showMessage(recvMsg: RecvMessage) {
+    const sender = this.$store.getters.userById(recvMsg.senderId);
+    const msg = recvMsg.messageText;
     this.$bvModal
-      .msgBoxOk(msg, alertOption("Ranjit"))
+      .msgBoxOk(msg, alertOption(sender))
       .then(value => {
-        this.showAlert = true;
-        console.log("click-value", value);
+        ApiService.markRead(recvMsg.messageId);
+        console.log("markRead", recvMsg.messageId);
       })
       .catch(err => {
-        console.log("click-error", err);
+        console.log("modal-error", err);
       });
-    this.syncCount = this.syncCount + 1;
   }
+
+  showMessages() {
+    if (!this.showAlert) return;
+    this.showAlert = false;
+    this.$store
+      .dispatch("recvMessages")
+      .then(msgs => Promise.all(msgs.map(this.showMessage)))
+      .then(value => {
+        this.showAlert = true;
+      });
+  }
+
+  // showAlerts() {
+  //   if (!this.showAlert) return;
+  //   this.showAlert = false;
+  //   const msg = "Are you sure? " + this.syncCount;
+  //   this.$bvModal
+  //     .msgBoxOk(msg, alertOption("Ranjit"))
+  //     .then(value => {
+  //       this.showAlert = true;
+  //       console.log("click-value", value);
+  //     })
+  //     .catch(err => {
+  //       console.log("click-error", err);
+  //     });
+  //   this.syncCount = this.syncCount + 1;
+  // }
 
   sync() {
     if (this.syncing) {
@@ -148,7 +172,7 @@ export default class Home extends Vue {
       this.syncing = false;
       this.syncTimerHandler = setTimeout(this.sync, SYNC_INTERVAL);
     });
-    this.showAlerts();
+    this.showMessages();
   }
 
   joinRoom(roomId: string) {

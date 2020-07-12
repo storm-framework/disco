@@ -97,7 +97,7 @@ export default new Vuex.Store({
       Promise.all([
         ApiService.rooms(),
         ApiService.users(),
-        ApiService.messages()
+        ApiService.recvMessages()
       ]).then(r =>
         commit("sync", { rooms: r[0], users: r[1], rcvMsgs: r[2]})
       ),
@@ -138,7 +138,9 @@ export default new Vuex.Store({
     currentRoom: (_state, getters) => {
       const currentRoomId = getters.sessionUser?.room;
       return currentRoomId && getters.room(currentRoomId);
-    }
+    },
+    userById: ({ users }) => (userId: string) => 
+      users[userId]
   },
   modules: {},
   strict: process.env.NODE_ENV !== "production"

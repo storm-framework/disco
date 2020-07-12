@@ -7,7 +7,7 @@ import {
   UserData,
   UserSignUp,
   MessageId,
-  SendMessage
+  RecvMessage
 } from "@/models";
 import Mock from "./api.mock";
 import Server from "./api.server";
@@ -48,7 +48,7 @@ interface ApiService {
   uploadFile(file: File, code?: string): Promise<string>;
 
   // Messages
-  messages(): Promise<SendMessage[]>;
+  recvMessages(): Promise<RecvMessage[]>;
   markRead(msgId: MessageId): Promise<void>;
 }
 

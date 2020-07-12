@@ -6,7 +6,7 @@ import {
   User,
   UserData,
   UserSignUp,
-  SendMessage,
+  RecvMessage,
   MessageId
 } from "@/models";
 import { max } from 'lodash';
@@ -19,14 +19,14 @@ function delay(ms = 1000) {
   }
 }
 
-const MESSAGES: SendMessage[] = [
-  { senderId: 1, messageText: "1 The FIRST message"  , timestamp: 12 },
-  { senderId: 2, messageText: "2 The SECOND message" , timestamp: 19 },
-  { senderId: 3, messageText: "3 The THIRD message"  , timestamp: 49 },
-  { senderId: 4, messageText: "4 The FOURTH message" , timestamp: 106 },
-  { senderId: 3, messageText: "5 The FIFTH message"  , timestamp: 200 },
-  { senderId: 1, messageText: "6 The SIXTH message"  , timestamp: 2234 },
-  { senderId: 2, messageText: "7 The SEVENTH message", timestamp: 8124 },
+const MESSAGES: RecvMessage[] = [
+  { senderId: 1, messageText: "1 The FIRST message"  , messageId: 1, timestamp: 12 },
+  { senderId: 2, messageText: "2 The SECOND message" , messageId: 3, timestamp: 19 },
+  { senderId: 3, messageText: "3 The THIRD message"  , messageId: 4, timestamp: 49 },
+  { senderId: 4, messageText: "4 The FOURTH message" , messageId: 6, timestamp: 106 },
+  { senderId: 3, messageText: "5 The FIFTH message"  , messageId: 8, timestamp: 200 },
+  { senderId: 1, messageText: "6 The SIXTH message"  , messageId: 12, timestamp: 2234 },
+  { senderId: 2, messageText: "7 The SEVENTH message", messageId: 15, timestamp: 8124 },
 ];
 
 
@@ -160,6 +160,7 @@ class ApiService {
   constructor(private accessToken: string | null) {}
 
   readUpto: MessageId = 0;
+  currentClock: number = 0;
 
   get sessionUserId(): string | null {
     if (!this.accessToken) {
@@ -269,10 +270,10 @@ class ApiService {
 
   // Messages
   
-  messages(): Promise<SendMessage[]> {
-    // the "from:MessageId" should be obtained from local-storage
-    alert("FIXME:api.mock.getMessages");
-    return Promise.resolve([]);
+  recvMessages(): Promise<RecvMessage[]> {
+    const msgs = MESSAGES.filter(v => this.readUpto < v.messageId && v.messageId <= this.currentClock);
+    this.currentClock += 1;
+    return Promise.resolve(msgs);
   }
 
   markRead(msgId: MessageId): Promise<void> {

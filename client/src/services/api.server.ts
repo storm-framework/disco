@@ -6,7 +6,7 @@ import {
   User,
   UserData,
   UserSignUp,
-  SendMessage,
+  RecvMessage,
   MessageId
 } from "@/models";
 import router from "@/router";
@@ -155,7 +155,7 @@ class ApiService {
 
   // Messages
 
-  messages(): Promise<SendMessage[]> {
+  recvMessages(): Promise<RecvMessage[]> {
     // the "from:MessageId" should be obtained from local-storage
     alert("FIXME:api.server.getMessages");
     return Promise.resolve([]);
