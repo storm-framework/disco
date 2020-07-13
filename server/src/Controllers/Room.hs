@@ -140,7 +140,7 @@ leaveRoom = do
   viewer   <- requireAuthUser
   viewerId <- project userId' viewer
   _        <- updateWhere (userId' ==. viewerId) (userRoom' `assign` Nothing)
-  respondJSON status200 (object [])
+  respondTagged (emptyResponse status200)
 
 ----------------------------------------------------------------------------------------------------
 -- | Room Get

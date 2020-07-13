@@ -37,6 +37,7 @@ import qualified Data.ByteString.Base64.URL    as B64Url
 import qualified Data.ByteString.Lazy          as L
 import           Data.Int                       ( Int64 )
 import           Data.Maybe                     ( listToMaybe )
+import           Data.Time.Clock                ( secondsToDiffTime )
 import           Database.Persist.Sql           ( toSqlKey
                                                 , fromSqlKey
                                                 )
@@ -44,6 +45,7 @@ import           GHC.Generics
 import           Text.Read                      ( readMaybe )
 import           Text.Printf                    ( printf )
 import           Frankie.Config
+import           Frankie.Cookie
 
 import           Binah.Core
 import           Binah.Actions
@@ -85,6 +87,18 @@ addOrganizer UserCreate {..} = do
   insert user
 
 --------------------------------------------------------------------------------
+-- | SignOut
+--------------------------------------------------------------------------------
+
+{-@ signOut :: TaggedT<{\_ -> False}, {\_ -> True}> _ () @-}
+signOut :: Controller ()
+signOut = do
+  viewer   <- requireAuthUser
+  viewerId <- project userId' viewer
+  _        <- updateWhere (userId' ==. viewerId) (userRoom' `assign` Nothing)
+  respondTagged $ expireSessionCookie (emptyResponse status201)
+
+--------------------------------------------------------------------------------
 -- | SignIn
 --------------------------------------------------------------------------------
 
@@ -97,7 +111,7 @@ signIn = do
   token                             <- genJwt userId
   userData                          <- extractUserData user
 
-  respondJSON status200 $ AuthRes (unpackLazy8 token) userData
+  respondTagged $ setSessionCookie token (jsonResponse status201 userData)
 
 {-@ ignore authUser @-}
 {-@ authUser :: _ -> _ -> TaggedT<{\_ -> True}, {\v -> v == currentUser}> _ _ @-}
@@ -118,15 +132,6 @@ data SignInReq = SignInReq
 
 instance FromJSON SignInReq where
   parseJSON = genericParseJSON (stripPrefix "signInReq")
-
-data AuthRes = AuthRes
-  { authResAccessToken :: String
-  , authResUser :: UserData
-  }
-  deriving Generic
-
-instance ToJSON AuthRes where
-  toEncoding = genericToEncoding (stripPrefix "authRes")
 
 -------------------------------------------------------------------------------
 -- | SignUp
@@ -161,7 +166,7 @@ signUp = do
   user     <- selectFirstOr notFoundJSON (userId' ==. userId)
   token    <- genJwt userId
   userData <- extractUserData user
-  respondJSON status201 $ AuthRes (unpackLazy8 token) userData
+  respondTagged $ setSessionCookie token (jsonResponse status201 userData)
 
 validateUser :: UserCreate -> Controller ()
 validateUser UserCreate {..} = do
@@ -210,8 +215,20 @@ data UserCreate = UserCreate
 instance FromJSON UserCreate where
   parseJSON = genericParseJSON defaultOptions
 
+expireSessionCookie :: Response -> Response
+expireSessionCookie =
+  setCookie (defaultSetCookie { setCookieName = "session", setCookieMaxAge = Just 0 })
+
+setSessionCookie :: L.ByteString -> Response -> Response
+setSessionCookie token = setCookie
+  (defaultSetCookie { setCookieName   = "session"
+                    , setCookieValue  = L.toStrict token
+                    , setCookieMaxAge = Just $ secondsToDiffTime 604800 -- 1 week
+                    }
+  )
+
 --------------------------------------------------------------------------------
--- | SignIn
+-- | presignS3URL
 --------------------------------------------------------------------------------
 
 {-@ presignS3URL :: TaggedT<{\_ -> False}, {\_ -> True}> _ _ @-}
@@ -247,13 +264,15 @@ authMethod = AuthMethod
                           Nothing   -> respondError status401 Nothing
   }
 
+-- TODO: we can get rid of all the jwt stuffs and just sign the cookie with a mac
 {-@ ignore checkIfAuth @-}
 checkIfAuth :: Controller (Maybe (Entity User))
 checkIfAuth = do
-  key        <- configSecretKey <$> getConfig
-  authHeader <- requestHeader hAuthorization
-  let token = authHeader >>= ByteString.stripPrefix "Bearer " <&> L.fromStrict
-  claims <- liftTIO $ mapM (doVerify key) token
+  key    <- configSecretKey <$> getConfig
+  token  <- listToMaybe <$> getCookie "session"
+  -- authHeader <- requestHeader hAuthorization
+  -- let token = authHeader >>= ByteString.stripPrefix "Bearer "
+  claims <- liftTIO $ mapM (doVerify key . L.fromStrict) token
   case claims of
     Just (Right claims) -> do
       let sub    = claims ^. claimSub ^? _Just . string

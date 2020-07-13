@@ -86,6 +86,9 @@ respondJSON status a = respondTagged (jsonResponse status a)
 jsonResponse :: ToJSON a => Status -> a -> Response
 jsonResponse status a = Response status defaultHeaders (encode a)
 
+emptyResponse :: Status -> Response
+emptyResponse status = Response status defaultHeaders ""
+
 {-@ respondError :: _ -> _ -> TaggedT<{\_ -> True}, {\v -> v == currentUser}> _ _ @-}
 respondError :: Status -> Maybe String -> Controller a
 respondError status error = respondTagged (errorResponse status error)
