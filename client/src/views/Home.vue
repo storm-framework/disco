@@ -143,8 +143,16 @@ export default class Home extends Vue {
     return this.availableRooms.length !== 0;
   }
 
+  get emptyRoomsAreAvailable() {
+    return this.emptyRooms.length !== 0;
+  }
+
   get availableRooms(): Room[] {
     return this.$store.getters.availableRooms;
+  }
+
+  get emptyRooms(): Room[] {
+    return this.$store.getters.emptyRooms;
   }
 
   mounted() {
@@ -259,6 +267,13 @@ export default class Home extends Vue {
 
   joinRandomRoom() {
     const random = _.sample(this.availableRooms);
+    if (random) {
+      this.$store.dispatch("joinRoom", random.id);
+    }
+  }
+
+  joinEmptyRoom() {
+    const random = _.sample(this.emptyRooms);
     if (random) {
       this.$store.dispatch("joinRoom", random.id);
     }

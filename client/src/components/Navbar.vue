@@ -32,6 +32,7 @@
       :ok-title="'Send'"
       @ok="sendMessage"
       @cancel="clearMessage"
+      @keydown.native.enter="sendMessage"
       hide-header-close
       no-close-on-esc
       no-close-on-backdrop

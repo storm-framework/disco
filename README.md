@@ -9,7 +9,10 @@ The app is divided in a [client](https://github.com/nilehmann/binah-apps/tree/ma
 
 DB Models
 
-```
+```haskell
+
+-- | DB Models
+
 Message
   sender    UserId
   receiver  UserId Maybe
@@ -21,8 +24,12 @@ MarkRead
   message   MessageId 
 ```
 
+-- | POST /api/sendMessage
+
 sendMessage msg = 
   create-and-insert relevant record
+
+-- | POST /api/markRead/:msgId
 
 markRead msgId = do
   userId <- requireAuthUser
@@ -31,13 +38,15 @@ markRead msgId = do
     Nothing   -> insert-NEW-RECORD
     Just read -> insert-UPDATED-RECORD with max of read.message
 
+-- | GET /api/getMessages
+
 getMessages = do
   userId   <- requireAuthUser
   readUpto <- getReadUpto userId
   public   <- selectList [ readUpto <=. messageId, messageReceiver ==. Nothing, ]
   private  <- selectList [ readUpto <=. messageId, messageReceiver ==. Just userId ]
   return (public ++ private)
-
+```
 
 ## Development
 
