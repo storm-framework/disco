@@ -1,5 +1,5 @@
 <template>
-  <b-container>
+  <b-container class="mt-4">
     <b-alert :show="error" variant="danger" dismissible>{{ errorMsg }}</b-alert>
     <b-form @submit.prevent="onSubmit">
       <profile-form v-model="profile" @state="valid = $event" />
