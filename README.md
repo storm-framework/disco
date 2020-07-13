@@ -7,6 +7,38 @@ The app is divided in a [client](https://github.com/nilehmann/binah-apps/tree/ma
 - [Fancy Modal Message OK](https://bootstrap-vue.org/docs/components/modal#confirm-message-box)
 - [Modal Form](https://stackoverflow.com/questions/53269544/how-to-submit-form-data-from-b-modal-in-vue)
 
+DB Models
+
+```
+Message
+  sender    UserId
+  receiver  UserId Maybe
+  message   Text
+  timestamp Int64
+
+MarkRead
+  user      UserId
+  message   MessageId 
+```
+
+sendMessage msg = 
+  create-and-insert relevant record
+
+markRead msgId = do
+  userId <- requireAuthUser
+  readMb <- selectFirst (markReadUser ==. userId)
+  case readMb of
+    Nothing   -> insert-NEW-RECORD
+    Just read -> insert-UPDATED-RECORD with max of read.message
+
+getMessages = do
+  userId   <- requireAuthUser
+  readUpto <- getReadUpto userId
+  public   <- selectList [ readUpto <=. messageId, messageReceiver ==. Nothing, ]
+  private  <- selectList [ readUpto <=. messageId, messageReceiver ==. Just userId ]
+  return (public ++ private)
+
+
 ## Development
 
 ### Get the code

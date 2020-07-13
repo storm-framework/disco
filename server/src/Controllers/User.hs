@@ -39,7 +39,7 @@ userList :: Controller ()
 userList = do
   _     <- requireAuthUser
   users <- selectList trueF
-  users <- mapT extractUserData users
+  users <- mapTT extractUserData users
   respondJSON status200 users
 
 {-@ extractUserData :: _ -> TaggedT<{\_ -> True}, {\_ -> False}> _ _ @-}
