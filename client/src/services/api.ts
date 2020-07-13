@@ -40,6 +40,10 @@ interface ApiService {
   //  Upload Files
 
   uploadFile(file: File, code?: string): Promise<string>;
+
+  // Beacon
+
+  sendBeacon(): void;
 }
 
 let module: ApiService;

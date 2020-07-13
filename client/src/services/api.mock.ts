@@ -237,6 +237,12 @@ class ApiService {
     );
   }
 
+  // Beacon
+
+  sendBeacon() {
+    return;
+  }
+
   // Errors
 
   errorResponse(status: number): Promise<any> {

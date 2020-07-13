@@ -99,7 +99,7 @@ class ApiService {
   }
 
   leaveRoom(): Promise<void> {
-    return this.post(`/room/current/leave`);
+    return this.post("/room/current/leave");
   }
 
   // Files
@@ -122,6 +122,12 @@ class ApiService {
     });
     const u = new URL(presigned);
     return `${u.protocol}//${u.host}${u.pathname}`;
+  }
+
+  // Beacon
+
+  sendBeacon() {
+    navigator.sendBeacon(`${API_URL}/room/current/leave`);
   }
 
   // Raw Requests
