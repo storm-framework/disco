@@ -7,7 +7,8 @@ import {
   UserData,
   UserSignUp,
   MessageId,
-  RecvMessage
+  RecvMessage,
+  SendMessage
 } from "@/models";
 import Mock from "./api.mock";
 import Server from "./api.server";
@@ -50,6 +51,7 @@ interface ApiService {
   // Messages
   recvMessages(): Promise<RecvMessage[]>;
   markRead(msgId: MessageId): Promise<void>;
+  sendMessage(msg: SendMessage): Promise<string>;
 }
 
 let module: ApiService;
