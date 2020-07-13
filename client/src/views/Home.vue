@@ -24,10 +24,10 @@
     </b-modal>
 
     <h1 class="sr-only">Overview</h1>
-    <h2 class="sr-only" v-if="currentRoom">Current Call</h2>
+    <h2 class="sr-only" v-if="currentVideoRoom">Current Call</h2>
     <transition name="appear">
       <jitsi-call
-        v-if="currentRoom"
+        v-if="currentVideoRoom"
         class="call"
         :room="currentRoom"
         :user="sessionUser"
@@ -53,20 +53,52 @@
         />
         <b-col
           v-else
-          cols="4"
+          cols="6"
           class="align-items-center d-flex flex-column justify-content-center"
         >
           <p class="h5">
-            You have not joined a room
+            You are currently invisible!
           </p>
-          <icon-button
-            v-if="roomsAreAvailable"
-            icon="dice"
+          <b-dropdown
             variant="primary"
-            @click="joinRandomRoom"
+            id="dropdown-1"
+            text="Join"
+            class="m-md-2"
           >
-            Random room
-          </icon-button>
+            <b-dropdown-item
+              v-if="roomsAreAvailable"
+              icon="dice"
+              @click="joinRandomRoom"
+            >
+              Random room
+            </b-dropdown-item>
+            <b-dropdown-item
+              v-if="waitingRooms.length > 0"
+              icon="dice"
+              @click="joinWaitingRoom"
+            >
+              Waiting area
+            </b-dropdown-item>
+          </b-dropdown>
+          <!-- <div>
+            <icon-button
+              v-if="roomsAreAvailable"
+              icon="dice"
+              variant="primary"
+              @click="joinRandomRoom"
+            >
+              Random room
+            </icon-button>
+
+            <icon-button
+              v-if="waitingRooms.length > 0"
+              icon="dice"
+              variant="success"
+              @click="joinWaitingRoom"
+            >
+              Waiting room
+            </icon-button>
+          </div> -->
         </b-col>
       </b-row>
     </section>
@@ -121,7 +153,7 @@ function timeStampString(timeStamp: number) {
 
 @Component({
   components: { RoomCard, UserSummary, JitsiCall },
-  computed: mapGetters(["sessionUser", "currentRoom"])
+  computed: mapGetters(["sessionUser", "currentRoom", "waitingRooms"])
 })
 export default class Home extends Vue {
   syncing = false;
@@ -138,6 +170,11 @@ export default class Home extends Vue {
     message: "",
     messageId: -1
   };
+
+  get currentVideoRoom() {
+    const current = this.$store.getters.currentRoom;
+    return current && this.$store.getters.isVideoRoom(current);
+  }
 
   get roomsAreAvailable() {
     return this.availableRooms.length !== 0;
@@ -272,8 +309,8 @@ export default class Home extends Vue {
     }
   }
 
-  joinEmptyRoom() {
-    const random = _.sample(this.emptyRooms);
+  joinWaitingRoom() {
+    const random = _.sample(this.$store.getters.waitingRooms);
     if (random) {
       this.$store.dispatch("joinRoom", random.id);
     }

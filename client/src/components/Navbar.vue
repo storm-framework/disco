@@ -15,7 +15,7 @@
             Send Message
           </b-dropdown-item-button>
         </b-nav-item-dropdown>
-        <b-nav-item v-if="loggedIn" @click="signOut">Sign out</b-nav-item>
+        <b-nav-item v-if="showSignOut" @click="signOut">Sign out</b-nav-item>
       </b-navbar-nav>
     </b-navbar>
 
@@ -56,7 +56,7 @@ import ApiService from "@/services/api";
 import { User } from "@/models";
 
 @Component({
-  computed: mapGetters(["loggedIn"])
+  computed: mapGetters(["loggedIn", "currentRoom", "currentVideoRoom"])
 })
 export default class Navbar extends Vue {
   // The navBar is in charge of syncing the session user with the backend.
@@ -77,6 +77,11 @@ export default class Navbar extends Vue {
 
   get isOrganizer() {
     return this.$store.getters.sessionUser?.level == "organizer";
+  }
+  get showSignOut() {
+    const current = this.$store.getters.currentRoom;
+    const video = current && this.$store.getters.isVideoRoom(current);
+    return this.$store.getters.loggedIn && !video;
   }
 
   signOut() {
