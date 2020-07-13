@@ -32,14 +32,12 @@
       :ok-title="'Send'"
       @ok="sendMessage"
       @cancel="clearMessage"
+      hide-header-close
+      no-close-on-esc
+      no-close-on-backdrop
     >
       <form>
         <div>
-          <!-- <input
-            type="text"
-            placeholder="Hi everyone!"
-            v-model="messageModal.message"
-          /> -->
           <b-form-input
             v-model="messageModal.message"
             placeholder="Hi everyone!"
