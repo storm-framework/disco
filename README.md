@@ -2,6 +2,11 @@
 
 The app is divided in a [client](https://github.com/nilehmann/binah-apps/tree/master/covid/client) written with [vue.js](https://vuejs.org/) and a [server](https://github.com/nilehmann/binah-apps/tree/master/covid/server) written with Binah.
 
+## TODO
+
+- [Fancy Modal Message OK](https://bootstrap-vue.org/docs/components/modal#confirm-message-box)
+- [Modal Form](https://stackoverflow.com/questions/53269544/how-to-submit-form-data-from-b-modal-in-vue)
+
 ## Development
 
 ### Get the code

@@ -7,6 +7,7 @@ import {
   UserData,
   UserSignUp,
   RecvMessage,
+  SendMessage,
   MessageId
 } from "@/models";
 
@@ -18,16 +19,17 @@ function delay(ms = 1000) {
   }
 }
 
-const MESSAGES: RecvMessage[] = [
-  { senderId: 1, messageText: "1 The FIRST message"  , messageId: 1, timestamp: 12 },
-  { senderId: 2, messageText: "2 The SECOND message" , messageId: 3, timestamp: 19 },
-  { senderId: 3, messageText: "3 The THIRD message"  , messageId: 4, timestamp: 49 },
-  { senderId: 4, messageText: "4 The FOURTH message" , messageId: 6, timestamp: 106 },
-  { senderId: 3, messageText: "5 The FIFTH message"  , messageId: 8, timestamp: 200 },
-  { senderId: 1, messageText: "6 The SIXTH message"  , messageId: 12, timestamp: 2234 },
-  { senderId: 2, messageText: "7 The SEVENTH message", messageId: 15, timestamp: 8124 },
-];
+const NOW = (new Date()).getTime();
 
+const MESSAGES: RecvMessage[] = [
+  { senderId: 1, receiverId: -1, messageText: "1 The FIRST message"  , messageId: 1,  timestamp: NOW          },
+  { senderId: 2, receiverId: -1, messageText: "2 The SECOND message" , messageId: 2,  timestamp: NOW + 10000  },
+  // { senderId: 3, receiverId: -1, messageText: "3 The THIRD message"  , messageId: 3,  timestamp: NOW + 20000  },
+  // { senderId: 4, receiverId: -1, messageText: "4 The FOURTH message" , messageId: 3,  timestamp: NOW + 40000  },
+  // { senderId: 3, receiverId: -1, messageText: "5 The FIFTH message"  , messageId: 4,  timestamp: NOW + 90000  },
+  // { senderId: 1, receiverId: -1, messageText: "6 The SIXTH message"  , messageId: 5, timestamp: NOW + 150000 },
+  { senderId: 2, receiverId: -1, messageText: "7 The SEVENTH message", messageId: 6, timestamp: NOW + 200000 },
+];
 
 const INVITATION: Invitation = {
   id: 1,
@@ -159,6 +161,7 @@ class ApiService {
   constructor(private accessToken: string | null) {}
 
   readUpto: MessageId = 0;
+
   currentClock = 0;
 
   get sessionUserId(): string | null {
@@ -281,6 +284,13 @@ class ApiService {
       this.readUpto = msgId;
     }
     return Promise.resolve();
+  }
+
+  sendMessage(sendMsg: SendMessage): Promise<string> {
+    const recvMsg: RecvMessage = Object.assign(sendMsg, { messageId: this.currentClock });
+    MESSAGES.push(recvMsg);
+    console.log("Sending a message:", recvMsg);
+    return Promise.resolve("");
   }
 
   // Errors

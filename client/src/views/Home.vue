@@ -1,5 +1,28 @@
 <template>
   <main v-if="sessionUser" tag="main">
+    <b-modal
+      id="showMessage"
+      title="Message"
+      :header-bg-variant="'info'"
+      :header-text-variant="'light'"
+      :body-bg-variant="'light'"
+      :body-text-variant="'dark'"
+      :footer-bg-variant="'dark'"
+      :footer-text-variant="'light'"
+      :ok-title="'Ok'"
+      @ok="receivedMessage"
+      ok-only
+      hide-header-close
+      no-close-on-esc
+      no-close-on-backdrop
+    >
+      <template slot="modal-title">
+        <h3>{{ messageModal.sender }}</h3>
+      </template>
+      <p class="font-italic">At {{ messageModal.time }}</p>
+      <p>{{ messageModal.message }}</p>
+    </b-modal>
+
     <h1 class="sr-only">Overview</h1>
     <h2 class="sr-only" v-if="currentRoom">Current Call</h2>
     <transition name="appear">
@@ -91,6 +114,11 @@ function alertOption(sender: string) {
   };
 }
 
+function timeStampString(timeStamp: number) {
+  const date = new Date(timeStamp);
+  return date.toString().split(" GMT")[0];
+}
+
 @Component({
   components: { RoomCard, UserSummary, JitsiCall },
   computed: mapGetters(["sessionUser", "currentRoom"])
@@ -98,10 +126,18 @@ function alertOption(sender: string) {
 export default class Home extends Vue {
   syncing = false;
   syncCount = 0;
-  msgPending = false;
   msgQueue: RecvMessage[] = [];
   currentRoom!: Room;
   syncTimerHandler: number | null = null;
+  // pauseAlerts = false;
+
+  messageModal = {
+    display: false,
+    sender: "",
+    time: "",
+    message: "",
+    messageId: -1
+  };
 
   get roomsAreAvailable() {
     return this.availableRooms.length !== 0;
@@ -138,10 +174,17 @@ export default class Home extends Vue {
   @Watch("msgQueue")
   showMessages() {
     console.log("showMessages", this.msgQueue);
+    const paused = this.$store.getters.isPauseAlert;
+    // const paused = this.pauseAlerts;
 
-    if (this.msgPending) return;
-    if (this.msgQueue.length == 0) return;
-
+    if (paused) {
+      console.log("is-paused-alert");
+      return;
+    }
+    if (this.msgQueue.length == 0) {
+      console.log("is-no-more-messages");
+      return;
+    }
     // pop first msg
     const msg = this.msgQueue[0];
     this.msgQueue.shift();
@@ -150,22 +193,48 @@ export default class Home extends Vue {
     this.showMessage(msg);
   }
 
+  // showMessageOLD(msg: RecvMessage) {
+  //   const isRead = this.$store.getters.isRead(msg.messageId);
+  //   if (isRead) {
+  //     this.showMessages();
+  //   } else {
+  //     // this.$store.commit("pauseAlerts");
+  //     this.pauseAlerts = true;
+  //     const sender = this.$store.getters.userById(msg.senderId).displayName;
+  //     const body = timeStampString(msg.timestamp) + " : " + msg.messageText;
+  //     //
+  //     this.$bvModal.msgBoxOk(body, alertOption(sender)).then(value => {
+  //       this.$store.dispatch("markRead", msg.messageId);
+  //       // this.$store.commit("resumeAlerts");
+  //       this.pauseAlerts = false;
+  //       this.showMessages();
+  //     });
+  //   }
+  // }
+
   showMessage(msg: RecvMessage) {
     const isRead = this.$store.getters.isRead(msg.messageId);
     if (isRead) {
       this.showMessages();
     } else {
-      this.msgPending = true;
-      const sender = this.$store.getters.userById(msg.senderId).displayName;
-      this.$bvModal
-        .msgBoxOk(msg.messageText, alertOption(sender))
-        .then(value => {
-          // console.log("markRead-START", msg.messageId);
-          this.$store.dispatch("markRead", msg.messageId);
-          this.msgPending = false;
-          this.showMessages();
-        });
+      this.$store.dispatch("pauseAlerts").then(() => {
+        this.messageModal.sender = this.$store.getters.userById(
+          msg.senderId
+        ).displayName;
+        this.messageModal.time = timeStampString(msg.timestamp);
+        this.messageModal.message = msg.messageText;
+        this.messageModal.messageId = msg.messageId;
+        this.$bvModal.show("showMessage");
+      });
     }
+  }
+
+  receivedMessage() {
+    this.$bvModal.hide("showMessage");
+    this.$store.dispatch("markRead", this.messageModal.messageId).then(() => {
+      console.log("resume-messages");
+      this.showMessages();
+    });
   }
 
   sync() {

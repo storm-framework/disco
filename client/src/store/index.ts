@@ -12,6 +12,7 @@ interface State {
   rooms: { [key: string]: Room };
   newMessages: RecvMessage[];
   readMessages: { [key: number]: boolean }; 
+  pauseAlerts: boolean;
 }
 
 const initialState: State = {
@@ -19,7 +20,8 @@ const initialState: State = {
   users: {},
   rooms: {},
   newMessages: [],
-  readMessages: {}
+  readMessages: {},
+  pauseAlerts: false
 };
 
 function addUsersToRoom(room: Room, users: User[]) {
@@ -66,6 +68,12 @@ export default new Vuex.Store({
     },
     markRead(state, msgId: MessageId) {
       state.readMessages[msgId] = true;
+    },
+    pauseAlerts(state) {
+      state.pauseAlerts = true;
+    },
+    resumeAlerts(state) {
+      state.pauseAlerts = false;
     }
   },
   actions: {
@@ -123,8 +131,10 @@ export default new Vuex.Store({
     },
     markRead: ({ commit }, msgId: MessageId) => {
       commit("markRead", msgId);
+      commit("resumeAlerts");
       ApiService.markRead(msgId);
-    }
+    },
+    pauseAlerts: ({ commit }) => commit("pauseAlerts")
   },
   getters: {
     loggedIn: ({ sessionUserId }) => !!sessionUserId,
@@ -150,8 +160,8 @@ export default new Vuex.Store({
       return currentRoomId && getters.room(currentRoomId);
     },
     userById: ({ users }) => (userId: string) => users[userId],
-
-    isRead: ({ readMessages }) => (msgId: MessageId) => readMessages[msgId] 
+    isRead: ({ readMessages }) => (msgId: MessageId) => readMessages[msgId],
+    isPauseAlert: ({ pauseAlerts }) => pauseAlerts
   },
   modules: {},
   strict: process.env.NODE_ENV !== "production"
