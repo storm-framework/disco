@@ -94,8 +94,9 @@ runServer ServerOpts {..} = runNoLoggingT $ do
             port optsPort
             initWithT $ initFromPool cfg pool
         dispatch $ do
-            post "/api/signin" signIn
-            post "/api/signup" signUp
+            post "/api/signin"  signIn
+            post "/api/signup"  signUp
+            post "/api/signout" signOut
             put "/api/invitation" invitationPut
             get "/api/invitation/:id" invitationGet
             get "/api/invitation"     invitationList

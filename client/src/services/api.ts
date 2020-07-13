@@ -11,13 +11,9 @@ import Mock from "./api.mock";
 import Server from "./api.server";
 
 interface ApiService {
-  sessionUserId: string | null;
-
   // Auth
-
   signIn(emailAddress: string, password: string): Promise<User>;
   signUp(data: UserSignUp): Promise<User>;
-  signedIn(): boolean;
   signOut(): Promise<void>;
 
   // Invitations
@@ -29,7 +25,7 @@ interface ApiService {
   // Users
 
   users(): Promise<User[]>;
-  user(userId: number): Promise<User>;
+  user(userId: number | "me"): Promise<User>;
   updateUserDataMe(data: UserData): Promise<User>;
 
   // Rooms

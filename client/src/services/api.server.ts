@@ -22,16 +22,6 @@ function delay(ms = 1000) {
 }
 
 class ApiService {
-  constructor(private accessToken: string | null) {}
-
-  get sessionUserId(): string | null {
-    if (!this.accessToken) {
-      return null;
-    }
-    const payload = _.split(this.accessToken, ".")[1];
-    return JSON.parse(atob(payload)).sub;
-  }
-
   // Auth
 
   async signIn(emailAddress: string, password: string): Promise<User> {
@@ -40,33 +30,18 @@ class ApiService {
       emailAddress: emailAddress,
       password: password
     });
-    if (response.data.accessToken) {
-      localStorage.setItem("accessToken", response.data.accessToken);
-      this.accessToken = response.data.accessToken;
-    }
 
-    return response.data.user;
+    return response.data;
   }
 
   async signUp(data: UserSignUp): Promise<User> {
     await delay();
     const response = await axios.post(`${API_URL}/signup`, data);
-    if (response.data.accessToken) {
-      localStorage.setItem("accessToken", response.data.accessToken);
-      this.accessToken = response.data.accessToken;
-    }
-    return response.data.user;
+    return response.data;
   }
 
-  signedIn() {
-    return this.accessToken !== null;
-  }
-
-  signOut() {
-    this.accessToken = null;
-    localStorage.removeItem("accessToken");
-    // TODO: Remove user from room
-    return Promise.resolve();
+  async signOut() {
+    const _ = await axios.post(`${API_URL}/signout`);
   }
 
   // Invitations
@@ -90,7 +65,7 @@ class ApiService {
     return this.get("/user");
   }
 
-  user(userId: number): Promise<User> {
+  user(userId: number | "me"): Promise<User> {
     return this.get(`/user/${userId}`);
   }
 
@@ -158,33 +133,30 @@ class ApiService {
   ): Promise<any> {
     await delay();
     try {
-      const response = await axios.post(`${API_URL}${path}`, data, {
-        headers: this.authHeader(),
-        ...config
-      });
-      axios.create({});
+      const response = await axios.post(`${API_URL}${path}`, data, config);
       return response.data;
     } catch (error) {
-      if (error?.response?.status == 401) {
-        await this.unauthorized();
+      if (error.response?.status == 401) {
+        this.redirectToSignIn();
+        return Promise.race([]);
+      } else {
+        throw error;
       }
-      throw error;
     }
   }
 
   async get(path: string, config?: AxiosRequestConfig): Promise<any> {
     await delay();
     try {
-      const response = await axios.get(`${API_URL}${path}`, {
-        headers: this.authHeader(),
-        ...config
-      });
+      const response = await axios.get(`${API_URL}${path}`, config);
       return response.data;
     } catch (error) {
-      if (error?.response?.status == 401) {
-        await this.unauthorized();
+      if (error.response?.status == 401) {
+        this.redirectToSignIn();
+        return Promise.race([]);
+      } else {
+        throw error;
       }
-      throw error;
     }
   }
 
@@ -195,33 +167,23 @@ class ApiService {
   ): Promise<any> {
     await delay();
     try {
-      const response = await axios.put(`${API_URL}${path}`, data, {
-        headers: this.authHeader(),
-        ...config
-      });
+      const response = await axios.put(`${API_URL}${path}`, data, config);
       return response.data;
     } catch (error) {
-      if (error?.response?.status == 401) {
-        await this.unauthorized();
+      if (error.response?.status == 401) {
+        this.redirectToSignIn();
+        return Promise.race([]);
+      } else {
+        throw error;
       }
-      throw error;
     }
   }
 
-  authHeader() {
-    if (this.accessToken) {
-      return { Authorization: "Bearer " + this.accessToken };
-    } else {
-      return {};
+  async redirectToSignIn() {
+    if (router.currentRoute.name != "SignIn") {
+      router.replace({ name: "SignIn" });
     }
-  }
-
-  async unauthorized() {
-    await this.signOut();
-    router.replace({ name: "signIn" });
   }
 }
 
-const accessToken = localStorage.getItem("accessToken");
-
-export default new ApiService(accessToken);
+export default new ApiService();
