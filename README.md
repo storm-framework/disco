@@ -7,6 +7,13 @@ The app is divided in a [client](https://github.com/nilehmann/binah-apps/tree/ma
 - [Fancy Modal Message OK](https://bootstrap-vue.org/docs/components/modal#confirm-message-box)
 - [Modal Form](https://stackoverflow.com/questions/53269544/how-to-submit-form-data-from-b-modal-in-vue)
 
+Issues
+
+1. Models
+2. Return-in-modal
+3. Message-to-user
+4. Reply-to-sender
+
 DB Models
 
 ```haskell
