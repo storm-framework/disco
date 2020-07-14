@@ -56,7 +56,7 @@ module Model
   , messageTimestamp'
   , markReadId'
   , markReadUser'
-  , markReadMessage'
+  , markReadUpto'
   , InvitationId
   , UserId
   , RoomId
@@ -123,7 +123,7 @@ Message
 
 MarkRead
   user UserId
-  message Int64
+  upto MessageId
   
 |]
 
@@ -712,9 +712,9 @@ messageTimestamp' = EntityFieldWrapper MessageTimestamp
 -- * MarkRead
 {-@ mkMarkRead ::
      x_0: UserId
-  -> x_1: Int64
+  -> x_1: MessageId
   -> BinahRecord <
-       {\row -> markReadUser (entityVal row) == x_0 && markReadMessage (entityVal row) == x_1}
+       {\row -> markReadUser (entityVal row) == x_0 && markReadUpto (entityVal row) == x_1}
      , {\_ _ -> True}
      , {\x_0 x_1 -> False}
      > MarkRead
@@ -751,20 +751,20 @@ markReadId' = EntityFieldWrapper MarkReadId
 markReadUser' :: EntityFieldWrapper MarkRead UserId
 markReadUser' = EntityFieldWrapper MarkReadUser
 
-{-@ measure markReadMessage :: MarkRead -> Int64 @-}
+{-@ measure markReadUpto :: MarkRead -> MessageId @-}
 
-{-@ measure markReadMessageCap :: Entity MarkRead -> Bool @-}
+{-@ measure markReadUptoCap :: Entity MarkRead -> Bool @-}
 
-{-@ assume markReadMessage' :: EntityFieldWrapper <
+{-@ assume markReadUpto' :: EntityFieldWrapper <
     {\_ _ -> True}
-  , {\row field -> field == markReadMessage (entityVal row)}
-  , {\field row -> field == markReadMessage (entityVal row)}
-  , {\old -> markReadMessageCap old}
-  , {\old _ _ -> markReadMessageCap old}
-  > MarkRead Int64
+  , {\row field -> field == markReadUpto (entityVal row)}
+  , {\field row -> field == markReadUpto (entityVal row)}
+  , {\old -> markReadUptoCap old}
+  , {\old _ _ -> markReadUptoCap old}
+  > MarkRead MessageId
 @-}
-markReadMessage' :: EntityFieldWrapper MarkRead Int64
-markReadMessage' = EntityFieldWrapper MarkReadMessage
+markReadUpto' :: EntityFieldWrapper MarkRead MessageId
+markReadUpto' = EntityFieldWrapper MarkReadUpto
 
 --------------------------------------------------------------------------------
 -- | Inline

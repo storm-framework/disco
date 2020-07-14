@@ -74,7 +74,7 @@ Message
 
 MarkRead
   user      UserId
-  message   Int64
+  upto      MessageId
 
 
 policy IsInRoom = \viewer room ->

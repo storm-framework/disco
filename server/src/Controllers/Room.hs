@@ -43,7 +43,7 @@ updateTopic roomId = do
   viewer   <- requireAuthUser
   userRoom <- project userRoom' viewer
   vis      <- project userVisibility' viewer
-    case userRoom == Just roomId of
+  case userRoom == Just roomId of
     True | vis == "public" -> do
       topic    <- decodeBody
       _        <- validateTopic topic
