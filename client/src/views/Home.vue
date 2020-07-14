@@ -57,7 +57,7 @@
           class="align-items-center d-flex flex-column justify-content-center"
         >
           <p class="h5">
-            You are currently invisible!
+            You are invisible until you join a room
           </p>
           <b-dropdown
             variant="primary"

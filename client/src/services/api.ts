@@ -50,7 +50,7 @@ interface ApiService {
 
   // Messages
   recvMessages(): Promise<RecvMessage[]>;
-  markRead(msgId: MessageId): Promise<void>;
+  markRead(msgId: MessageId): Promise<string>;
   sendMessage(msg: SendMessage): Promise<string>;
 }
 

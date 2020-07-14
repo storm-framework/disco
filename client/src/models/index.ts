@@ -55,7 +55,7 @@ export type MessageId = number;
 
 export interface SendMessage {
   senderId:    number;
-  receiverId:  number; // -1 for broadcast?
+  receiverId:  number | null; // null = broadcast
   messageText: string;
   timestamp:   number; // time since epoch
 }

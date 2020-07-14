@@ -31,12 +31,12 @@ MarkRead
   message   MessageId 
 ```
 
--- | POST /api/sendMessage
+-- | POST /api/message/send
 
 sendMessage msg = 
   create-and-insert relevant record
 
--- | POST /api/markRead/:msgId
+-- | POST /api/message/read/:msgId
 
 markRead msgId = do
   userId <- requireAuthUser
@@ -45,7 +45,7 @@ markRead msgId = do
     Nothing   -> insert-NEW-RECORD
     Just read -> insert-UPDATED-RECORD with max of read.message
 
--- | GET /api/getMessages
+-- | GET /api/message/receive
 
 getMessages = do
   userId   <- requireAuthUser

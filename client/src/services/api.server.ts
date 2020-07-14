@@ -157,26 +157,15 @@ class ApiService {
   // Messages
 
   recvMessages(): Promise<RecvMessage[]> {
-    // the "from:MessageId" should be obtained from local-storage
-    alert("FIXME:api.server.getMessages");
-    return Promise.resolve([]);
+    return this.get(`/message/receive`);
   }
 
-  markRead(msgId: MessageId): Promise<void> {
-    const readToStr = localStorage.getItem("readUpto");
-    let readTo = 0;
-    if (readToStr) { 
-      readTo = +readToStr;
-    }
-    if (readTo < msgId) {
-      localStorage.setItem("readUpto", msgId.toString());
-    }
-    return Promise.resolve();
+  markRead(msgId: MessageId): Promise<string> {
+    return this.post(`/message/read/${msgId}`);
   }
 
   sendMessage(msg: SendMessage): Promise<string> {
-    alert("FIXME:api.server.sendMessage");
-    return Promise.resolve("TODO");
+    return this.post(`/message/send`, msg);
   }
 
   // Raw Requests

@@ -1,4 +1,5 @@
 import Data.ByteString (ByteString)
+import Data.Int (Int64)
 
 Invitation
   code Text
@@ -64,6 +65,17 @@ Room
 
   update [ topic ] {\old _ viewer -> IsInRoom viewer old}
   update [ name, capacity, zoomLink, topic ] {\_ _ viewer -> IsOrganizer viewer}
+
+Message
+  sender    UserId
+  receiver  UserId Maybe
+  message   Text
+  timestamp Int64
+
+MarkRead
+  user      UserId
+  message   Int64
+
 
 policy IsInRoom = \viewer room ->
   userRoom viewer == Just (entityKey room)

@@ -16,9 +16,13 @@ module Model
   , mkInvitation
   , mkUser
   , mkRoom
+  , mkMessage
+  , mkMarkRead
   , Invitation
   , User
   , Room
+  , Message
+  , MarkRead
   , invitationId'
   , invitationCode'
   , invitationEmailAddress'
@@ -45,9 +49,19 @@ module Model
   , roomName'
   , roomTopic'
   , roomZoomLink'
+  , messageId'
+  , messageSender'
+  , messageReceiver'
+  , messageMessage'
+  , messageTimestamp'
+  , markReadId'
+  , markReadUser'
+  , markReadMessage'
   , InvitationId
   , UserId
   , RoomId
+  , MessageId
+  , MarkReadId
   )
 
 where
@@ -65,6 +79,7 @@ import qualified Database.Persist              as Persist
 import           Binah.Core
 
 import Data.ByteString (ByteString)
+import Data.Int (Int64)
 
 share [mkPersist sqlSettings, mkMigrate "migrateAll"] [persistLowerCase|
 Invitation
@@ -97,6 +112,18 @@ Room
   name Text
   topic Text
   zoomLink Text
+  
+
+Message
+  sender UserId
+  receiver UserId Maybe
+  message Text
+  timestamp Int64
+  
+
+MarkRead
+  user UserId
+  message Int64
   
 |]
 
@@ -592,6 +619,152 @@ roomTopic' = EntityFieldWrapper RoomTopic
 @-}
 roomZoomLink' :: EntityFieldWrapper Room Text
 roomZoomLink' = EntityFieldWrapper RoomZoomLink
+
+-- * Message
+{-@ mkMessage ::
+     x_0: UserId
+  -> x_1: (Maybe UserId)
+  -> x_2: Text
+  -> x_3: Int64
+  -> BinahRecord <
+       {\row -> messageSender (entityVal row) == x_0 && messageReceiver (entityVal row) == x_1 && messageMessage (entityVal row) == x_2 && messageTimestamp (entityVal row) == x_3}
+     , {\_ _ -> True}
+     , {\x_0 x_1 -> False}
+     > Message
+@-}
+mkMessage x_0 x_1 x_2 x_3 = BinahRecord (Message x_0 x_1 x_2 x_3)
+
+{-@ invariant {v: Entity Message | v == getJust (entityKey v)} @-}
+
+
+
+{-@ assume messageId' :: EntityFieldWrapper <
+    {\row viewer -> True}
+  , {\row field  -> field == entityKey row}
+  , {\field row  -> field == entityKey row}
+  , {\_ -> False}
+  , {\_ _ _ -> True}
+  > Message MessageId
+@-}
+messageId' :: EntityFieldWrapper Message MessageId
+messageId' = EntityFieldWrapper MessageId
+
+{-@ measure messageSender :: Message -> UserId @-}
+
+{-@ measure messageSenderCap :: Entity Message -> Bool @-}
+
+{-@ assume messageSender' :: EntityFieldWrapper <
+    {\_ _ -> True}
+  , {\row field -> field == messageSender (entityVal row)}
+  , {\field row -> field == messageSender (entityVal row)}
+  , {\old -> messageSenderCap old}
+  , {\old _ _ -> messageSenderCap old}
+  > Message UserId
+@-}
+messageSender' :: EntityFieldWrapper Message UserId
+messageSender' = EntityFieldWrapper MessageSender
+
+{-@ measure messageReceiver :: Message -> (Maybe UserId) @-}
+
+{-@ measure messageReceiverCap :: Entity Message -> Bool @-}
+
+{-@ assume messageReceiver' :: EntityFieldWrapper <
+    {\_ _ -> True}
+  , {\row field -> field == messageReceiver (entityVal row)}
+  , {\field row -> field == messageReceiver (entityVal row)}
+  , {\old -> messageReceiverCap old}
+  , {\old _ _ -> messageReceiverCap old}
+  > Message (Maybe UserId)
+@-}
+messageReceiver' :: EntityFieldWrapper Message (Maybe UserId)
+messageReceiver' = EntityFieldWrapper MessageReceiver
+
+{-@ measure messageMessage :: Message -> Text @-}
+
+{-@ measure messageMessageCap :: Entity Message -> Bool @-}
+
+{-@ assume messageMessage' :: EntityFieldWrapper <
+    {\_ _ -> True}
+  , {\row field -> field == messageMessage (entityVal row)}
+  , {\field row -> field == messageMessage (entityVal row)}
+  , {\old -> messageMessageCap old}
+  , {\old _ _ -> messageMessageCap old}
+  > Message Text
+@-}
+messageMessage' :: EntityFieldWrapper Message Text
+messageMessage' = EntityFieldWrapper MessageMessage
+
+{-@ measure messageTimestamp :: Message -> Int64 @-}
+
+{-@ measure messageTimestampCap :: Entity Message -> Bool @-}
+
+{-@ assume messageTimestamp' :: EntityFieldWrapper <
+    {\_ _ -> True}
+  , {\row field -> field == messageTimestamp (entityVal row)}
+  , {\field row -> field == messageTimestamp (entityVal row)}
+  , {\old -> messageTimestampCap old}
+  , {\old _ _ -> messageTimestampCap old}
+  > Message Int64
+@-}
+messageTimestamp' :: EntityFieldWrapper Message Int64
+messageTimestamp' = EntityFieldWrapper MessageTimestamp
+
+-- * MarkRead
+{-@ mkMarkRead ::
+     x_0: UserId
+  -> x_1: Int64
+  -> BinahRecord <
+       {\row -> markReadUser (entityVal row) == x_0 && markReadMessage (entityVal row) == x_1}
+     , {\_ _ -> True}
+     , {\x_0 x_1 -> False}
+     > MarkRead
+@-}
+mkMarkRead x_0 x_1 = BinahRecord (MarkRead x_0 x_1)
+
+{-@ invariant {v: Entity MarkRead | v == getJust (entityKey v)} @-}
+
+
+
+{-@ assume markReadId' :: EntityFieldWrapper <
+    {\row viewer -> True}
+  , {\row field  -> field == entityKey row}
+  , {\field row  -> field == entityKey row}
+  , {\_ -> False}
+  , {\_ _ _ -> True}
+  > MarkRead MarkReadId
+@-}
+markReadId' :: EntityFieldWrapper MarkRead MarkReadId
+markReadId' = EntityFieldWrapper MarkReadId
+
+{-@ measure markReadUser :: MarkRead -> UserId @-}
+
+{-@ measure markReadUserCap :: Entity MarkRead -> Bool @-}
+
+{-@ assume markReadUser' :: EntityFieldWrapper <
+    {\_ _ -> True}
+  , {\row field -> field == markReadUser (entityVal row)}
+  , {\field row -> field == markReadUser (entityVal row)}
+  , {\old -> markReadUserCap old}
+  , {\old _ _ -> markReadUserCap old}
+  > MarkRead UserId
+@-}
+markReadUser' :: EntityFieldWrapper MarkRead UserId
+markReadUser' = EntityFieldWrapper MarkReadUser
+
+{-@ measure markReadMessage :: MarkRead -> Int64 @-}
+
+{-@ measure markReadMessageCap :: Entity MarkRead -> Bool @-}
+
+{-@ assume markReadMessage' :: EntityFieldWrapper <
+    {\_ _ -> True}
+  , {\row field -> field == markReadMessage (entityVal row)}
+  , {\field row -> field == markReadMessage (entityVal row)}
+  , {\old -> markReadMessageCap old}
+  , {\old _ _ -> markReadMessageCap old}
+  > MarkRead Int64
+@-}
+markReadMessage' :: EntityFieldWrapper MarkRead Int64
+markReadMessage' = EntityFieldWrapper MarkReadMessage
 
 --------------------------------------------------------------------------------
 -- | Inline

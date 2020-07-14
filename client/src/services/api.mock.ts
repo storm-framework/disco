@@ -22,13 +22,13 @@ function delay(ms = 1000) {
 const NOW = (new Date()).getTime();
 
 const MESSAGES: RecvMessage[] = [
-  { senderId: 1, receiverId: -1, messageText: "1 The FIRST message"  , messageId: 1,  timestamp: NOW          },
-  { senderId: 2, receiverId: -1, messageText: "2 The SECOND message" , messageId: 2,  timestamp: NOW + 10000  },
+  { senderId: 1, receiverId: null, messageText: "1 The FIRST message"  , messageId: 1,  timestamp: NOW          },
+  { senderId: 2, receiverId: null, messageText: "2 The SECOND message" , messageId: 2,  timestamp: NOW + 10000  },
   // { senderId: 3, receiverId: -1, messageText: "3 The THIRD message"  , messageId: 3,  timestamp: NOW + 20000  },
   // { senderId: 4, receiverId: -1, messageText: "4 The FOURTH message" , messageId: 3,  timestamp: NOW + 40000  },
   // { senderId: 3, receiverId: -1, messageText: "5 The FIFTH message"  , messageId: 4,  timestamp: NOW + 90000  },
   // { senderId: 1, receiverId: -1, messageText: "6 The SIXTH message"  , messageId: 5, timestamp: NOW + 150000 },
-  { senderId: 2, receiverId: -1, messageText: "7 The SEVENTH message", messageId: 4, timestamp: NOW + 200000 },
+  { senderId: 2, receiverId: null, messageText: "7 The SEVENTH message", messageId: 4, timestamp: NOW + 200000 },
 ];
 
 const INVITATION: Invitation = {
@@ -287,19 +287,19 @@ class ApiService {
     return Promise.resolve(msgs);
   }
 
-  markRead(msgId: MessageId): Promise<void> {
+  markRead(msgId: MessageId): Promise<string> {
     const alreadyReadUpto = this.readUpto;
     if (alreadyReadUpto < msgId) {
       this.readUpto = msgId;
     }
-    return Promise.resolve();
+    return Promise.resolve("ok");
   }
 
   sendMessage(sendMsg: SendMessage): Promise<string> {
     const recvMsg: RecvMessage = Object.assign(sendMsg, { messageId: this.currentClock });
     MESSAGES.push(recvMsg);
     console.log("Sending a message:", recvMsg);
-    return Promise.resolve("");
+    return Promise.resolve("ok");
   }
 
   // Errors

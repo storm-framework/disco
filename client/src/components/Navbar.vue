@@ -95,7 +95,7 @@ export default class Navbar extends Vue {
     if (user) {
       ApiService.sendMessage({
         senderId: user.id,
-        receiverId: -1,
+        receiverId: null,
         messageText: this.messageModal.message,
         timestamp: new Date().getTime()
       }).then(value => this.clearMessage());
