@@ -136,7 +136,7 @@ export default class UserSummary extends Mixins(HeadingContext) {
     const thisId = this.id.toString();
     const userId = this.$store.getters.sessionUser.id;
     const res = thisId != userId;
-    return res && false;
+    return res && this.$store.getters.allowDirectMessages;
   }
 
   get dmModal() {

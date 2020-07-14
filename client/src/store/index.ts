@@ -149,6 +149,7 @@ export default new Vuex.Store({
     pauseAlerts: ({ commit }) => commit("pauseAlerts")
   },
   getters: {
+    allowDirectMessages: () => false, 
     loggedIn: ({ sessionUserId }) => !!sessionUserId,
     sessionUser: ({ users, sessionUserId }) =>
       sessionUserId && users[sessionUserId],
