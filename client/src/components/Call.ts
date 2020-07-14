@@ -1,8 +1,8 @@
 import JitsiMeetExternalAPI, {
   AppConfig,
+  Events as ApiEvents,
   InterfaceConfig,
   ParticipantId,
-  Events as ApiEvents,
   UserInfo
 } from "jitsi-meet-external-api";
 import { TypedEmitter } from "tiny-typed-emitter";
@@ -11,7 +11,8 @@ const APP_CONFIG: AppConfig = {
   disableInviteFunctions: true,
   doNotStoreRoom: true,
   enableClosePage: true,
-  transcribingEnabled: true
+  transcribingEnabled: true,
+  prejoinPageEnabled: false
 };
 
 const INTERFACE_CONFIG: InterfaceConfig = {
