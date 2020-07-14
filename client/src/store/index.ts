@@ -125,9 +125,13 @@ export default new Vuex.Store({
     leaveRoom: ({ commit }) =>
       ApiService.leaveRoom().then(() => commit("leaveRoom")),
     recvMessages: ({ commit, state }) => {
-      const curMessages = state.newMessages.filter(m => !state.readMessages[m.messageId]);
-      commit("clearMessages");
-      return curMessages;
+      const myUserId = state.sessionUserId;
+      if (myUserId) {
+        const curMessages = state.newMessages.filter(m =>
+          m.senderId.toString() != myUserId && !state.readMessages[m.messageId]);
+        commit("clearMessages");
+        return curMessages;
+      }
     },
     markRead: ({ commit }, msgId: MessageId) => {
       commit("markRead", msgId);
