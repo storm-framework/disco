@@ -45,14 +45,19 @@ updateTopic roomId = do
   vis      <- project userVisibility' viewer
   case userRoom == Just roomId of
     True | vis == "public" -> do
-      topic    <- decodeBody
-      _        <- validateTopic topic
-      _        <- updateWhere (roomId' ==. roomId) (roomTopic' `assign` topic)
-      room     <- selectFirstOr notFoundJSON (roomId' ==. roomId)
-      roomData <- extractRoomData room
+      UpdateTopicReq {..} <- decodeBody
+      _                   <- validateTopic updateTopicReqTopic
+      _ <- updateWhere (roomId' ==. roomId) (roomTopic' `assign` updateTopicReqTopic)
+      room                <- selectFirstOr notFoundJSON (roomId' ==. roomId)
+      roomData            <- extractRoomData room
       respondJSON status200 roomData
     True  -> respondError status409 (Just "This operation may leak information")
     False -> respondError status403 Nothing
+
+newtype UpdateTopicReq = UpdateTopicReq { updateTopicReqTopic :: Text } deriving Generic
+
+instance FromJSON UpdateTopicReq where
+  parseJSON = genericParseJSON (stripPrefix "updateTopicReq")
 
 {-@ validateTopic :: _ -> TaggedT<{\_ -> True}, {\v -> v == currentUser}> _ _ @-}
 validateTopic :: Text -> Controller ()

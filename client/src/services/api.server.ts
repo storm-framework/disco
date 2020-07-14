@@ -84,7 +84,7 @@ class ApiService {
   }
 
   updateTopic(id: number, topic: string): Promise<Room> {
-    return this.post(`/room/${id}/topic`, topic);
+    return this.post(`/room/${id}/topic`, { topic });
   }
 
   updateRooms(updates: Room[], inserts: RoomData[]): Promise<number[]> {

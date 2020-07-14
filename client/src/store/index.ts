@@ -83,6 +83,10 @@ export default new Vuex.Store({
       ApiService.updateRoom(roomId, data).then(room =>
         commit("updateRoom", room)
       ),
+    updateTopic: ({ commit }, { roomId, topic }) =>
+      ApiService.updateTopic(roomId, topic).then(room =>
+        commit("updateRoom", room)
+      ),
     signOut: ({ commit }) =>
       ApiService.signOut().then(() => commit("removeSessionUser")),
     sync: ({ commit }) =>
