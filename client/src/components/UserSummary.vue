@@ -2,7 +2,15 @@
   <div>
     <div class="user-brief" v-if="!long">
       <b-avatar class="photo" :src="photoURL" :text="avatarText" size="2em" />
-      <p class="name">{{ displayName }}</p>
+      <p class="name">
+        {{ displayName }}
+        <!-- <button class="btn btn-xs btn-warning pull-right">
+          <span class="glyphicon glyphicon-trash"></span>
+        </button> -->
+      </p>
+      <!-- <b-button pill variant="btn-xs outline-secondary pull-right"
+          >Pong!</b-button
+        > -->
     </div>
     <div class="user-long" v-else>
       <b-avatar class="photo" :src="photoURL" :text="avatarText" size="6em" />
@@ -30,6 +38,14 @@
           </div>
         </dl>
         <p v-if="bio" class="bio">{{ bio }}</p>
+        <icon-button
+          v-if="showSendMessage"
+          icon="comment-alt"
+          variant="success"
+          @click="sendMessage(id)"
+        >
+          Message
+        </icon-button>
       </div>
     </div>
   </div>
@@ -45,10 +61,11 @@ import {
   faUser,
   faUniversity,
   faLink,
-  faEdit
+  faEdit,
+  faCommentAlt
 } from "@fortawesome/free-solid-svg-icons";
 
-library.add(faUser, faUniversity, faLink, faEdit);
+library.add(faUser, faUniversity, faLink, faEdit, faCommentAlt);
 
 @Component({ components: { Heading } })
 export default class UserSummary extends Mixins(HeadingContext) {
@@ -73,8 +90,23 @@ export default class UserSummary extends Mixins(HeadingContext) {
   @Prop({ default: "" })
   readonly bio!: string;
 
+  @Prop({ default: 0 })
+  readonly id!: number;
+
   get avatarText(): string {
     return this.displayName.slice(0, 2);
+  }
+
+  get showSendMessage(): boolean {
+    const thisId = this.id.toString();
+    const userId = this.$store.getters.sessionUser.id;
+    const res = thisId != userId;
+    console.log("showSendMessage", thisId, userId, res);
+    return res;
+  }
+
+  sendMessage(userId: number) {
+    console.log("You want to send a message to: ", userId);
   }
 }
 </script>
