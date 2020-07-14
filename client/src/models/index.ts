@@ -63,3 +63,9 @@ export interface SendMessage {
 export interface RecvMessage extends SendMessage {
   messageId: MessageId;
 }
+
+export interface MessageModal {
+  display: boolean;
+  message: string;
+  receiverId: number | null; // null = broadcast
+}

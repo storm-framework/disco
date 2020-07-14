@@ -17,7 +17,7 @@
       no-close-on-backdrop
     >
       <template slot="modal-title">
-        <h3>{{ messageModal.sender }}</h3>
+        <h3>{{ messageModal.sender }} says ...</h3>
       </template>
       <p class="font-italic">At {{ messageModal.time }}</p>
       <p>{{ messageModal.message }}</p>
@@ -131,6 +131,7 @@ import { library } from "@fortawesome/fontawesome-svg-core";
 library.add(faDice);
 
 const SYNC_INTERVAL = 10000;
+const MSG_SYNC_INTERVAL = 1000;
 
 function timeStampString(timeStamp: number) {
   const date = new Date(timeStamp);
@@ -144,10 +145,11 @@ function timeStampString(timeStamp: number) {
 export default class Home extends Vue {
   syncing = false;
   syncCount = 0;
+  msgSyncing = false;
   msgQueue: RecvMessage[] = [];
   currentRoom!: Room;
   syncTimerHandler: number | null = null;
-  // pauseAlerts = false;
+  msgSyncTimerHandler: number | null = null;
 
   messageModal = {
     display: false,
@@ -180,6 +182,7 @@ export default class Home extends Vue {
 
   mounted() {
     this.sync();
+    this.msgSync();
   }
 
   beforeDestroy() {
@@ -187,16 +190,9 @@ export default class Home extends Vue {
     if (this.syncTimerHandler) {
       clearTimeout(this.syncTimerHandler);
     }
-  }
-
-  // update msgQueue with messages
-  getMessages() {
-    this.$store.dispatch("recvMessages").then(msgs => {
-      if (msgs.length > 0) {
-        console.log("getMessages", msgs);
-        this.msgQueue = msgs;
-      }
-    });
+    if (this.msgSyncTimerHandler) {
+      clearTimeout(this.msgSyncTimerHandler);
+    }
   }
 
   // trigger message alerts when msgQueue changes, by popping first message
@@ -204,16 +200,15 @@ export default class Home extends Vue {
   // retrigger to drain more messages.
   @Watch("msgQueue")
   showMessages() {
-    console.log("showMessages", this.msgQueue);
+    // console.log("showMessages", this.msgQueue);
     const paused = this.$store.getters.isPauseAlert;
-    // const paused = this.pauseAlerts;
 
     if (paused) {
-      console.log("is-paused-alert");
+      // console.log("is-paused-alert");
       return;
     }
     if (this.msgQueue.length == 0) {
-      console.log("is-no-more-messages");
+      // console.log("is-no-more-messages");
       return;
     }
     // pop first msg
@@ -223,25 +218,6 @@ export default class Home extends Vue {
     // display it
     this.showMessage(msg);
   }
-
-  // showMessageOLD(msg: RecvMessage) {
-  //   const isRead = this.$store.getters.isRead(msg.messageId);
-  //   if (isRead) {
-  //     this.showMessages();
-  //   } else {
-  //     // this.$store.commit("pauseAlerts");
-  //     this.pauseAlerts = true;
-  //     const sender = this.$store.getters.userById(msg.senderId).displayName;
-  //     const body = timeStampString(msg.timestamp) + " : " + msg.messageText;
-  //     //
-  //     this.$bvModal.msgBoxOk(body, alertOption(sender)).then(value => {
-  //       this.$store.dispatch("markRead", msg.messageId);
-  //       // this.$store.commit("resumeAlerts");
-  //       this.pauseAlerts = false;
-  //       this.showMessages();
-  //     });
-  //   }
-  // }
 
   showMessage(msg: RecvMessage) {
     const isRead = this.$store.getters.isRead(msg.messageId);
@@ -263,7 +239,7 @@ export default class Home extends Vue {
   receivedMessage() {
     this.$bvModal.hide("showMessage");
     this.$store.dispatch("markRead", this.messageModal.messageId).then(() => {
-      console.log("resume-messages");
+      // console.log("resume-messages");
       this.showMessages();
     });
   }
@@ -277,7 +253,32 @@ export default class Home extends Vue {
       this.syncing = false;
       this.syncTimerHandler = setTimeout(this.sync, SYNC_INTERVAL);
     });
-    this.getMessages();
+    // this.getMessages();
+  }
+
+  // update msgQueue with messages
+  // getMessages() {
+  //   this.$store.dispatch("recvMessages").then(msgs => {
+  //     if (msgs.length > 0) {
+  //       // console.log("getMessages", msgs);
+  //       this.msgQueue = msgs;
+  //     }
+  //   });
+  // }
+
+  msgSync() {
+    if (this.msgSyncing) {
+      return;
+    }
+    this.msgSyncing = true;
+    this.$store.dispatch("recvMessages").then(msgs => {
+      // console.log("getMessages", msgs);
+      this.msgSyncing = false;
+      this.msgSyncTimerHandler = setTimeout(this.msgSync, MSG_SYNC_INTERVAL);
+      if (msgs.length > 0) {
+        this.msgQueue = msgs;
+      }
+    });
   }
 
   joinRoom(roomId: string) {

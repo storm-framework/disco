@@ -42,12 +42,38 @@
           v-if="showSendMessage"
           icon="comment-alt"
           variant="success"
-          @click="sendMessage(id)"
+          @click.stop="sendMessage"
         >
           Message
         </icon-button>
       </div>
     </div>
+
+    <!-- <send-message :modalId="dmModalId(id)" :receiver="id" /> -->
+
+    <b-modal
+      :id="dmModal"
+      :title="dmTitle"
+      :header-bg-variant="'info'"
+      :header-text-variant="'light'"
+      :body-bg-variant="'light'"
+      :body-text-variant="'dark'"
+      :footer-bg-variant="'dark'"
+      :footer-text-variant="'light'"
+      :ok-title="'Send'"
+      @ok="send"
+      @cancel="clear"
+      @keydown.native.enter="send"
+      hide-header-close
+      no-close-on-esc
+      no-close-on-backdrop
+    >
+      <form>
+        <div>
+          <b-form-input v-model="message" placeholder="Hey!"></b-form-input>
+        </div>
+      </form>
+    </b-modal>
   </div>
 </template>
 
@@ -55,6 +81,9 @@
 import { Component, Prop, Mixins } from "vue-property-decorator";
 import HeadingContext from "@/mixins/HeadingContext";
 import Heading from "@/components/Heading";
+// import SendMessage from "@/components/SendMessage.vue";
+import ApiService from "@/services/api";
+import { User } from "@/models";
 
 import { library } from "@fortawesome/fontawesome-svg-core";
 import {
@@ -93,20 +122,46 @@ export default class UserSummary extends Mixins(HeadingContext) {
   @Prop({ default: 0 })
   readonly id!: number;
 
+  message = "";
+
   get avatarText(): string {
     return this.displayName.slice(0, 2);
+  }
+
+  get dmTitle(): string {
+    return "Message " + this.displayName;
   }
 
   get showSendMessage(): boolean {
     const thisId = this.id.toString();
     const userId = this.$store.getters.sessionUser.id;
     const res = thisId != userId;
-    console.log("showSendMessage", thisId, userId, res);
-    return res;
+    return res && false;
   }
 
-  sendMessage(userId: number) {
-    console.log("You want to send a message to: ", userId);
+  get dmModal() {
+    return "direct-message-" + this.id;
+  }
+
+  sendMessage() {
+    // console.log("You want to send a message to: ", this.id);
+    this.$bvModal.show(this.dmModal);
+  }
+
+  send() {
+    const sender: User = this.$store.getters.sessionUser;
+    if (sender) {
+      ApiService.sendMessage({
+        senderId: sender.id,
+        receiverId: this.id,
+        messageText: this.message,
+        timestamp: new Date().getTime()
+      }).then(() => this.clear());
+    }
+  }
+
+  clear() {
+    this.message = "";
   }
 }
 </script>

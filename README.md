@@ -9,51 +9,11 @@ The app is divided in a [client](https://github.com/nilehmann/binah-apps/tree/ma
 
 Issues
 
-1. Models
-2. Return-in-modal
-3. Message-to-user
-4. Reply-to-sender
-
-DB Models
-
-```haskell
-
--- | DB Models
-
-Message
-  sender    UserId
-  receiver  UserId Maybe
-  message   Text
-  timestamp Int64
-
-MarkRead
-  user      UserId
-  message   MessageId 
-```
-
--- | POST /api/message/send
-
-sendMessage msg = 
-  create-and-insert relevant record
-
--- | POST /api/message/read/:msgId
-
-markRead msgId = do
-  userId <- requireAuthUser
-  readMb <- selectFirst (markReadUser ==. userId)
-  case readMb of
-    Nothing   -> insert-NEW-RECORD
-    Just read -> insert-UPDATED-RECORD with max of read.message
-
--- | GET /api/message/receive
-
-getMessages = do
-  userId   <- requireAuthUser
-  readUpto <- getReadUpto userId
-  public   <- selectList [ readUpto <=. messageId, messageReceiver ==. Nothing, ]
-  private  <- selectList [ readUpto <=. messageId, messageReceiver ==. Just userId ]
-  return (public ++ private)
-```
+- "Direct Message"
+- Move "Message" button to right of name in RoomCard/UserSummary
+- heartbeat @2s for messages, @10s for general sync?
+- refactor message-display-modal to use toasts
+- SERVER: check that BROADCAST is from ORGANIZER (!)
 
 ## Development
 

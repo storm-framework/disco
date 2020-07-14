@@ -313,7 +313,7 @@ class ApiService {
       messageId: this.currentClock
     });
     MESSAGES.push(recvMsg);
-    console.log("Sending a message:", recvMsg);
+    // console.log("Sending a message:", recvMsg);
     return Promise.resolve("ok");
   }
 

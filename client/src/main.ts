@@ -11,6 +11,7 @@ import "reflect-metadata";
 import Vue from "vue";
 import App from "./App.vue";
 import IconButton from "./components/IconButton.vue";
+
 import "./plugins/bootstrap-vue";
 import "./plugins/vue-fontawesome";
 

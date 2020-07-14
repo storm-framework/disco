@@ -165,6 +165,7 @@ class ApiService {
   }
 
   sendMessage(msg: SendMessage): Promise<string> {
+    // console.log("Send-Message", msg);
     return this.post(`/message/send`, msg);
   }
 

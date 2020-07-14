@@ -11,15 +11,18 @@
           <b-dropdown-item :to="{ name: 'SendInvitations' }">
             Send Invitations
           </b-dropdown-item>
-          <b-dropdown-item-button @click="messageModal.display = true">
-            Send Message
+          <!-- <b-dropdown-item-button @click="messageModal.display = true"> -->
+          <b-dropdown-item-button v-b-modal="'broadcast-modal'">
+            Make Announcement
           </b-dropdown-item-button>
         </b-nav-item-dropdown>
         <b-nav-item v-if="showSignOut" @click="signOut">Sign out</b-nav-item>
       </b-navbar-nav>
     </b-navbar>
 
-    <b-modal
+    <send-message modalId="broadcast-modal" modalTitle="Announce Message" />
+
+    <!-- <b-modal
       id="sendMessage"
       v-model="messageModal.display"
       title="Broadcast Message"
@@ -45,26 +48,29 @@
           ></b-form-input>
         </div>
       </form>
-    </b-modal>
+    </b-modal> -->
   </div>
 </template>
 
 <script lang="ts">
 import { Component, Vue } from "vue-property-decorator";
 import { mapGetters } from "vuex";
-import ApiService from "@/services/api";
-import { User } from "@/models";
+// import { MessageModal } from "@/models";
+import SendMessage from "@/components/SendMessage.vue";
 
 @Component({
-  computed: mapGetters(["loggedIn", "currentRoom", "currentVideoRoom"])
+  computed: mapGetters(["loggedIn", "currentRoom", "currentVideoRoom"]),
+  components: { SendMessage }
 })
 export default class Navbar extends Vue {
   // The navBar is in charge of syncing the session user with the backend.
   // Other components rely on this.
-  messageModal = {
-    display: false,
-    message: ""
-  };
+
+  // messageModal: MessageModal = {
+  //   display: false,
+  //   message: "",
+  //   receiverId: null
+  // };
 
   mounted() {
     this.$store.dispatch("syncSessionUser").catch(error => {
@@ -78,6 +84,7 @@ export default class Navbar extends Vue {
   get isOrganizer() {
     return this.$store.getters.sessionUser?.level == "organizer";
   }
+
   get showSignOut() {
     const current = this.$store.getters.currentRoom;
     const video = current && this.$store.getters.isVideoRoom(current);
@@ -90,20 +97,5 @@ export default class Navbar extends Vue {
       .then(() => this.$router.push({ name: "SignIn" }));
   }
 
-  sendMessage() {
-    const user: User = this.$store.getters.sessionUser;
-    if (user) {
-      ApiService.sendMessage({
-        senderId: user.id,
-        receiverId: null,
-        messageText: this.messageModal.message,
-        timestamp: new Date().getTime()
-      }).then(() => this.clearMessage());
-    }
-  }
-
-  clearMessage() {
-    this.messageModal.message = "";
-  }
 }
 </script>
