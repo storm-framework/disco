@@ -57,7 +57,7 @@
           class="align-items-center d-flex flex-column justify-content-center"
         >
           <p class="h5">
-            You are invisible until you join a room
+            You are invisible to others until you join a room
           </p>
           <b-dropdown
             variant="primary"
@@ -131,20 +131,6 @@ import { library } from "@fortawesome/fontawesome-svg-core";
 library.add(faDice);
 
 const SYNC_INTERVAL = 10000;
-
-function alertOption(sender: string) {
-  return {
-    title: "Message from " + sender,
-    size: "sm",
-    buttonSize: "sm",
-    okVariant: "success",
-    okTitle: "Ok",
-    cancelTitle: "NO",
-    footerClass: "p-2",
-    hideHeaderClose: true,
-    centered: true
-  };
-}
 
 function timeStampString(timeStamp: number) {
   const date = new Date(timeStamp);

@@ -98,7 +98,7 @@ export default class Navbar extends Vue {
         receiverId: null,
         messageText: this.messageModal.message,
         timestamp: new Date().getTime()
-      }).then(value => this.clearMessage());
+      }).then(() => this.clearMessage());
     }
   }
 

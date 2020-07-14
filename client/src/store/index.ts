@@ -11,7 +11,7 @@ interface State {
   users: { [key: string]: User };
   rooms: { [key: string]: Room };
   newMessages: RecvMessage[];
-  readMessages: { [key: number]: boolean }; 
+  readMessages: { [key: number]: boolean };
   pauseAlerts: boolean;
 }
 
@@ -34,7 +34,14 @@ function addUsersToRoom(room: Room, users: User[]) {
 export default new Vuex.Store({
   state: initialState,
   mutations: {
-    sync(state, { rooms, users, rcvMsgs }: { rooms: Room[]; users: User[], rcvMsgs: RecvMessage[] }) {
+    sync(
+      state,
+      {
+        rooms,
+        users,
+        rcvMsgs
+      }: { rooms: Room[]; users: User[]; rcvMsgs: RecvMessage[] }
+    ) {
       state.rooms = Object.fromEntries(rooms.map(r => [r.id, r]));
       state.users = Object.fromEntries(users.map(u => [u.id, u]));
       state.newMessages = rcvMsgs;
@@ -111,9 +118,7 @@ export default new Vuex.Store({
         ApiService.rooms(),
         ApiService.users(),
         ApiService.recvMessages()
-      ]).then(r =>
-        commit("sync", { rooms: r[0], users: r[1], rcvMsgs: r[2]})
-      ),
+      ]).then(r => commit("sync", { rooms: r[0], users: r[1], rcvMsgs: r[2] })),
     selectRoom: ({ commit }, roomId: string) => {
       commit("changeActiveRoom", roomId);
     },
@@ -127,8 +132,11 @@ export default new Vuex.Store({
     recvMessages: ({ commit, state }) => {
       const myUserId = state.sessionUserId;
       if (myUserId) {
-        const curMessages = state.newMessages.filter(m =>
-          m.senderId.toString() != myUserId && !state.readMessages[m.messageId]);
+        const curMessages = state.newMessages.filter(
+          m =>
+            m.senderId.toString() != myUserId &&
+            !state.readMessages[m.messageId]
+        );
         commit("clearMessages");
         return curMessages;
       }
@@ -155,9 +163,8 @@ export default new Vuex.Store({
         return getters.rooms;
       }
     },
-    waitingRooms: (_state, getters) => 
-      _.filter(getters.rooms, room => !getters.isVideoRoom(room))
-    ,
+    waitingRooms: (_state, getters) =>
+      _.filter(getters.rooms, room => !getters.isVideoRoom(room)),
     roomUsers: ({ users }) => (roomId: string) =>
       _.filter(_.values(users), u => u.room == roomId),
     room: ({ rooms }, getters) => (roomId: string) =>
@@ -166,7 +173,7 @@ export default new Vuex.Store({
       const currentRoomId = getters.sessionUser?.room;
       return currentRoomId && getters.room(currentRoomId);
     },
-    isVideoRoom: (_state) => (room: Room) =>
+    isVideoRoom: () => (room: Room) =>
       room && !room.zoomLink.includes("waiting-room"),
     lobbyUsers: ({ users }) => _.filter(_.values(users), u => u.room == null),
     userById: ({ users }) => (userId: string) => users[userId],

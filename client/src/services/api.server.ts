@@ -25,8 +25,8 @@ function delay(ms = 1000) {
 }
 
 class ApiService {
-  constructor(private accessToken: string | null) { }
-  
+  constructor(private accessToken: string | null) {}
+
   readUpto: MessageId = 0;
 
   get sessionUserId(): string | null {
