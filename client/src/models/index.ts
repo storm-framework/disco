@@ -51,13 +51,13 @@ export interface Room extends RoomData {
   id: number;
 }
 
-export type MessageId = number; 
+export type MessageId = number;
 
 export interface SendMessage {
-  senderId:    number;
-  receiverId:  number | null; // null = broadcast
+  senderId: number;
+  receiverId: number | null; // null = broadcast
   messageText: string;
-  timestamp:   number; // time since epoch
+  timestamp: number; // time since epoch
 }
 
 export interface RecvMessage extends SendMessage {

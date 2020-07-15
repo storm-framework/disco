@@ -10,7 +10,6 @@ import {
   UserData,
   UserSignUp
 } from "@/models";
-import router from "@/router";
 import axios, { AxiosRequestConfig } from "axios";
 import _ from "lodash";
 
@@ -203,8 +202,8 @@ class ApiService {
   }
 
   async redirectToSignIn() {
-    if (router.currentRoute.name != "SignIn") {
-      router.replace({ name: "SignIn" });
+    if (location.pathname !== "/signin") {
+      location.replace("/signin");
     }
   }
 }

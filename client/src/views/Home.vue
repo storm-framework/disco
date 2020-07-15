@@ -57,25 +57,6 @@
               Waiting area
             </b-dropdown-item>
           </b-dropdown>
-          <!-- <div>
-            <icon-button
-              v-if="roomsAreAvailable"
-              icon="dice"
-              variant="primary"
-              @click="joinRandomRoom"
-            >
-              Random room
-            </icon-button>
-
-            <icon-button
-              v-if="waitingRooms.length > 0"
-              icon="dice"
-              variant="success"
-              @click="joinWaitingRoom"
-            >
-              Waiting room
-            </icon-button>
-          </div> -->
         </b-col>
       </b-row>
     </section>

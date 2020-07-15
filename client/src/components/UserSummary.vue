@@ -4,13 +4,7 @@
       <b-avatar class="photo" :src="photoURL" :text="avatarText" size="2em" />
       <p class="name">
         {{ displayName }}
-        <!-- <button class="btn btn-xs btn-warning pull-right">
-          <span class="glyphicon glyphicon-trash"></span>
-        </button> -->
       </p>
-      <!-- <b-button pill variant="btn-xs outline-secondary pull-right"
-          >Pong!</b-button
-        > -->
     </div>
     <div class="user-long" v-else>
       <b-avatar class="photo" :src="photoURL" :text="avatarText" size="6em" />
@@ -49,31 +43,7 @@
       </div>
     </div>
 
-    <!-- <send-message :modalId="dmModalId(id)" :receiver="id" /> -->
-
-    <b-modal
-      :id="dmModal"
-      :title="dmTitle"
-      :header-bg-variant="'info'"
-      :header-text-variant="'light'"
-      :body-bg-variant="'light'"
-      :body-text-variant="'dark'"
-      :footer-bg-variant="'dark'"
-      :footer-text-variant="'light'"
-      :ok-title="'Send'"
-      @ok="send"
-      @cancel="clear"
-      @keydown.native.enter="send"
-      hide-header-close
-      no-close-on-esc
-      no-close-on-backdrop
-    >
-      <form>
-        <div>
-          <b-form-input v-model="message" placeholder="Hey!"></b-form-input>
-        </div>
-      </form>
-    </b-modal>
+    <send-message :modalId="dmModal" :receiver="id" />
   </div>
 </template>
 
@@ -81,7 +51,7 @@
 import { Component, Prop, Mixins } from "vue-property-decorator";
 import HeadingContext from "@/mixins/HeadingContext";
 import Heading from "@/components/Heading";
-// import SendMessage from "@/components/SendMessage.vue";
+import SendMessage from "@/components/SendMessage.vue";
 import ApiService from "@/services/api";
 import { User } from "@/models";
 
@@ -96,7 +66,7 @@ import {
 
 library.add(faUser, faUniversity, faLink, faEdit, faCommentAlt);
 
-@Component({ components: { Heading } })
+@Component({ components: { Heading, SendMessage } })
 export default class UserSummary extends Mixins(HeadingContext) {
   @Prop({ type: Boolean, default: false }) editable!: boolean;
 
@@ -144,7 +114,6 @@ export default class UserSummary extends Mixins(HeadingContext) {
   }
 
   sendMessage() {
-    // console.log("You want to send a message to: ", this.id);
     this.$bvModal.show(this.dmModal);
   }
 

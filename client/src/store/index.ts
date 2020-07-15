@@ -123,7 +123,7 @@ export default new Vuex.Store({
       ApiService.leaveRoom().then(() => commit("leaveRoom"))
   },
   getters: {
-    allowDirectMessages: () => false,
+    allowDirectMessages: () => true,
     loggedIn: ({ sessionUserId }) => !!sessionUserId,
     sessionUser: ({ users, sessionUserId }) =>
       sessionUserId && users[sessionUserId],

@@ -32,6 +32,7 @@ import {
   BOverlay,
   BRow,
   VBModal,
+  BVModalPlugin,
   BVToastPlugin
 } from "bootstrap-vue";
 
@@ -67,4 +68,5 @@ Vue.component("b-nav-item-dropdown", BNavItemDropdown);
 Vue.component("b-overlay", BOverlay);
 Vue.component("b-row", BRow);
 Vue.directive("b-modal", VBModal);
+Vue.use(BVModalPlugin);
 Vue.use(BVToastPlugin);
