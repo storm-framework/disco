@@ -127,16 +127,12 @@ export default new Vuex.Store({
         return getters.rooms;
       }
     },
-    waitingRooms: (_state, getters) =>
-      _.filter(getters.rooms, room => !getters.isVideoRoom(room)),
     roomUsers: ({ users }) => (roomId: string) =>
       _.filter(_.values(users), u => u.room == roomId && u.isActive),
     currentRoom: ({ rooms }, getters) => {
       const currentRoomId = getters.sessionUser?.room;
       return currentRoomId && rooms[currentRoomId];
     },
-    isVideoRoom: () => (room: Room) =>
-      room && !room.zoomLink.includes("waiting-room"),
     lobbyUsers: ({ users }) =>
       _.filter(_.values(users), u => u.room == null && u.isActive),
     userById: ({ users }) => (userId: number) => users[userId],

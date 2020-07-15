@@ -45,8 +45,7 @@ export default class Navbar extends Vue {
 
   get showSignOut() {
     const current = this.$store.getters.currentRoom;
-    const video = current && this.$store.getters.isVideoRoom(current);
-    return this.$store.getters.loggedIn && !video;
+    return this.$store.getters.loggedIn && current !== null;
   }
 
   signOut() {

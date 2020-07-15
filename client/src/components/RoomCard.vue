@@ -111,21 +111,12 @@ import {
   faComments,
   faPhone,
   faEdit,
-  faExternalLinkAlt,
   faSave,
   faTimes,
   faDoorOpen
 } from "@fortawesome/free-solid-svg-icons";
 
-library.add(
-  faComments,
-  faPhone,
-  faEdit,
-  faExternalLinkAlt,
-  faSave,
-  faTimes,
-  faDoorOpen
-);
+library.add(faComments, faPhone, faEdit, faSave, faTimes, faDoorOpen);
 
 @Component({ components: { UserSummary, Heading } })
 export default class RoomCard extends Mixins(HeadingContext) {
