@@ -74,13 +74,26 @@
       </template>
 
       <icon-button
-        v-if="inLobby"
+        v-if="showJoin"
         icon="phone"
         variant="primary"
         @click="joinRoom"
       >
         Join
       </icon-button>
+
+      <icon-button
+        v-if="showLeave"
+        icon="door-open"
+        variant="danger"
+        @click="leaveRoom"
+      >
+        Leave
+      </icon-button>
+
+      <p v-if="!showLeave && isCurrentRoom">
+        <i>Leave</i> in the video pane to exit
+      </p>
     </b-card-body>
   </article>
 </template>
@@ -100,10 +113,19 @@ import {
   faEdit,
   faExternalLinkAlt,
   faSave,
-  faTimes
+  faTimes,
+  faDoorOpen
 } from "@fortawesome/free-solid-svg-icons";
 
-library.add(faComments, faPhone, faEdit, faExternalLinkAlt, faSave, faTimes);
+library.add(
+  faComments,
+  faPhone,
+  faEdit,
+  faExternalLinkAlt,
+  faSave,
+  faTimes,
+  faDoorOpen
+);
 
 @Component({ components: { UserSummary, Heading } })
 export default class RoomCard extends Mixins(HeadingContext) {
@@ -131,8 +153,20 @@ export default class RoomCard extends Mixins(HeadingContext) {
     return this.$store.getters.currentRoom?.id === this.room.id;
   }
 
-  get inLobby() {
-    return !this.$store.getters.currentRoom;
+  get currentRoom() {
+    return this.$store.getters.currentRoom;
+  }
+
+  get showJoin(): boolean {
+    const current = this.$store.getters.currentRoom;
+    const video = this.$store.getters.isVideoRoom(current);
+    return !current || (!video && !this.isCurrentRoom);
+  }
+
+  get showLeave(): boolean {
+    // const current = this.$store.getters.currentRoom;
+    // const video = this.$store.getters.isVideoRoom(current);
+    return !this.showJoin && this.isCurrentRoom; // && !video;
   }
 
   isExpanded(user: User) {
@@ -149,6 +183,10 @@ export default class RoomCard extends Mixins(HeadingContext) {
 
   joinRoom() {
     this.$store.dispatch("joinRoom", this.room.id);
+  }
+
+  leaveRoom() {
+    this.$store.dispatch("leaveRoom", this.room.id);
   }
 
   editTopic() {

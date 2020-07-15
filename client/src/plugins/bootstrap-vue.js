@@ -8,7 +8,9 @@ import {
   BCardText,
   BCol,
   BContainer,
+  BDropdown,
   BDropdownItem,
+  BDropdownItemButton,
   BForm,
   BFormCheckbox,
   BFormFile,
@@ -29,7 +31,9 @@ import {
   BNavItemDropdown,
   BOverlay,
   BRow,
-  VBModal
+  VBModal,
+  BVModalPlugin,
+  BVToastPlugin
 } from "bootstrap-vue";
 
 Vue.component("b-alert", BAlert);
@@ -40,7 +44,9 @@ Vue.component("b-card-body", BCardBody);
 Vue.component("b-card-text", BCardText);
 Vue.component("b-col", BCol);
 Vue.component("b-container", BContainer);
+Vue.component("b-dropdown", BDropdown);
 Vue.component("b-dropdown-item", BDropdownItem);
+Vue.component("b-dropdown-item-button", BDropdownItemButton);
 Vue.component("b-form", BForm);
 Vue.component("b-form-checkbox", BFormCheckbox);
 Vue.component("b-form-file", BFormFile);
@@ -62,3 +68,5 @@ Vue.component("b-nav-item-dropdown", BNavItemDropdown);
 Vue.component("b-overlay", BOverlay);
 Vue.component("b-row", BRow);
 Vue.directive("b-modal", VBModal);
+Vue.use(BVModalPlugin);
+Vue.use(BVToastPlugin);

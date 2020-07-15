@@ -5,7 +5,10 @@ import {
   RoomData,
   User,
   UserData,
-  UserSignUp
+  UserSignUp,
+  RecvMessage,
+  SendMessage,
+  MessageId
 } from "@/models";
 
 function delay(ms = 1000) {
@@ -15,6 +18,36 @@ function delay(ms = 1000) {
     return Promise.resolve();
   }
 }
+
+const NOW = new Date().getTime();
+
+const MESSAGES: RecvMessage[] = [
+  {
+    senderId: 1,
+    receiverId: null,
+    messageText: "1 The FIRST message",
+    messageId: 1,
+    timestamp: NOW
+  },
+  {
+    senderId: 2,
+    receiverId: null,
+    messageText: "2 The SECOND message",
+    messageId: 2,
+    timestamp: NOW + 10000
+  },
+  // { senderId: 3, receiverId: -1, messageText: "3 The THIRD message"  , messageId: 3,  timestamp: NOW + 20000  },
+  // { senderId: 4, receiverId: -1, messageText: "4 The FOURTH message" , messageId: 3,  timestamp: NOW + 40000  },
+  // { senderId: 3, receiverId: -1, messageText: "5 The FIFTH message"  , messageId: 4,  timestamp: NOW + 90000  },
+  // { senderId: 1, receiverId: -1, messageText: "6 The SIXTH message"  , messageId: 5, timestamp: NOW + 150000 },
+  {
+    senderId: 2,
+    receiverId: null,
+    messageText: "7 The SEVENTH message",
+    messageId: 4,
+    timestamp: NOW + 200000
+  }
+];
 
 const INVITATION: Invitation = {
   id: 1,
@@ -81,7 +114,9 @@ const USERS: { [id: string]: User } = {
     id: 3,
     photoURL:
       "https://upload.wikimedia.org/wikipedia/commons/2/2c/Rotating_earth_%28large%29.gif",
+
     displayName: "ţ̶̨̛͎̤͍̥̝̺̦̖̪͎̮̖̪̗̣̤̦͓͛̌̀̓̑̅̈̅͆̅͋̏̆̀̔̈́̈́̓́̈̿̀̈́̂̏͌͗͜͠͝͝͝h̸̨̧̢̛̟͎̯̠͕͈͔̥̙͕̳͍̫͔̬͖̖̣͖̳̫͕̰̗̣̭͙̘͕͎͕͍̤͈̦̦̳̠́̓͆̄͗͑̈́͂̔̈́̎͒͂̇̎̌͐͌̓̂̔̃̏̾̓̈́̏͌̐̄͜͝ͅi̷̡̨̧̨̢̢̡̫͎̬̪͓͉̳̥̬̖̫̖͎̤̯̤̜͓͉̼͙̼̭̩͉̻̣̝͖͇̲̖̹̣͍͙͓̯̇͛͆ş̶̨͙̥͈̝̞̜̥̯̻̦̥͖̯͕͚̦̫̭͍̱͚̑́̋̽͂̒̇͆̄̊͗̿̈̈́͋͒̏͒͊̆́͋͛͛̄̀̑͆̆͘͘͝͝͝ ̵̧̩̬͇̦̯͈̭͕̥̯̯̮͚̱̜̳͎͎̤̯͇̏̃̽̈́̈́n̸̨̡̡̨̧̫̗͔̗̗̠͔̪͔̠̝̖̝͇̪̳̝̙̰̣̘̤̮͎̲̙̖̺̼̹̖̱̦̰̑̌̅̑̍́͗́̆̿̈͛̏̀̀̍̽̀̒̎͘͘͠͝ͅą̶̧̯̩̬̰̮̬̝͙̬͕̰̰̫͕̬̗̜͍͖̱͚̱̳̰̫͍͙͕͋̓̑̇̀͗̓̃̐͒͠ͅͅm̴̨̪̩̦͙̱̰̺͍͓̹̥̗̠̞͎͇͔̤͉̺͙̹̼͈̳̓̏̀͜e̶̡̧̡̧̛̦͉͎̫̺̦̫͖͙͓͇̥̮̫͇͇̳͇̱̥̮̝̭̜̻̺̼̼̱̪̲̼̿͒̈̌̉̐̿͛̽̑́̄̎̓͑͌̈́ͅͅ ̵̡̧̢̧̙̲̼̯̗̖̟̜͈̦̟͈̪̣͉̙͂̈́̅̈́̇́̐̔̊̏̎̃̆̅͊̈́̕̕͝͝ͅh̴̡̢̨̡͈̰̖̦̺̯̱̻̭̲̗͚͚͓̖͈̥͈̪̼͍͔̺͇͔̺̱̼͉͙͚̃́́̍̇͐̐̉͜͝ͅa̴̢͍̪̰̗̓̋̈́͂̋̀̈́͒s̶̨̨͎̭͕̖͓͍̹͎͚̻͇͖̫͇͔̲̣͙̑̇̇͝ͅͅ ̵̢̞͍͇̪̌̋͆͌̐͂̓̽̀͂̒̈̇͒͋͛̽͆͒̓̌̆̅͗̾̎̄̆͠ļ̴̡̜̰̦͓̗̀̉̄́͛̀͌̿͋̈́́̈́̆̚ǫ̷̢̬͉̞͓͐̾̀̾̿͛̊̔̃͒̔͊̅̏̎̑̿͂͑͗̽̈́͛̄͆̉̾͂̉̚͘͘͝͝͝ṱ̶̤̗͉̱͈̺̠̤̉͜s̸̨̛̭̜̼̬̮͕̤̻͉̯͙̥̟̤̩̘̃̈́̈͌̑́͂͑̉͒̉̀͑̄̃̀͊͒̈́͌̉̾͗̓̽̉́̂́̋́͐̓̉̄̉̈͘͘͘̕͜͝͠͝ͅ ̵̢̗̯̹͈̦͚̮̭̝̭͙̜̭̖̪͕̹̲͙͍͕̱̤̝͚̜͔͚̘̣͔͙̫̠̔̈́̂́̔͐́̏͆͑͆̌̿̋̎̍̀̂͌̓͆̌̅͗̚̚͜͜ͅớ̵̡̡̢̨̘̝̟̤͙͚̟̳̩͉̹͙̦̪̥̻̻̘̝͓͙̰̽̈́̄̇͆͌́̈̋̄́̍͌̏̏̓̂̓́̋̾͗̓̈́̎̃̐̔̏̓͂͒̈́̓̿̽͗̇̈̓̚̕͜͜͜͝ͅf̶͓̠͕̯̲̟̻̱̹̦̼͍̱̗͚̠̙̲̬̠̯̖͖̺̟̟̈́͌ͅͅͅ ̶̢̞͙̐̓̔̈́͗͋͊̎͋͊̎̐̅̎̀̐̀̈́̚͝ą̴̧̡̧̢̢̛͖̝͓̩͓͍̭͇̣͇͚̦̗̠̼̜͍̹̘͎̠͍͚̩̥͎̺͚̰͈̱̰̈́̄́̊͂͐̃͐̓́̎̂̌̉͛̒̾̐̿̊̂̑̽̄̏͋̈́͒͆̽͛͑͘̚̚͝͝͠ͅç̷̧̢̧̨̬̥̪̯̪͖̭̣̩̤̺̘͍̣̝̘̝̗̭̹͍̮͉̯̥̝̱̜̙͙̲̗̯̺͙̀̏̏͊̇̓̈̀̏͑̃̿̐͂͛͆͆̃̓̕͘̕̚͜͝ͅc̵̢̡̛̛̛̛̭͉͚̙̲̠̼̹͓̦̳̰̤͈̞̭̙̥̓͋̐͊̎͋̏̔̈́̈́̿́̊̓̽͐̑͑̀̎̃͋̎̽̚͜͝͠͝͝͠e̵̡̢̢̡̧̨̛͚̣̞͎͚̳͚̫̪̰̺̦̗̱͉̮̦̙͇̺̭̳̯͓͓͖͇̻̤̹̯̞̘̲̯̞͔̹͌̂̒͆̒̅͊̈́̋̾́̇̆̾̀̓̊͑͑͐̾̄̇̅͋͛̄̇͒̕̚͜͠n̷͇̗̣̖̣͚̲̒̀̐̇̐̇͊̽͆̎̂̅͑̊̒̒́̑̕͝t̴̡̢̡̢̛̝̟͚̙̦̘̖͎̼̱̜͓̮͇̞̹͈̼͓̖̹͚̟̔͗̉̓̊̃̆̒́̈́̎̈̇͒̍̂̈́̊̈́̔̾́͊̔́͊̂͐̉̐̃͋̿͆̆̋̓͌͘̕̚̚̚͠ͅs̷̨̢̧̫̞̞̼͈̦̟̲̠̺̥̦͈̝̠̬̞̪̠͖̼̈̊̿̇̅̌̾͒͠ͅͅ",
+
     institution: "Russian River",
     pronouns: "או אנא רשימות",
     bio: "A bio",
@@ -94,7 +129,7 @@ const USERS: { [id: string]: User } = {
     photoURL:
       "https://upload.wikimedia.org/wikipedia/commons/a/a1/Johnrogershousemay2020.webp",
     displayName: "Vinnie Cilurzo",
-    institution: "Russina River",
+    institution: "Russian River",
     pronouns: "",
     bio:
       "فسقط مشاركة لليابان مع لها. مع وبعض غينيا أما. بـ قام ووصف الحدود, و جيوب فكان الدولارات بحث, مدن احداث تكتيكاً ماليزيا، بـ. ضرب أم بوابة اتّجة, بـ ضمنها للجزر ولم.\nأسيا انتهت فصل مع. إذ وسوء أحدث الستار كلا, جعل سكان فهرست الضغوط ما, مليارات الأوروبيّون لان ثم. هنا؟ مواقعها والكوري حين عل, كل به، الأوضاع والفلبين",
@@ -143,6 +178,10 @@ const SESSION_USER_ID = "1";
 
 /* eslint-disable @typescript-eslint/no-unused-vars */
 class ApiService {
+  readUpto: MessageId = 0;
+
+  currentClock = 0;
+
   // Auth
 
   async signIn(emailAddress: string, password: string): Promise<User> {
@@ -235,6 +274,33 @@ class ApiService {
     return Promise.resolve(
       "https://upload.wikimedia.org/wikipedia/commons/thumb/7/77/Avatar_cat.png/120px-Avatar_cat.png"
     );
+  }
+
+  // Messages
+
+  recvMessages(): Promise<RecvMessage[]> {
+    const msgs = MESSAGES.filter(
+      v => this.readUpto < v.messageId && v.messageId <= this.currentClock
+    );
+    this.currentClock += 1;
+    return Promise.resolve(msgs);
+  }
+
+  markRead(msgId: MessageId): Promise<string> {
+    const alreadyReadUpto = this.readUpto;
+    if (alreadyReadUpto < msgId) {
+      this.readUpto = msgId;
+    }
+    return Promise.resolve("ok");
+  }
+
+  sendMessage(sendMsg: SendMessage): Promise<string> {
+    const recvMsg: RecvMessage = Object.assign(sendMsg, {
+      messageId: this.currentClock
+    });
+    MESSAGES.push(recvMsg);
+    // console.log("Sending a message:", recvMsg);
+    return Promise.resolve("ok");
   }
 
   // Beacon

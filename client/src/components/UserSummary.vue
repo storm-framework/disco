@@ -2,7 +2,9 @@
   <div>
     <div class="user-brief" v-if="!long">
       <b-avatar class="photo" :src="photoURL" :text="avatarText" size="2em" />
-      <p class="name">{{ displayName }}</p>
+      <p class="name">
+        {{ displayName }}
+      </p>
     </div>
     <div class="user-long" v-else>
       <b-avatar class="photo" :src="photoURL" :text="avatarText" size="6em" />
@@ -30,8 +32,18 @@
           </div>
         </dl>
         <p v-if="bio" class="bio">{{ bio }}</p>
+        <icon-button
+          v-if="showSendMessage"
+          icon="comment-alt"
+          variant="success"
+          @click.stop="sendMessage"
+        >
+          Message
+        </icon-button>
       </div>
     </div>
+
+    <send-message :modalId="dmModal" :receiver="id" />
   </div>
 </template>
 
@@ -39,18 +51,22 @@
 import { Component, Prop, Mixins } from "vue-property-decorator";
 import HeadingContext from "@/mixins/HeadingContext";
 import Heading from "@/components/Heading";
+import SendMessage from "@/components/SendMessage.vue";
+import ApiService from "@/services/api";
+import { User } from "@/models";
 
 import { library } from "@fortawesome/fontawesome-svg-core";
 import {
   faUser,
   faUniversity,
   faLink,
-  faEdit
+  faEdit,
+  faCommentAlt
 } from "@fortawesome/free-solid-svg-icons";
 
-library.add(faUser, faUniversity, faLink, faEdit);
+library.add(faUser, faUniversity, faLink, faEdit, faCommentAlt);
 
-@Component({ components: { Heading } })
+@Component({ components: { Heading, SendMessage } })
 export default class UserSummary extends Mixins(HeadingContext) {
   @Prop({ type: Boolean, default: false }) editable!: boolean;
 
@@ -73,8 +89,48 @@ export default class UserSummary extends Mixins(HeadingContext) {
   @Prop({ default: "" })
   readonly bio!: string;
 
+  @Prop({ default: 0 })
+  readonly id!: number;
+
+  message = "";
+
   get avatarText(): string {
     return this.displayName.slice(0, 2);
+  }
+
+  get dmTitle(): string {
+    return "Message " + this.displayName;
+  }
+
+  get showSendMessage(): boolean {
+    const thisId = this.id.toString();
+    const userId = this.$store.getters.sessionUser.id;
+    const res = thisId != userId;
+    return res && this.$store.getters.allowDirectMessages;
+  }
+
+  get dmModal() {
+    return "direct-message-" + this.id;
+  }
+
+  sendMessage() {
+    this.$bvModal.show(this.dmModal);
+  }
+
+  send() {
+    const sender: User = this.$store.getters.sessionUser;
+    if (sender) {
+      ApiService.sendMessage({
+        senderId: sender.id,
+        receiverId: this.id,
+        messageText: this.message,
+        timestamp: new Date().getTime()
+      }).then(() => this.clear());
+    }
+  }
+
+  clear() {
+    this.message = "";
   }
 }
 </script>

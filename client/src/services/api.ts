@@ -1,8 +1,11 @@
 import {
   Invitation,
   InvitationInsert,
+  MessageId,
+  RecvMessage,
   Room,
   RoomData,
+  SendMessage,
   User,
   UserData,
   UserSignUp
@@ -37,9 +40,15 @@ interface ApiService {
   joinRoom(roomId: string): Promise<string>;
   leaveRoom(): Promise<void>;
 
-  //  Upload Files
+  // Upload Files
 
   uploadFile(file: File, code?: string): Promise<string>;
+
+  // Messages
+
+  recvMessages(): Promise<RecvMessage[]>;
+  markRead(msgId: MessageId): Promise<string>;
+  sendMessage(msg: SendMessage): Promise<string>;
 
   // Beacon
 

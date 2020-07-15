@@ -1,13 +1,15 @@
 import {
   Invitation,
   InvitationInsert,
+  MessageId,
+  RecvMessage,
   Room,
   RoomData,
+  SendMessage,
   User,
   UserData,
   UserSignUp
 } from "@/models";
-import router from "@/router";
 import axios, { AxiosRequestConfig } from "axios";
 import _ from "lodash";
 
@@ -41,7 +43,7 @@ class ApiService {
   }
 
   async signOut() {
-    const _ = await axios.post(`${API_URL}/signout`);
+    await axios.post(`${API_URL}/signout`);
   }
 
   // Invitations
@@ -124,6 +126,20 @@ class ApiService {
     return `${u.protocol}//${u.host}${u.pathname}`;
   }
 
+  // Messages
+
+  recvMessages(): Promise<RecvMessage[]> {
+    return this.get(`/message/receive`);
+  }
+
+  markRead(msgId: MessageId): Promise<string> {
+    return this.post(`/message/read/${msgId}`);
+  }
+
+  sendMessage(msg: SendMessage): Promise<string> {
+    return this.post(`/message/send`, msg);
+  }
+
   // Beacon
 
   sendBeacon() {
@@ -186,8 +202,8 @@ class ApiService {
   }
 
   async redirectToSignIn() {
-    if (router.currentRoute.name != "SignIn") {
-      router.replace({ name: "SignIn" });
+    if (location.pathname !== "/signin") {
+      location.replace("/signin");
     }
   }
 }

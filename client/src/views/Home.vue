@@ -1,10 +1,10 @@
 <template>
   <main v-if="sessionUser" tag="main">
     <h1 class="sr-only">Overview</h1>
-    <h2 class="sr-only" v-if="currentRoom">Current Call</h2>
+    <h2 class="sr-only" v-if="currentVideoRoom">Current Call</h2>
     <transition name="appear">
       <jitsi-call
-        v-if="currentRoom"
+        v-if="currentVideoRoom"
         class="call"
         :room="currentRoom"
         :user="sessionUser"
@@ -30,20 +30,33 @@
         />
         <b-col
           v-else
-          cols="4"
+          cols="6"
           class="align-items-center d-flex flex-column justify-content-center"
         >
           <p class="h5">
-            You have not joined a room
+            You are invisible to others until you join a room
           </p>
-          <icon-button
-            v-if="roomsAreAvailable"
-            icon="dice"
+          <b-dropdown
             variant="primary"
-            @click="joinRandomRoom"
+            id="dropdown-1"
+            text="Join"
+            class="m-md-2"
           >
-            Random room
-          </icon-button>
+            <b-dropdown-item
+              v-if="roomsAreAvailable"
+              icon="dice"
+              @click="joinRandomRoom"
+            >
+              Random room
+            </b-dropdown-item>
+            <b-dropdown-item
+              v-if="waitingRooms.length > 0"
+              icon="dice"
+              @click="joinWaitingRoom"
+            >
+              Waiting area
+            </b-dropdown-item>
+          </b-dropdown>
         </b-col>
       </b-row>
     </section>
@@ -68,34 +81,59 @@ import { Component, Vue } from "vue-property-decorator";
 import RoomCard from "@/components/RoomCard.vue";
 import UserSummary from "@/components/UserSummary.vue";
 import JitsiCall from "@/components/JitsiCall.vue";
-import { Room } from "@/models";
+import { Room, RecvMessage, User } from "@/models";
 import { mapGetters } from "vuex";
 import _ from "lodash";
-
 import { faDice } from "@fortawesome/free-solid-svg-icons";
 import { library } from "@fortawesome/fontawesome-svg-core";
+import { BvEvent } from "bootstrap-vue";
 library.add(faDice);
 
 const SYNC_INTERVAL = 10000;
 
+function timeStampString(timeStamp: number) {
+  const date = new Date(timeStamp);
+  return date.toString().split(" GMT")[0];
+}
+
 @Component({
   components: { RoomCard, UserSummary, JitsiCall },
-  computed: mapGetters(["sessionUser", "currentRoom"])
+  computed: mapGetters(["sessionUser", "currentRoom", "waitingRooms"])
 })
 export default class Home extends Vue {
   syncing = false;
+  syncCount = 0;
+  msgSyncing = false;
+  msgQueue: RecvMessage[] = [];
   currentRoom!: Room;
   syncTimerHandler: number | null = null;
+  msgSyncTimerHandler: number | null = null;
+
+  get currentVideoRoom() {
+    const current = this.$store.getters.currentRoom;
+    return current && this.$store.getters.isVideoRoom(current);
+  }
 
   get roomsAreAvailable() {
     return this.availableRooms.length !== 0;
+  }
+
+  get emptyRoomsAreAvailable() {
+    return this.emptyRooms.length !== 0;
   }
 
   get availableRooms(): Room[] {
     return this.$store.getters.availableRooms;
   }
 
+  get emptyRooms(): Room[] {
+    return this.$store.getters.emptyRooms;
+  }
+
   mounted() {
+    this.$root.$on("bv::toast:hide", (event: BvEvent) => {
+      this.$store.dispatch("markAsRead", parseInt(event.componentId || "0"));
+    });
     this.sync();
   }
 
@@ -110,10 +148,32 @@ export default class Home extends Vue {
       return;
     }
     this.syncing = true;
-    this.$store.dispatch("sync").then(() => {
+    this.$store.dispatch("sync").then((messages: RecvMessage[]) => {
       this.syncing = false;
+      for (const m of messages) {
+        this.showMessage(m);
+      }
       this.syncTimerHandler = setTimeout(this.sync, SYNC_INTERVAL);
     });
+  }
+
+  showMessage(message: RecvMessage) {
+    const e = this.$createElement;
+    const sender: User | null = this.$store.getters.userById(message.senderId);
+    this.$bvToast.toast(
+      e("div", {}, [
+        e("i", {}, timeStampString(message.timestamp)),
+        e("div", {}, message.messageText)
+      ]),
+      {
+        id: message.messageId.toString(),
+        title: `${sender?.displayName} says ...`,
+        solid: true,
+        noAutoHide: true,
+        appendToast: true,
+        variant: "secondary"
+      }
+    );
   }
 
   joinRoom(roomId: string) {
@@ -126,6 +186,13 @@ export default class Home extends Vue {
 
   joinRandomRoom() {
     const random = _.sample(this.availableRooms);
+    if (random) {
+      this.$store.dispatch("joinRoom", random.id);
+    }
+  }
+
+  joinWaitingRoom() {
+    const random = _.sample(this.$store.getters.waitingRooms);
     if (random) {
       this.$store.dispatch("joinRoom", random.id);
     }

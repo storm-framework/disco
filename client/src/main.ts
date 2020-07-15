@@ -1,12 +1,9 @@
 // Polyfills
 import "core-js/stable";
-import "regenerator-runtime/runtime";
-
 import "mutationobserver-shim";
-
 // Introspect types
 import "reflect-metadata";
-
+import "regenerator-runtime/runtime";
 // Vue setup
 import Vue from "vue";
 import App from "./App.vue";

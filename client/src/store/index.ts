@@ -1,4 +1,4 @@
-import { Room, User } from "@/models";
+import { MessageId, RecvMessage, Room, User } from "@/models";
 import ApiService from "@/services/api";
 import _ from "lodash";
 import Vue from "vue";
@@ -7,15 +7,17 @@ import Vuex from "vuex";
 Vue.use(Vuex);
 
 interface State {
-  sessionUserId: string | null;
+  sessionUserId: number | null;
   users: { [key: string]: User };
   rooms: { [key: string]: Room };
+  receivedMessages: { [key: number]: boolean };
 }
 
 const initialState: State = {
   sessionUserId: null,
   users: {},
-  rooms: {}
+  rooms: {},
+  receivedMessages: {}
 };
 
 function addUsersToRoom(room: Room, users: User[]) {
@@ -55,6 +57,11 @@ export default new Vuex.Store({
       if (sessionUserId) {
         users[sessionUserId].room = null;
       }
+    },
+    markAsReceived(state, messages: RecvMessage[]) {
+      for (const m of messages) {
+        Vue.set(state.receivedMessages, m.messageId, true);
+      }
     }
   },
   actions: {
@@ -89,10 +96,21 @@ export default new Vuex.Store({
       ),
     signOut: ({ commit }) =>
       ApiService.signOut().then(() => commit("removeSessionUser")),
-    sync: ({ commit }) =>
-      Promise.all([ApiService.rooms(), ApiService.users()]).then(r =>
-        commit("sync", { rooms: r[0], users: r[1] })
-      ),
+    sync: ({ state, commit }) =>
+      Promise.all([
+        ApiService.rooms(),
+        ApiService.users(),
+        ApiService.recvMessages()
+      ]).then(r => {
+        const newMessages = _.filter(
+          r[2],
+          m => !state.receivedMessages[m.messageId]
+        );
+        commit("sync", { rooms: r[0], users: r[1] });
+        commit("markAsReceived", r[2]);
+        return newMessages;
+      }),
+    markAsRead: (_, messageId: MessageId) => ApiService.markRead(messageId),
     selectRoom: ({ commit }, roomId: string) => {
       commit("changeActiveRoom", roomId);
     },
@@ -105,6 +123,7 @@ export default new Vuex.Store({
       ApiService.leaveRoom().then(() => commit("leaveRoom"))
   },
   getters: {
+    allowDirectMessages: () => true,
     loggedIn: ({ sessionUserId }) => !!sessionUserId,
     sessionUser: ({ users, sessionUserId }) =>
       sessionUserId && users[sessionUserId],
@@ -119,6 +138,8 @@ export default new Vuex.Store({
         return getters.rooms;
       }
     },
+    waitingRooms: (_state, getters) =>
+      _.filter(getters.rooms, room => !getters.isVideoRoom(room)),
     roomUsers: ({ users }) => (roomId: string) =>
       _.filter(_.values(users), u => u.room == roomId),
     room: ({ rooms }, getters) => (roomId: string) =>
@@ -126,7 +147,11 @@ export default new Vuex.Store({
     currentRoom: (_state, getters) => {
       const currentRoomId = getters.sessionUser?.room;
       return currentRoomId && getters.room(currentRoomId);
-    }
+    },
+    isVideoRoom: () => (room: Room) =>
+      room && !room.zoomLink.includes("waiting-room"),
+    lobbyUsers: ({ users }) => _.filter(_.values(users), u => u.room == null),
+    userById: ({ users }) => (userId: string) => users[userId]
   },
   modules: {},
   strict: process.env.NODE_ENV !== "production"

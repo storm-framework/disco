@@ -2,6 +2,11 @@
 
 The app is divided in a [client](https://github.com/nilehmann/binah-apps/tree/master/covid/client) written with [vue.js](https://vuejs.org/) and a [server](https://github.com/nilehmann/binah-apps/tree/master/covid/server) written with Binah.
 
+## Flags
+
+- [x] Twiddle `allowDirectMessages` in the client if you want direct messages between participants.
+
+
 ## Development
 
 ### Get the code
@@ -42,3 +47,4 @@ For example, assuming you built the code with `build.sh` you can run the server 
 ```bash
 $ dist/disco --static=dist/static
 ```
+

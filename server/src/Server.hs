@@ -65,6 +65,7 @@ import           Controllers
 import           Controllers.Invitation
 import           Controllers.User
 import           Controllers.Room
+import           Controllers.Message
 import           Model
 import           Auth
 
@@ -109,7 +110,10 @@ runServer ServerOpts {..} = runNoLoggingT $ do
             post "/api/room/:id"           roomUpdate
             post "/api/room/:id/topic"     updateTopic
             post "/api/room/:id/join"      joinRoom
-            get "/api/signurl" presignS3URL
+            get "/api/signurl"             presignS3URL
+            post "/api/message/send"       sendMessage
+            post "/api/message/read/:id"   readMessage 
+            get  "/api/message/receive"    recvMessage 
 
             case optsStatic of
                 Just path -> fallback (sendFromDirectory path "index.html")

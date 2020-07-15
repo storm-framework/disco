@@ -50,3 +50,22 @@ export interface RoomData {
 export interface Room extends RoomData {
   id: number;
 }
+
+export type MessageId = number;
+
+export interface SendMessage {
+  senderId: number;
+  receiverId: number | null; // null = broadcast
+  messageText: string;
+  timestamp: number; // time since epoch
+}
+
+export interface RecvMessage extends SendMessage {
+  messageId: MessageId;
+}
+
+export interface MessageModal {
+  display: boolean;
+  message: string;
+  receiverId: number | null; // null = broadcast
+}
