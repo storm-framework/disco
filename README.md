@@ -2,18 +2,10 @@
 
 The app is divided in a [client](https://github.com/nilehmann/binah-apps/tree/master/covid/client) written with [vue.js](https://vuejs.org/) and a [server](https://github.com/nilehmann/binah-apps/tree/master/covid/server) written with Binah.
 
-## TODO
+## Flags
 
-- [Fancy Modal Message OK](https://bootstrap-vue.org/docs/components/modal#confirm-message-box)
-- [Modal Form](https://stackoverflow.com/questions/53269544/how-to-submit-form-data-from-b-modal-in-vue)
+- [x] Twiddle `allowDirectMessages` in the client if you want direct messages between participants.
 
-Issues
-
-- "Direct Message"
-- Move "Message" button to right of name in RoomCard/UserSummary
-- heartbeat @2s for messages, @10s for general sync?
-- refactor message-display-modal to use toasts
-- SERVER: check that BROADCAST is from ORGANIZER (!)
 
 ## Development
 
