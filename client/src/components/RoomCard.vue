@@ -164,8 +164,8 @@ export default class RoomCard extends Mixins(HeadingContext) {
   }
 
   get showLeave(): boolean {
-    const current = this.$store.getters.currentRoom;
-    const video = this.$store.getters.isVideoRoom(current);
+    // const current = this.$store.getters.currentRoom;
+    // const video = this.$store.getters.isVideoRoom(current);
     return !this.showJoin && this.isCurrentRoom; // && !video;
   }
 

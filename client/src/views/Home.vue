@@ -96,7 +96,7 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue, Watch } from "vue-property-decorator";
+import { Component, Vue } from "vue-property-decorator";
 import RoomCard from "@/components/RoomCard.vue";
 import UserSummary from "@/components/UserSummary.vue";
 import JitsiCall from "@/components/JitsiCall.vue";

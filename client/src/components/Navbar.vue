@@ -91,6 +91,5 @@ export default class Navbar extends Vue {
       .dispatch("signOut")
       .then(() => this.$router.push({ name: "SignIn" }));
   }
-
 }
 </script>

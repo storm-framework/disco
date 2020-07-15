@@ -44,7 +44,7 @@ class ApiService {
   }
 
   async signOut() {
-    const _ = await axios.post(`${API_URL}/signout`);
+    await axios.post(`${API_URL}/signout`);
   }
 
   // Invitations
