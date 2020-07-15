@@ -38,7 +38,8 @@ interface ApiService {
   updateRoom(roomId: number, data: RoomData): Promise<Room>;
   updateTopic(roomId: number, topic: string): Promise<Room>;
   updateRooms(updates: Room[], inserts: RoomData[]): Promise<number[]>;
-  joinRoom(roomId: number): Promise<string>;
+  joinRoom(roomId: number): Promise<void>;
+  joinRandom(): Promise<number>;
   leaveRoom(): Promise<void>;
 
   // Upload Files

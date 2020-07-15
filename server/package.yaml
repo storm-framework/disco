@@ -57,6 +57,8 @@ dependencies:
   - HaskellNet-SSL
   - mime-mail
   - cryptonite
+  - MonadRandom
+  - random-shuffle
 
 library:
   source-dirs: src

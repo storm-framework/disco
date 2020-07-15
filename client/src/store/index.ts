@@ -104,9 +104,13 @@ export default new Vuex.Store({
       commit("changeActiveRoom", roomId);
     },
     joinRoom: async ({ commit }, roomId: number) => {
-      const zoomLink = await ApiService.joinRoom(roomId);
+      await ApiService.joinRoom(roomId);
       commit("swithToRoom", roomId);
-      return zoomLink;
+    },
+    joinRandom: async ({ commit }) => {
+      const roomId = await ApiService.joinRandom();
+      commit("swithToRoom", roomId);
+      return roomId;
     },
     leaveRoom: ({ commit }) =>
       ApiService.leaveRoom().then(() => commit("leaveRoom"))

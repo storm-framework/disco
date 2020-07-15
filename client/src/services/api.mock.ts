@@ -11,6 +11,7 @@ import {
   UserData,
   UserSignUp
 } from "@/models";
+import _ from "lodash";
 
 function delay(ms = 1000) {
   if (process.env.NODE_ENV === "development") {
@@ -266,8 +267,13 @@ class ApiService {
     return Promise.reject("Not implemented");
   }
 
-  joinRoom(roomId: number): Promise<string> {
-    return Promise.resolve(ROOMS[roomId].zoomLink);
+  joinRoom(roomId: number): Promise<void> {
+    return Promise.resolve();
+  }
+
+  joinRandom(): Promise<number> {
+    const random = _.sample(Object.keys(ROOMS)) || "1";
+    return Promise.resolve(parseInt(random));
   }
 
   leaveRoom(): Promise<void> {

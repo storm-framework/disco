@@ -76,16 +76,13 @@ export default class Lobby extends Mixins(HeadingContext) {
   }
 
   joinRandomRoom() {
-    const random: Room | null = _.sample(this.$store.getters.availableRooms);
-    if (random) {
-      this.$store.dispatch("joinRoom", random.id).catch(error => {
-        if (error.response?.status == 409) {
-          this.showError("Sorry, but the room is already full");
-        } else {
-          this.showError("An unexpected error happend");
-        }
-      });
-    }
+    this.$store.dispatch("joinRandom").catch(error => {
+      if (error.response?.status == 409) {
+        this.showError("Sorry, but all rooms are currently full");
+      } else {
+        this.showError("An unexpected error happend");
+      }
+    });
   }
 }
 </script>

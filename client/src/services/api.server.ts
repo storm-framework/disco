@@ -83,7 +83,7 @@ class ApiService {
   }
 
   updateRoom(id: number, data: RoomData): Promise<Room> {
-    return this.post(`/room/${id}`, data);
+    return this.post(`/room/${id}/update`, data);
   }
 
   updateTopic(id: number, topic: string): Promise<Room> {
@@ -97,8 +97,12 @@ class ApiService {
     });
   }
 
-  joinRoom(roomId: number): Promise<string> {
+  joinRoom(roomId: number): Promise<void> {
     return this.post(`/room/${roomId}/join`);
+  }
+
+  joinRandom(): Promise<number> {
+    return this.post("/room/joinRandom");
   }
 
   leaveRoom(): Promise<void> {

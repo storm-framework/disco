@@ -27,6 +27,7 @@ import           Binah.Helpers
 import           Binah.Infrastructure
 import           Binah.Templates
 import           Binah.Frankie
+import           Crypto
 
 import           Controllers
 import           Model
@@ -140,13 +141,34 @@ joinRoom roomId = do
 
   whenT (currentRoom == Just roomId) (respondJSON status200 zoomLink)
 
+  ok <- tryJoinRoom viewerId room
+  if ok
+    then respondTagged (emptyResponse status200)
+    else respondError status409 (Just "Capacity Exceeded")
+
+joinRandom :: Controller ()
+joinRandom = do
+  viewer      <- requireAuthUser
+  viewerId    <- project userId' viewer
+  currentRoom <- project userRoom' viewer
+  rooms       <- selectList trueF
+  forT rooms $ \room -> do
+    ok <- tryJoinRoom viewerId room
+    whenT ok $ do
+      roomId <- project roomId' room
+      respondJSON status200 roomId
+  respondError status409 (Just "All rooms are full")
+
+tryJoinRoom :: UserId -> Entity Room -> Controller Bool
+tryJoinRoom viewerId room = do
+  roomId     <- project roomId' room
   usersCount <- count (userRoom' ==. Just roomId)
   capacity   <- project roomCapacity' room
   if capacity <= 0 || usersCount < capacity
     then do
       _ <- updateWhere (userId' ==. viewerId) (userRoom' `assign` Just roomId)
-      respondJSON status200 zoomLink
-    else respondError status409 (Just "Capacity Exceeded")
+      return True
+    else return False
 
 ----------------------------------------------------------------------------------------------------
 -- | Leave Room

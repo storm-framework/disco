@@ -1,11 +1,13 @@
 module Crypto
   ( encryptPassTIO'
+  , shuffleT
   , module Crypto.Scrypt
   )
 where
 
 import           Control.Monad.Time             ( MonadTime(..) )
-import           Crypto.JWT                     ( MonadRandom(..) )
+import qualified Crypto.Random                 as Crypto
+import qualified Control.Monad.Random          as Random
 import           Crypto.Scrypt
 import           Data.Text                      ( Text(..) )
 import qualified Data.Text.Encoding            as T
@@ -15,12 +17,23 @@ import           Controllers
 import           Binah.Infrastructure
 import           Binah.Filters
 import           Model
+import qualified System.Random.Shuffle         as Shuffle
 
-instance MonadRandom TIO where
-  getRandomBytes x = TIO (getRandomBytes x)
+instance Crypto.MonadRandom TIO where
+  getRandomBytes x = TIO (Crypto.getRandomBytes x)
+
+instance Random.MonadRandom TIO where
+  getRandom   = TIO Random.getRandom
+  getRandoms  = TIO Random.getRandoms
+  getRandomR  = TIO . Random.getRandomR
+  getRandomRs = TIO . Random.getRandomRs
 
 instance MonadTime TIO where
   currentTime = TIO currentTime
+
+{-@ assume shuffleT :: [a] -> TaggedT<{\_ -> True}, {\_ -> False}> _ [a] @-}
+shuffleT :: MonadTIO m => [a] -> TaggedT m [a]
+shuffleT = liftTIO . Shuffle.shuffleM
 
 ----------------------------------------------------------------------------------------------------
 -- | Scrypto

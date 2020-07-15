@@ -108,9 +108,10 @@ runServer ServerOpts {..} = runNoLoggingT $ do
             get "/api/room" roomGet
             post "/api/room"               roomBatchUpdate
             post "/api/room/current/leave" leaveRoom
-            post "/api/room/:id"           roomUpdate
+            post "/api/room/:id/update"    roomUpdate
             post "/api/room/:id/topic"     updateTopic
             post "/api/room/:id/join"      joinRoom
+            post "/api/room/joinRandom"    joinRandom
             get "/api/signurl" presignS3URL
             post "/api/message/send"     sendMessage
             post "/api/message/read/:id" readMessage
