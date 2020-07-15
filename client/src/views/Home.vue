@@ -1,28 +1,5 @@
 <template>
   <main v-if="sessionUser" tag="main">
-    <b-modal
-      id="showMessage"
-      title="Message"
-      :header-bg-variant="'info'"
-      :header-text-variant="'light'"
-      :body-bg-variant="'light'"
-      :body-text-variant="'dark'"
-      :footer-bg-variant="'dark'"
-      :footer-text-variant="'light'"
-      :ok-title="'Ok'"
-      @ok="receivedMessage"
-      ok-only
-      hide-header-close
-      no-close-on-esc
-      no-close-on-backdrop
-    >
-      <template slot="modal-title">
-        <h3>{{ messageModal.sender }} says ...</h3>
-      </template>
-      <p class="font-italic">At {{ messageModal.time }}</p>
-      <p>{{ messageModal.message }}</p>
-    </b-modal>
-
     <h1 class="sr-only">Overview</h1>
     <h2 class="sr-only" v-if="currentVideoRoom">Current Call</h2>
     <transition name="appear">
@@ -123,15 +100,15 @@ import { Component, Vue, Watch } from "vue-property-decorator";
 import RoomCard from "@/components/RoomCard.vue";
 import UserSummary from "@/components/UserSummary.vue";
 import JitsiCall from "@/components/JitsiCall.vue";
-import { Room, RecvMessage } from "@/models";
+import { Room, RecvMessage, User } from "@/models";
 import { mapGetters } from "vuex";
 import _ from "lodash";
 import { faDice } from "@fortawesome/free-solid-svg-icons";
 import { library } from "@fortawesome/fontawesome-svg-core";
+import { BvEvent } from "bootstrap-vue";
 library.add(faDice);
 
 const SYNC_INTERVAL = 10000;
-const MSG_SYNC_INTERVAL = 1000;
 
 function timeStampString(timeStamp: number) {
   const date = new Date(timeStamp);
@@ -150,14 +127,6 @@ export default class Home extends Vue {
   currentRoom!: Room;
   syncTimerHandler: number | null = null;
   msgSyncTimerHandler: number | null = null;
-
-  messageModal = {
-    display: false,
-    sender: "",
-    time: "",
-    message: "",
-    messageId: -1
-  };
 
   get currentVideoRoom() {
     const current = this.$store.getters.currentRoom;
@@ -181,67 +150,16 @@ export default class Home extends Vue {
   }
 
   mounted() {
+    this.$root.$on("bv::toast:hide", (event: BvEvent) => {
+      this.$store.dispatch("markAsRead", parseInt(event.componentId || "0"));
+    });
     this.sync();
-    this.msgSync();
   }
 
   beforeDestroy() {
-    console.log("ABOUT TO DESTROY");
     if (this.syncTimerHandler) {
       clearTimeout(this.syncTimerHandler);
     }
-    if (this.msgSyncTimerHandler) {
-      clearTimeout(this.msgSyncTimerHandler);
-    }
-  }
-
-  // trigger message alerts when msgQueue changes, by popping first message
-  // and displaying it as a modal: the handler for the 'ok' will recursively
-  // retrigger to drain more messages.
-  @Watch("msgQueue")
-  showMessages() {
-    // console.log("showMessages", this.msgQueue);
-    const paused = this.$store.getters.isPauseAlert;
-
-    if (paused) {
-      // console.log("is-paused-alert");
-      return;
-    }
-    if (this.msgQueue.length == 0) {
-      // console.log("is-no-more-messages");
-      return;
-    }
-    // pop first msg
-    const msg = this.msgQueue[0];
-    this.msgQueue.shift();
-
-    // display it
-    this.showMessage(msg);
-  }
-
-  showMessage(msg: RecvMessage) {
-    const isRead = this.$store.getters.isRead(msg.messageId);
-    if (isRead) {
-      this.showMessages();
-    } else {
-      this.$store.dispatch("pauseAlerts").then(() => {
-        this.messageModal.sender = this.$store.getters.userById(
-          msg.senderId
-        ).displayName;
-        this.messageModal.time = timeStampString(msg.timestamp);
-        this.messageModal.message = msg.messageText;
-        this.messageModal.messageId = msg.messageId;
-        this.$bvModal.show("showMessage");
-      });
-    }
-  }
-
-  receivedMessage() {
-    this.$bvModal.hide("showMessage");
-    this.$store.dispatch("markRead", this.messageModal.messageId).then(() => {
-      // console.log("resume-messages");
-      this.showMessages();
-    });
   }
 
   sync() {
@@ -249,36 +167,32 @@ export default class Home extends Vue {
       return;
     }
     this.syncing = true;
-    this.$store.dispatch("sync").then(() => {
+    this.$store.dispatch("sync").then((messages: RecvMessage[]) => {
       this.syncing = false;
+      for (const m of messages) {
+        this.showMessage(m);
+      }
       this.syncTimerHandler = setTimeout(this.sync, SYNC_INTERVAL);
     });
-    // this.getMessages();
   }
 
-  // update msgQueue with messages
-  // getMessages() {
-  //   this.$store.dispatch("recvMessages").then(msgs => {
-  //     if (msgs.length > 0) {
-  //       // console.log("getMessages", msgs);
-  //       this.msgQueue = msgs;
-  //     }
-  //   });
-  // }
-
-  msgSync() {
-    if (this.msgSyncing) {
-      return;
-    }
-    this.msgSyncing = true;
-    this.$store.dispatch("recvMessages").then(msgs => {
-      // console.log("getMessages", msgs);
-      this.msgSyncing = false;
-      this.msgSyncTimerHandler = setTimeout(this.msgSync, MSG_SYNC_INTERVAL);
-      if (msgs.length > 0) {
-        this.msgQueue = msgs;
+  showMessage(message: RecvMessage) {
+    const e = this.$createElement;
+    const sender: User | null = this.$store.getters.userById(message.senderId);
+    this.$bvToast.toast(
+      e("div", {}, [
+        e("i", {}, timeStampString(message.timestamp)),
+        e("div", {}, message.messageText)
+      ]),
+      {
+        id: message.messageId.toString(),
+        title: `${sender?.displayName} says ...`,
+        solid: true,
+        noAutoHide: true,
+        appendToast: true,
+        variant: "secondary"
       }
-    });
+    );
   }
 
   joinRoom(roomId: string) {

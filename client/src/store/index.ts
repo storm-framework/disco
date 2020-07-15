@@ -1,4 +1,4 @@
-import { Room, User, RecvMessage, MessageId } from "@/models";
+import { MessageId, RecvMessage, Room, User } from "@/models";
 import ApiService from "@/services/api";
 import _ from "lodash";
 import Vue from "vue";
@@ -10,18 +10,14 @@ interface State {
   sessionUserId: string | null;
   users: { [key: string]: User };
   rooms: { [key: string]: Room };
-  newMessages: RecvMessage[];
-  readMessages: { [key: number]: boolean };
-  pauseAlerts: boolean;
+  receivedMessages: { [key: number]: boolean };
 }
 
 const initialState: State = {
   sessionUserId: null,
   users: {},
   rooms: {},
-  newMessages: [],
-  readMessages: {},
-  pauseAlerts: false
+  receivedMessages: {}
 };
 
 function addUsersToRoom(room: Room, users: User[]) {
@@ -34,17 +30,9 @@ function addUsersToRoom(room: Room, users: User[]) {
 export default new Vuex.Store({
   state: initialState,
   mutations: {
-    sync(
-      state,
-      {
-        rooms,
-        users,
-        rcvMsgs
-      }: { rooms: Room[]; users: User[]; rcvMsgs: RecvMessage[] }
-    ) {
+    sync(state, { rooms, users }: { rooms: Room[]; users: User[] }) {
       state.rooms = Object.fromEntries(rooms.map(r => [r.id, r]));
       state.users = Object.fromEntries(users.map(u => [u.id, u]));
-      state.newMessages = rcvMsgs;
     },
     updateRoom({ rooms }, room: Room) {
       // We assume the room is already in the store. if it isn't this won't trigger reactivity
@@ -70,17 +58,10 @@ export default new Vuex.Store({
         users[sessionUserId].room = null;
       }
     },
-    clearMessages(state) {
-      state.newMessages = [];
-    },
-    markRead(state, msgId: MessageId) {
-      state.readMessages[msgId] = true;
-    },
-    pauseAlerts(state) {
-      state.pauseAlerts = true;
-    },
-    resumeAlerts(state) {
-      state.pauseAlerts = false;
+    markAsReceived(state, messages: RecvMessage[]) {
+      for (const m of messages) {
+        Vue.set(state.receivedMessages, m.messageId, true);
+      }
     }
   },
   actions: {
@@ -115,12 +96,21 @@ export default new Vuex.Store({
       ),
     signOut: ({ commit }) =>
       ApiService.signOut().then(() => commit("removeSessionUser")),
-    sync: ({ commit }) =>
+    sync: ({ state, commit }) =>
       Promise.all([
         ApiService.rooms(),
         ApiService.users(),
         ApiService.recvMessages()
-      ]).then(r => commit("sync", { rooms: r[0], users: r[1], rcvMsgs: r[2] })),
+      ]).then(r => {
+        const newMessages = _.filter(
+          r[2],
+          m => !state.receivedMessages[m.messageId]
+        );
+        commit("sync", { rooms: r[0], users: r[1] });
+        commit("markAsReceived", r[2]);
+        return newMessages;
+      }),
+    markAsRead: (_, messageId: MessageId) => ApiService.markRead(messageId),
     selectRoom: ({ commit }, roomId: string) => {
       commit("changeActiveRoom", roomId);
     },
@@ -130,28 +120,10 @@ export default new Vuex.Store({
       return zoomLink;
     },
     leaveRoom: ({ commit }) =>
-      ApiService.leaveRoom().then(() => commit("leaveRoom")),
-    recvMessages: ({ commit, state }) => {
-      const myUserId = state.sessionUserId;
-      if (myUserId) {
-        const curMessages = state.newMessages.filter(
-          m =>
-            m.senderId.toString() != myUserId &&
-            !state.readMessages[m.messageId]
-        );
-        commit("clearMessages");
-        return curMessages;
-      }
-    },
-    markRead: ({ commit }, msgId: MessageId) => {
-      commit("markRead", msgId);
-      commit("resumeAlerts");
-      ApiService.markRead(msgId);
-    },
-    pauseAlerts: ({ commit }) => commit("pauseAlerts")
+      ApiService.leaveRoom().then(() => commit("leaveRoom"))
   },
   getters: {
-    allowDirectMessages: () => false, 
+    allowDirectMessages: () => false,
     loggedIn: ({ sessionUserId }) => !!sessionUserId,
     sessionUser: ({ users, sessionUserId }) =>
       sessionUserId && users[sessionUserId],
@@ -179,9 +151,7 @@ export default new Vuex.Store({
     isVideoRoom: () => (room: Room) =>
       room && !room.zoomLink.includes("waiting-room"),
     lobbyUsers: ({ users }) => _.filter(_.values(users), u => u.room == null),
-    userById: ({ users }) => (userId: string) => users[userId],
-    isRead: ({ readMessages }) => (msgId: MessageId) => readMessages[msgId],
-    isPauseAlert: ({ pauseAlerts }) => pauseAlerts
+    userById: ({ users }) => (userId: string) => users[userId]
   },
   modules: {},
   strict: process.env.NODE_ENV !== "production"

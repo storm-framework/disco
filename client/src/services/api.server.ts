@@ -1,14 +1,14 @@
 import {
   Invitation,
   InvitationInsert,
+  MessageId,
+  RecvMessage,
   Room,
   RoomData,
+  SendMessage,
   User,
   UserData,
-  UserSignUp,
-  RecvMessage,
-  MessageId,
-  SendMessage
+  UserSignUp
 } from "@/models";
 import router from "@/router";
 import axios, { AxiosRequestConfig } from "axios";
