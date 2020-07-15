@@ -20,13 +20,6 @@ const initialState: State = {
   receivedMessages: {}
 };
 
-function addUsersToRoom(room: Room, users: User[]) {
-  return {
-    users,
-    ...room
-  };
-}
-
 export default new Vuex.Store({
   state: initialState,
   mutations: {
@@ -114,7 +107,7 @@ export default new Vuex.Store({
     selectRoom: ({ commit }, roomId: string) => {
       commit("changeActiveRoom", roomId);
     },
-    joinRoom: async ({ commit }, roomId: string) => {
+    joinRoom: async ({ commit }, roomId: number) => {
       const zoomLink = await ApiService.joinRoom(roomId);
       commit("swithToRoom", roomId);
       return zoomLink;
@@ -142,16 +135,19 @@ export default new Vuex.Store({
       _.filter(getters.rooms, room => !getters.isVideoRoom(room)),
     roomUsers: ({ users }) => (roomId: string) =>
       _.filter(_.values(users), u => u.room == roomId),
-    room: ({ rooms }, getters) => (roomId: string) =>
-      rooms[roomId] && addUsersToRoom(rooms[roomId], getters.roomUsers(roomId)),
-    currentRoom: (_state, getters) => {
+    currentRoom: ({ rooms }, getters) => {
       const currentRoomId = getters.sessionUser?.room;
-      return currentRoomId && getters.room(currentRoomId);
+      return currentRoomId && rooms[currentRoomId];
     },
     isVideoRoom: () => (room: Room) =>
       room && !room.zoomLink.includes("waiting-room"),
     lobbyUsers: ({ users }) => _.filter(_.values(users), u => u.room == null),
-    userById: ({ users }) => (userId: string) => users[userId]
+    userById: ({ users }) => (userId: string) => users[userId],
+    roomIsFull: ({ rooms }, getters) => (roomId: number) => {
+      const usersCount = getters.roomUsers(roomId).length;
+      const capacity = rooms[roomId]?.capacity || 0;
+      return capacity > 0 && usersCount >= capacity;
+    }
   },
   modules: {},
   strict: process.env.NODE_ENV !== "production"

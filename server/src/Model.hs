@@ -48,6 +48,7 @@ module Model
   , roomColor'
   , roomName'
   , roomTopic'
+  , roomCapacity'
   , roomZoomLink'
   , messageId'
   , messageSender'
@@ -111,6 +112,7 @@ Room
   color Text
   name Text
   topic Text
+  capacity Int
   zoomLink Text
   
 
@@ -536,14 +538,15 @@ userRoom' = EntityFieldWrapper UserRoom
      x_0: Text
   -> x_1: Text
   -> x_2: Text
-  -> x_3: Text
+  -> x_3: Int
+  -> x_4: Text
   -> BinahRecord <
-       {\row -> roomColor (entityVal row) == x_0 && roomName (entityVal row) == x_1 && roomTopic (entityVal row) == x_2 && roomZoomLink (entityVal row) == x_3}
+       {\row -> roomColor (entityVal row) == x_0 && roomName (entityVal row) == x_1 && roomTopic (entityVal row) == x_2 && roomCapacity (entityVal row) == x_3 && roomZoomLink (entityVal row) == x_4}
      , {\_ viewer -> IsOrganizer viewer}
      , {\x_0 x_1 -> False}
      > Room
 @-}
-mkRoom x_0 x_1 x_2 x_3 = BinahRecord (Room x_0 x_1 x_2 x_3)
+mkRoom x_0 x_1 x_2 x_3 x_4 = BinahRecord (Room x_0 x_1 x_2 x_3 x_4)
 
 {-@ invariant {v: Entity Room | v == getJust (entityKey v)} @-}
 
@@ -604,6 +607,21 @@ roomName' = EntityFieldWrapper RoomName
 @-}
 roomTopic' :: EntityFieldWrapper Room Text
 roomTopic' = EntityFieldWrapper RoomTopic
+
+{-@ measure roomCapacity :: Room -> Int @-}
+
+{-@ measure roomCapacityCap :: Entity Room -> Bool @-}
+
+{-@ assume roomCapacity' :: EntityFieldWrapper <
+    {\_ _ -> True}
+  , {\row field -> field == roomCapacity (entityVal row)}
+  , {\field row -> field == roomCapacity (entityVal row)}
+  , {\old -> roomCapacityCap old}
+  , {\x_0 x_1 x_2 -> ((IsOrganizer x_2)) => (roomCapacityCap x_0)}
+  > Room Int
+@-}
+roomCapacity' :: EntityFieldWrapper Room Int
+roomCapacity' = EntityFieldWrapper RoomCapacity
 
 {-@ measure roomZoomLink :: Room -> Text @-}
 

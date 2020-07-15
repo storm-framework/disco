@@ -10,6 +10,7 @@
               <th class="room-color sr-only">Color</th>
               <th class="room-name">Name</th>
               <th class="room-topic">Topic</th>
+              <th class="room-capacity">Capacity</th>
               <th class="room-url">URL</th>
             </tr>
           </thead>
@@ -26,6 +27,9 @@
               </td>
               <td class="room-topic">
                 <b-form-input type="text" v-model="room.topic" />
+              </td>
+              <td class="room-capacity">
+                <b-form-input type="number" v-model="room.capacity" />
               </td>
               <td class="room-url">
                 <b-form-input type="url" v-model="room.zoomLink" required />
@@ -68,6 +72,7 @@ interface OldRoom {
   name: string;
   zoomLink: string;
   color: string;
+  capacity: string;
   topic: string;
 }
 
@@ -75,13 +80,14 @@ interface NewRoom {
   name: string;
   zoomLink: string;
   color: string;
+  capacity: string;
   topic: string;
 }
 
 function parseNewRoom(row: NewRoom): RoomData {
   return {
     name: row.name,
-    capacity: 10,
+    capacity: parseInt(row.capacity),
     zoomLink: row.zoomLink,
     color: row.color,
     topic: row.topic
@@ -182,6 +188,7 @@ export default class SignIn extends Vue {
             name: r.name,
             color: r.color,
             topic: r.topic,
+            capacity: r.capacity.toString(),
             zoomLink: r.zoomLink
           };
         });
@@ -203,6 +210,7 @@ export default class SignIn extends Vue {
       name: `${name} Room`,
       zoomLink: randomJitsiLink(),
       topic: "",
+      capacity: "0",
       color: color
     });
   }
@@ -285,8 +293,12 @@ main {
   @include make-col(4);
 }
 
+.room-capacity {
+  @include make-col(1);
+}
+
 .room-url {
-  @include make-col(4);
+  @include make-col(3);
 }
 
 .save {

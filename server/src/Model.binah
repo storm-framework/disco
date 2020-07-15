@@ -59,6 +59,7 @@ Room
   color Text
   name Text
   topic Text
+  capacity Int
   zoomLink Text
 
   insert {\_ viewer -> IsOrganizer viewer}

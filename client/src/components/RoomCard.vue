@@ -159,14 +159,12 @@ export default class RoomCard extends Mixins(HeadingContext) {
 
   get showJoin(): boolean {
     const current = this.$store.getters.currentRoom;
-    const video = this.$store.getters.isVideoRoom(current);
-    return !current || (!video && !this.isCurrentRoom);
+    const isFull = this.$store.getters.roomIsFull(this.room.id);
+    return !current && !isFull;
   }
 
   get showLeave(): boolean {
-    // const current = this.$store.getters.currentRoom;
-    // const video = this.$store.getters.isVideoRoom(current);
-    return !this.showJoin && this.isCurrentRoom; // && !video;
+    return this.isCurrentRoom;
   }
 
   isExpanded(user: User) {
@@ -182,7 +180,22 @@ export default class RoomCard extends Mixins(HeadingContext) {
   }
 
   joinRoom() {
-    this.$store.dispatch("joinRoom", this.room.id);
+    this.$store.dispatch("joinRoom", this.room.id).catch(error => {
+      if (error.response?.status == 409) {
+        this.showError("Sorry, but the room is already full");
+      } else {
+        this.showError("An unexpected error happend");
+      }
+    });
+  }
+
+  showError(msg: string) {
+    this.$bvToast.toast(msg, {
+      title: "Error",
+      toaster: "b-toaster-top-center",
+      variant: "danger",
+      solid: true
+    });
   }
 
   leaveRoom() {

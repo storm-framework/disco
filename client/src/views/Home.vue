@@ -132,7 +132,10 @@ export default class Home extends Vue {
 
   mounted() {
     this.$root.$on("bv::toast:hide", (event: BvEvent) => {
-      this.$store.dispatch("markAsRead", parseInt(event.componentId || "0"));
+      const m = /MESSAGE::(\d+)/.exec(event.componentId || "");
+      if (m && m[1]) {
+        this.$store.dispatch("markAsRead", parseInt(m[1]));
+      }
     });
     this.sync();
   }
@@ -166,7 +169,7 @@ export default class Home extends Vue {
         e("div", {}, message.messageText)
       ]),
       {
-        id: message.messageId.toString(),
+        id: `MESSAGE::${message.messageId}`,
         title: `${sender?.displayName} says ...`,
         solid: true,
         noAutoHide: true,
@@ -176,8 +179,14 @@ export default class Home extends Vue {
     );
   }
 
-  joinRoom(roomId: string) {
-    this.$store.dispatch("joinRoom", roomId);
+  joinRoom(roomId: number) {
+    this.$store.dispatch("joinRoom", roomId).catch(error => {
+      if (error.response?.status == 409) {
+        this.showError("Sorry, but the room is already full");
+      } else {
+        this.showError("An unexpected error happend");
+      }
+    });
   }
 
   leaveRoom() {
@@ -187,15 +196,24 @@ export default class Home extends Vue {
   joinRandomRoom() {
     const random = _.sample(this.availableRooms);
     if (random) {
-      this.$store.dispatch("joinRoom", random.id);
+      this.joinRoom(random.id);
     }
   }
 
   joinWaitingRoom() {
     const random = _.sample(this.$store.getters.waitingRooms);
     if (random) {
-      this.$store.dispatch("joinRoom", random.id);
+      this.joinRoom(random.id);
     }
+  }
+
+  showError(msg: string) {
+    this.$bvToast.toast(msg, {
+      title: "Error",
+      toaster: "b-toaster-top-center",
+      variant: "danger",
+      solid: true
+    });
   }
 }
 </script>

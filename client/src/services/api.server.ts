@@ -96,7 +96,7 @@ class ApiService {
     });
   }
 
-  joinRoom(roomId: string): Promise<string> {
+  joinRoom(roomId: number): Promise<string> {
     return this.post(`/room/${roomId}/join`);
   }
 

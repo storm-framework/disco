@@ -1,14 +1,14 @@
 import {
   Invitation,
   InvitationInsert,
+  MessageId,
+  RecvMessage,
   Room,
   RoomData,
+  SendMessage,
   User,
   UserData,
-  UserSignUp,
-  RecvMessage,
-  SendMessage,
-  MessageId
+  UserSignUp
 } from "@/models";
 
 function delay(ms = 1000) {
@@ -259,7 +259,7 @@ class ApiService {
     return Promise.reject("Not implemented");
   }
 
-  joinRoom(roomId: string): Promise<string> {
+  joinRoom(roomId: number): Promise<string> {
     return Promise.resolve(ROOMS[roomId].zoomLink);
   }
 

@@ -78,6 +78,7 @@ roomUpdate roomId = do
         (roomColor' `assign` insertColor)
           `combine` (roomName' `assign` insertName)
           `combine` (roomTopic' `assign` insertTopic)
+          `combine` (roomCapacity' `assign` insertCapacity)
           `combine` (roomZoomLink' `assign` insertZoomLink)
   _        <- updateWhere (roomId' ==. roomId) up
   room     <- selectFirstOr notFoundJSON (roomId' ==. roomId)
@@ -99,14 +100,17 @@ roomBatchUpdate = do
   _                         <- checkOrganizer viewer
   (PostReq inserts updates) <- decodeBody
 
-  let rooms =
-        map (\RoomInsert {..} -> mkRoom insertColor insertName insertTopic insertZoomLink) inserts
+  let rooms = map
+        (\RoomInsert {..} -> mkRoom insertColor insertName insertTopic insertCapacity insertZoomLink
+        )
+        inserts
   ids <- insertMany rooms
   _   <- forT updates $ \RoomData {..} -> do
     let up =
           (roomColor' `assign` roomColor)
             `combine` (roomName' `assign` roomName)
             `combine` (roomTopic' `assign` roomTopic)
+            `combine` (roomCapacity' `assign` roomCapacity)
             `combine` (roomZoomLink' `assign` roomZoomLink)
     updateWhere (roomId' ==. roomId) up
 
@@ -128,12 +132,21 @@ instance FromJSON PostReq where
 {-@ joinRoom :: _ -> TaggedT<{\_ -> False}, {\_ -> True}> _ _ @-}
 joinRoom :: RoomId -> Controller ()
 joinRoom roomId = do
-  viewer   <- requireAuthUser
-  viewerId <- project userId' viewer
-  room     <- selectFirstOr notFoundJSON (roomId' ==. roomId)
-  _        <- updateWhere (userId' ==. viewerId) (userRoom' `assign` Just roomId)
-  zoomLink <- project roomZoomLink' room
-  respondJSON status200 zoomLink
+  viewer      <- requireAuthUser
+  viewerId    <- project userId' viewer
+  currentRoom <- project userRoom' viewer
+  room        <- selectFirstOr notFoundJSON (roomId' ==. roomId)
+  zoomLink    <- project roomZoomLink' room
+
+  whenT (currentRoom == Just roomId) (respondJSON status200 zoomLink)
+
+  usersCount <- count (userRoom' ==. Just roomId)
+  capacity   <- project roomCapacity' room
+  if capacity <= 0 || usersCount < capacity
+    then do
+      _ <- updateWhere (userId' ==. viewerId) (userRoom' `assign` Just roomId)
+      respondJSON status200 zoomLink
+    else respondError status409 (Just "Capacity Exceeded")
 
 ----------------------------------------------------------------------------------------------------
 -- | Leave Room
@@ -168,6 +181,7 @@ extractRoomData room =
     <*>    project roomColor'    room
     <*>    project roomName'     room
     <*>    project roomTopic'    room
+    <*>    project roomCapacity' room
     <*>    project roomZoomLink' room
 
 -- | RoomInsert
@@ -176,6 +190,7 @@ data RoomInsert = RoomInsert
   { insertColor :: Text
   , insertName :: Text
   , insertTopic :: Text
+  , insertCapacity :: Int
   , insertZoomLink :: Text
   }
   deriving Generic
@@ -193,6 +208,7 @@ data RoomData = RoomData
   , roomColor :: Text
   , roomName :: Text
   , roomTopic :: Text
+  , roomCapacity :: Int
   , roomZoomLink :: Text
   }
   deriving Generic
