@@ -16,7 +16,7 @@ interface State {
 }
 
 const initialState: State = {
-  sessionUserId: ApiService.sessionUserId,
+  sessionUserId: null,
   users: {},
   rooms: {},
   newMessages: [],
@@ -47,7 +47,7 @@ export default new Vuex.Store({
       state.newMessages = rcvMsgs;
     },
     updateRoom({ rooms }, room: Room) {
-      // We assume the room is already in the store. if it's not this won't trigger reactivity
+      // We assume the room is already in the store. if it isn't this won't trigger reactivity
       rooms[room.id] = room;
     },
     swithToRoom(state, roomId) {
@@ -94,13 +94,11 @@ export default new Vuex.Store({
         commit("updateUser", user);
         commit("setSessionUser", user.id);
       }),
-    syncSessionUser: ({ dispatch, state }) => {
-      if (state.sessionUserId !== null) {
-        return dispatch("syncUser", state.sessionUserId);
-      } else {
-        return Promise.resolve();
-      }
-    },
+    syncSessionUser: ({ commit }) =>
+      ApiService.user("me").then(user => {
+        commit("updateUser", user);
+        commit("setSessionUser", user.id);
+      }),
     syncUser: ({ commit }, userId: number) =>
       ApiService.user(userId).then(user => commit("updateUser", user)),
     updateUserDataMe: ({ commit }, data) =>
@@ -109,6 +107,10 @@ export default new Vuex.Store({
       ),
     updateRoom: ({ commit }, { roomId, data }) =>
       ApiService.updateRoom(roomId, data).then(room =>
+        commit("updateRoom", room)
+      ),
+    updateTopic: ({ commit }, { roomId, topic }) =>
+      ApiService.updateTopic(roomId, topic).then(room =>
         commit("updateRoom", room)
       ),
     signOut: ({ commit }) =>

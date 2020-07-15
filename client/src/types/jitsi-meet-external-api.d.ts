@@ -8,6 +8,7 @@ declare module "jitsi-meet-external-api" {
     doNotStoreRoom?: boolean;
     enableClosePage?: boolean;
     transcribingEnabled?: boolean;
+    prejoinPageEnabled?: boolean;
     // ...
   }
 

@@ -73,12 +73,7 @@ export default class Navbar extends Vue {
   // };
 
   mounted() {
-    this.$store.dispatch("syncSessionUser").catch(error => {
-      // Don't panic if the user is not yet authenticated
-      if (error?.response?.status !== 401) {
-        throw error;
-      }
-    });
+    this.$store.dispatch("syncSessionUser");
   }
 
   get isOrganizer() {

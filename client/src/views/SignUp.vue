@@ -8,7 +8,7 @@
     class="form-signup"
     bg-color="#f5f5f5"
   >
-    <b-container>
+    <b-container class="mt-4">
       <b-alert :show="error" variant="danger" :dismissible="!fatalError">
         {{ errorMsg }}
       </b-alert>

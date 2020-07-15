@@ -199,10 +199,9 @@ export default class RoomCard extends Mixins(HeadingContext) {
       return;
     }
     const topic = _.trim(this.topic).substring(0, this.topicMaxLength);
-    const data = { ...this.room, topic };
     this.saving = true;
     this.$store
-      .dispatch("updateRoom", { roomId: this.room.id, data })
+      .dispatch("updateTopic", { roomId: this.room.id, topic })
       .finally(() => {
         this.saving = false;
         this.editingTopic = false;

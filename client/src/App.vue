@@ -12,13 +12,20 @@ import { Vue, Component } from "vue-property-decorator";
 import Navbar from "@/components/Navbar.vue";
 import router from "@/router";
 import store from "@/store";
+import ApiService from "@/services/api";
 
 @Component({
   store,
   router,
   components: { Navbar }
 })
-export default class App extends Vue {}
+export default class App extends Vue {
+  created() {
+    window.addEventListener("unload", function logData() {
+      ApiService.sendBeacon();
+    });
+  }
+}
 </script>
 
 <style lang="scss">

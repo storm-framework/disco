@@ -80,12 +80,20 @@ instance ToJSON UserData where
 ----------------------------------------------------------------------------------------------------
 
 {-@ userGet :: _ -> TaggedT<{\_ -> False}, {\_ -> True}> _ _ @-}
-userGet :: UserId -> Controller ()
-userGet userId = do
-  _        <- requireAuthUser
+userGet :: UserIdOrMe -> Controller ()
+userGet userIdOrMe = do
+  viewer <- requireAuthUser
+  userId <- case userIdOrMe of
+    Me             -> project userId' viewer
+    AUserId userId -> return userId
   user     <- selectFirstOr notFoundJSON (userId' ==. userId)
   userData <- extractUserData user
   respondJSON status200 userData
+
+data UserIdOrMe = AUserId UserId | Me
+
+instance Parseable UserIdOrMe where
+  parseText t = if t == "me" then Just Me else fmap AUserId (parseText t)
 
 ----------------------------------------------------------------------------------------------------
 -- | User Update

@@ -178,24 +178,14 @@ const SESSION_USER_ID = "1";
 
 /* eslint-disable @typescript-eslint/no-unused-vars */
 class ApiService {
-  constructor(private accessToken: string | null) {}
-
   readUpto: MessageId = 0;
 
   currentClock = 0;
-
-  get sessionUserId(): string | null {
-    if (!this.accessToken) {
-      return null;
-    }
-    return SESSION_USER_ID;
-  }
 
   // Auth
 
   async signIn(emailAddress: string, password: string): Promise<User> {
     await delay();
-    this.accessToken = "accessToken";
     return USERS[SESSION_USER_ID];
   }
 
@@ -204,12 +194,7 @@ class ApiService {
     return USERS[SESSION_USER_ID];
   }
 
-  signedIn() {
-    return this.accessToken !== null;
-  }
-
   signOut() {
-    this.accessToken = null;
     return Promise.resolve();
   }
 
@@ -230,9 +215,10 @@ class ApiService {
 
   // Users
 
-  async user(userId: number): Promise<User> {
+  async user(userIdOrMe: number | "me"): Promise<User> {
     await delay();
-    const user = USERS[SESSION_USER_ID];
+    const userId = userIdOrMe == "me" ? SESSION_USER_ID : userIdOrMe;
+    const user = USERS[userId];
     if (user) {
       return user;
     } else {
@@ -317,6 +303,12 @@ class ApiService {
     return Promise.resolve("ok");
   }
 
+  // Beacon
+
+  sendBeacon() {
+    return;
+  }
+
   // Errors
 
   errorResponse(status: number): Promise<any> {
@@ -324,4 +316,4 @@ class ApiService {
   }
 }
 
-export default new ApiService("accessToken");
+export default new ApiService();
