@@ -33,6 +33,8 @@ import SendMessage from "@/components/SendMessage.vue";
   components: { SendMessage }
 })
 export default class Navbar extends Vue {
+  // The navBar is in charge of syncing the session user with the backend.
+  // Other components rely on this.
   mounted() {
     this.$store.dispatch("syncSessionUser");
   }
