@@ -37,7 +37,7 @@
             You are invisible to others until you join a room
           </p>
           <b-dropdown
-            variant="primary"
+            variant="success"
             id="dropdown-1"
             text="Join"
             class="m-md-2"

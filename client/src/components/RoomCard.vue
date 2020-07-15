@@ -75,8 +75,8 @@
 
       <icon-button
         v-if="showJoin"
-        icon="phone"
-        variant="primary"
+        icon="video"
+        variant="outline-success"
         @click="joinRoom"
       >
         Join
@@ -110,6 +110,7 @@ import { library } from "@fortawesome/fontawesome-svg-core";
 import {
   faComments,
   faPhone,
+  faVideo,
   faEdit,
   faExternalLinkAlt,
   faSave,
@@ -120,6 +121,7 @@ import {
 library.add(
   faComments,
   faPhone,
+  faVideo,
   faEdit,
   faExternalLinkAlt,
   faSave,

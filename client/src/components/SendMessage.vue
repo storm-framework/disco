@@ -35,8 +35,8 @@ export default class SendMessage extends Vue {
   @Prop({ default: "message-modal" })
   modalId!: string;
 
-  @Prop({ default: "Send Message" })
-  modalTitle!: string;
+  // @Prop({ default: "Send Message" })
+  // modalTitle!: string;
 
   @Prop({ default: null })
   receiver!: number | null;
@@ -44,6 +44,16 @@ export default class SendMessage extends Vue {
   message = "";
 
   name = "send-message";
+
+  get modalTitle() {
+    let receiverName: string;
+    if (this.receiver) {
+      receiverName = this.$store.getters.userById(this.receiver).displayName;
+    } else {
+      receiverName = "everyone";
+    }
+    return "Send a message to " + receiverName;
+  }
 
   send() {
     const sender: User = this.$store.getters.sessionUser;
