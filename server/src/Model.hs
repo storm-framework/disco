@@ -44,6 +44,8 @@ module Model
   , userLevel'
   , userVisibility'
   , userRoom'
+  , userActive'
+  , userLastSync'
   , roomId'
   , roomColor'
   , roomName'
@@ -80,7 +82,8 @@ import qualified Database.Persist              as Persist
 import           Binah.Core
 
 import Data.ByteString (ByteString)
-import Data.Int (Int64)
+import Data.Int        (Int64)
+import Data.Time.Clock (UTCTime)
 
 share [mkPersist sqlSettings, mkMigrate "migrateAll"] [persistLowerCase|
 Invitation
@@ -106,6 +109,8 @@ User
   level String
   visibility String
   room RoomId Maybe
+  active Bool
+  lastSync UTCTime
   UniqueUserEmailAddress emailAddress
 
 Room
@@ -345,13 +350,15 @@ invitationEmailError' = EntityFieldWrapper InvitationEmailError
   -> x_8: String
   -> x_9: String
   -> x_10: (Maybe RoomId)
+  -> x_11: Bool
+  -> x_12: UTCTime
   -> BinahRecord <
-       {\row -> userEmailAddress (entityVal row) == x_0 && userPassword (entityVal row) == x_1 && userPhotoURL (entityVal row) == x_2 && userDisplayName (entityVal row) == x_3 && userInstitution (entityVal row) == x_4 && userPronouns (entityVal row) == x_5 && userWebsite (entityVal row) == x_6 && userBio (entityVal row) == x_7 && userLevel (entityVal row) == x_8 && userVisibility (entityVal row) == x_9 && userRoom (entityVal row) == x_10}
+       {\row -> userEmailAddress (entityVal row) == x_0 && userPassword (entityVal row) == x_1 && userPhotoURL (entityVal row) == x_2 && userDisplayName (entityVal row) == x_3 && userInstitution (entityVal row) == x_4 && userPronouns (entityVal row) == x_5 && userWebsite (entityVal row) == x_6 && userBio (entityVal row) == x_7 && userLevel (entityVal row) == x_8 && userVisibility (entityVal row) == x_9 && userRoom (entityVal row) == x_10 && userActive (entityVal row) == x_11 && userLastSync (entityVal row) == x_12}
      , {\new viewer -> IsOrganizer viewer || userLevel (entityVal new) == "attendee"}
      , {\x_0 x_1 -> (userVisibility (entityVal x_0) == "public" || IsSelf x_0 x_1) || (x_0 == x_1)}
      > User
 @-}
-mkUser x_0 x_1 x_2 x_3 x_4 x_5 x_6 x_7 x_8 x_9 x_10 = BinahRecord (User x_0 x_1 x_2 x_3 x_4 x_5 x_6 x_7 x_8 x_9 x_10)
+mkUser x_0 x_1 x_2 x_3 x_4 x_5 x_6 x_7 x_8 x_9 x_10 x_11 x_12 = BinahRecord (User x_0 x_1 x_2 x_3 x_4 x_5 x_6 x_7 x_8 x_9 x_10 x_11 x_12)
 
 {-@ invariant {v: Entity User | v == getJust (entityKey v)} @-}
 
@@ -532,6 +539,36 @@ userVisibility' = EntityFieldWrapper UserVisibility
 @-}
 userRoom' :: EntityFieldWrapper User (Maybe RoomId)
 userRoom' = EntityFieldWrapper UserRoom
+
+{-@ measure userActive :: User -> Bool @-}
+
+{-@ measure userActiveCap :: Entity User -> Bool @-}
+
+{-@ assume userActive' :: EntityFieldWrapper <
+    {\_ _ -> True}
+  , {\row field -> field == userActive (entityVal row)}
+  , {\field row -> field == userActive (entityVal row)}
+  , {\old -> userActiveCap old}
+  , {\old _ _ -> userActiveCap old}
+  > User Bool
+@-}
+userActive' :: EntityFieldWrapper User Bool
+userActive' = EntityFieldWrapper UserActive
+
+{-@ measure userLastSync :: User -> UTCTime @-}
+
+{-@ measure userLastSyncCap :: Entity User -> Bool @-}
+
+{-@ assume userLastSync' :: EntityFieldWrapper <
+    {\_ _ -> True}
+  , {\row field -> field == userLastSync (entityVal row)}
+  , {\field row -> field == userLastSync (entityVal row)}
+  , {\old -> userLastSyncCap old}
+  , {\old _ _ -> userLastSyncCap old}
+  > User UTCTime
+@-}
+userLastSync' :: EntityFieldWrapper User UTCTime
+userLastSync' = EntityFieldWrapper UserLastSync
 
 -- * Room
 {-@ mkRoom ::

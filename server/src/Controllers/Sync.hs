@@ -10,6 +10,7 @@ import           Database.Persist.Sql           ( fromSqlKey
                                                 , toSqlKey
                                                 )
 import           GHC.Generics
+import           Control.Monad.Time             ( MonadTime(..) )
 
 import           Binah.Core
 import           Binah.Actions
@@ -25,6 +26,7 @@ import           Controllers
 import           Controllers.User
 import           Controllers.Message
 import           Controllers.Room
+import           Crypto
 import           Model
 import           JSON
 
@@ -35,9 +37,11 @@ import           JSON
 {-@ sync :: TaggedT<{\_ -> False}, {\_ -> True}> _ _ @-}
 sync :: Controller ()
 sync = do
-  user     <- requireAuthUser
-  userId   <- project userId' user
-
+  user   <- requireAuthUser
+  userId <- project userId' user
+  t      <- liftTIO currentTime
+  _      <- updateWhere (userId' ==. userId)
+                        ((userLastSync' `assign` t) `combine` (userActive' `assign` True))
   users    <- allUsers
   rooms    <- allRooms
   messages <- messagesFor userId
@@ -63,5 +67,6 @@ beacon :: Controller ()
 beacon = do
   user   <- requireAuthUser
   userId <- project userId' user
-  _      <- updateWhere (userId' ==. userId) (userRoom' `assign` Nothing)
+  _      <- updateWhere (userId' ==. userId)
+                        ((userRoom' `assign` Nothing) `combine` (userActive' `assign` False))
   respondTagged (emptyResponse status200)

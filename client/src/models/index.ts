@@ -1,6 +1,6 @@
 export interface Sync {
-  users: UserData[];
-  rooms: RoomData[];
+  users: User[];
+  rooms: Room[];
   unreadMessages: RecvMessage[];
 }
 
@@ -43,6 +43,7 @@ export interface User extends UserData {
   id: number;
   level: string;
   room: string | null;
+  isActive: boolean;
 }
 
 export interface RoomData {

@@ -107,12 +107,11 @@ class ApiService {
 
   // Files
 
-  presignURL(param?: string): Promise<string> {
+  async presignURL(param?: string): Promise<string> {
     if (param) {
       const [id, code] = _.split(param, ".");
-      return axios
-        .get(`${API_URL}/signurl?code=${code}&id=${id}`)
-        .then(r => r.data);
+      const r = await axios.get(`${API_URL}/signurl?code=${code}&id=${id}`);
+      return r.data;
     } else {
       return this.get("/signurl");
     }

@@ -73,6 +73,7 @@ import           Network.AWS.Data.Text          ( toText )
 addOrganizer :: UserCreate -> Task UserId
 addOrganizer UserCreate {..} = do
   EncryptedPass encrypted <- encryptPassTIO' (Pass (T.encodeUtf8 password))
+  t                       <- liftTIO currentTime
   let user = mkUser emailAddress
                     encrypted
                     photoURL
@@ -84,6 +85,8 @@ addOrganizer UserCreate {..} = do
                     "organizer"
                     "public"
                     Nothing
+                    False
+                    t
   insert user
 
 --------------------------------------------------------------------------------
@@ -143,6 +146,7 @@ signUp = do
   (SignUpReq (InvitationCode id code) uc@UserCreate {..}) <- decodeBody
   validateUser uc
   EncryptedPass encrypted <- encryptPassTIO' (Pass (T.encodeUtf8 password))
+  t                       <- liftTIO currentTime
   let user = mkUser emailAddress
                     encrypted
                     photoURL
@@ -154,6 +158,8 @@ signUp = do
                     "attendee"
                     "public"
                     Nothing
+                    True
+                    t
   _ <- selectFirstOr
     (errorResponse status403 (Just "invalid invitation"))
     (   (invitationId' ==. id)

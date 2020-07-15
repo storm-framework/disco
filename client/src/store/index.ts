@@ -8,7 +8,7 @@ Vue.use(Vuex);
 
 interface State {
   sessionUserId: number | null;
-  users: { [key: string]: User };
+  users: { [key: number]: User };
   rooms: { [key: string]: Room };
   receivedMessages: { [key: number]: boolean };
 }
@@ -130,15 +130,16 @@ export default new Vuex.Store({
     waitingRooms: (_state, getters) =>
       _.filter(getters.rooms, room => !getters.isVideoRoom(room)),
     roomUsers: ({ users }) => (roomId: string) =>
-      _.filter(_.values(users), u => u.room == roomId),
+      _.filter(_.values(users), u => u.room == roomId && u.isActive),
     currentRoom: ({ rooms }, getters) => {
       const currentRoomId = getters.sessionUser?.room;
       return currentRoomId && rooms[currentRoomId];
     },
     isVideoRoom: () => (room: Room) =>
       room && !room.zoomLink.includes("waiting-room"),
-    lobbyUsers: ({ users }) => _.filter(_.values(users), u => u.room == null),
-    userById: ({ users }) => (userId: string) => users[userId],
+    lobbyUsers: ({ users }) =>
+      _.filter(_.values(users), u => u.room == null && u.isActive),
+    userById: ({ users }) => (userId: number) => users[userId],
     roomIsFull: ({ rooms }, getters) => (roomId: number) => {
       const usersCount = getters.roomUsers(roomId).length;
       const capacity = rooms[roomId]?.capacity || 0;
