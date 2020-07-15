@@ -28,7 +28,6 @@ import           Binah.Frankie
 import           Controllers
 import           Model
 import           JSON
-import           Control.Monad                  ( when )
 
 ----------------------------------------------------------------------------------------------------
 -- | User List
@@ -38,9 +37,13 @@ import           Control.Monad                  ( when )
 userList :: Controller ()
 userList = do
   _     <- requireAuthUser
-  users <- selectList trueF
-  users <- mapT extractUserData users
+  users <- allUsers
   respondJSON status200 users
+
+allUsers :: Controller [UserData]
+allUsers = do
+  users <- selectList trueF
+  mapT extractUserData users
 
 {-@ extractUserData :: _ -> TaggedT<{\_ -> True}, {\_ -> False}> _ _ @-}
 extractUserData :: Entity User -> Controller UserData

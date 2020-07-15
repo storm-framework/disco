@@ -6,6 +6,7 @@ import {
   Room,
   RoomData,
   SendMessage,
+  Sync,
   User,
   UserData,
   UserSignUp
@@ -278,12 +279,14 @@ class ApiService {
 
   // Messages
 
-  recvMessages(): Promise<RecvMessage[]> {
-    const msgs = MESSAGES.filter(
-      v => this.readUpto < v.messageId && v.messageId <= this.currentClock
+  getUnreadMessages(currentClock: number): RecvMessage[] {
+    return MESSAGES.filter(
+      v => this.readUpto < v.messageId && v.messageId <= currentClock
     );
-    this.currentClock += 1;
-    return Promise.resolve(msgs);
+  }
+
+  recvMessages(): Promise<RecvMessage[]> {
+    return Promise.resolve(this.getUnreadMessages(this.currentClock++));
   }
 
   markRead(msgId: MessageId): Promise<string> {
@@ -303,7 +306,17 @@ class ApiService {
     return Promise.resolve("ok");
   }
 
-  // Beacon
+  // Sync
+
+  async sync(): Promise<Sync> {
+    await delay();
+    const msg = (this.currentClock += 1);
+    return {
+      rooms: Object.values(ROOMS),
+      users: Object.values(USERS),
+      unreadMessages: this.getUnreadMessages(this.currentClock++)
+    };
+  }
 
   sendBeacon() {
     return;

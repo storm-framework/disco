@@ -1,10 +1,10 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.33.0.
+-- This file has been generated from package.yaml by hpack version 0.34.2.
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 0e22040c8654b667f425b2f524ae012080c86ef86ed86640b2aea5a70b996b53
+-- hash: 025eab763ef6f05dee6b18b73d3cb7831bf3fb2f46825f0b6d3ecd4f08b4d900
 
 name:           server
 version:        0.1.0.0
@@ -43,6 +43,7 @@ library
       Controllers.Invitation
       Controllers.Message
       Controllers.Room
+      Controllers.Sync
       Controllers.User
       Crypto
       JSON

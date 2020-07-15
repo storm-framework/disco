@@ -6,6 +6,7 @@ import {
   Room,
   RoomData,
   SendMessage,
+  Sync,
   User,
   UserData,
   UserSignUp
@@ -140,10 +141,14 @@ class ApiService {
     return this.post(`/message/send`, msg);
   }
 
-  // Beacon
+  // Sync
+
+  sync(): Promise<Sync> {
+    return this.post("/sync");
+  }
 
   sendBeacon() {
-    navigator.sendBeacon(`${API_URL}/room/current/leave`);
+    navigator.sendBeacon(`${API_URL}/beacon`);
   }
 
   // Raw Requests

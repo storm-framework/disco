@@ -168,10 +168,13 @@ leaveRoom = do
 roomGet :: Controller ()
 roomGet = do
   _     <- requireAuthUser
-  rooms <- selectList trueF
-  rooms <- mapT extractRoomData rooms
+  rooms <- allRooms
   respondJSON status200 rooms
 
+allRooms :: Controller [RoomData]
+allRooms = do
+  rooms <- selectList trueF
+  mapT extractRoomData rooms
 
 {-@ extractRoomData :: _ -> TaggedT<{\_ -> True}, {\_ -> False}> _ _ @-}
 extractRoomData :: Entity Room -> Controller RoomData

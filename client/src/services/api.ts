@@ -6,6 +6,7 @@ import {
   Room,
   RoomData,
   SendMessage,
+  Sync,
   User,
   UserData,
   UserSignUp
@@ -50,8 +51,9 @@ interface ApiService {
   markRead(msgId: MessageId): Promise<string>;
   sendMessage(msg: SendMessage): Promise<string>;
 
-  // Beacon
+  // Sync
 
+  sync(): Promise<Sync>;
   sendBeacon(): void;
 }
 

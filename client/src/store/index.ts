@@ -90,17 +90,13 @@ export default new Vuex.Store({
     signOut: ({ commit }) =>
       ApiService.signOut().then(() => commit("removeSessionUser")),
     sync: ({ state, commit }) =>
-      Promise.all([
-        ApiService.rooms(),
-        ApiService.users(),
-        ApiService.recvMessages()
-      ]).then(r => {
+      ApiService.sync().then(sync => {
         const newMessages = _.filter(
-          r[2],
+          sync.unreadMessages,
           m => !state.receivedMessages[m.messageId]
         );
-        commit("sync", { rooms: r[0], users: r[1] });
-        commit("markAsReceived", r[2]);
+        commit("sync", sync);
+        commit("markAsReceived", sync.unreadMessages);
         return newMessages;
       }),
     markAsRead: (_, messageId: MessageId) => ApiService.markRead(messageId),

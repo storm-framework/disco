@@ -8,6 +8,8 @@ module Controllers.Message
   ( sendMessage
   , recvMessage
   , readMessage
+  , messagesFor
+  , RecvMessage
   )
 where
 
@@ -96,6 +98,11 @@ recvMessage :: Controller ()
 recvMessage = do
   user   <- requireAuthUser
   userId <- project userId' user
+  sends  <- messagesFor userId
+  respondJSON status200 sends
+
+messagesFor :: UserId -> Controller [RecvMessage]
+messagesFor userId = do
   uptoMb <- selectFirst (markReadUser' ==. userId)
   lowerF <- case uptoMb of
     Nothing   -> return trueF
@@ -107,8 +114,7 @@ recvMessage = do
     &&: (messageReceiver' ==. Nothing ||: (messageReceiver' ==. Just userId))
     &&: (messageSender' !=. userId)
     )
-  sends <- mapT extractRecvMessage msgs
-  respondJSON status200 sends
+  mapT extractRecvMessage msgs
 
 extractRecvMessage :: Entity Message -> Controller RecvMessage
 extractRecvMessage msg =

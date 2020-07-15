@@ -1,3 +1,9 @@
+export interface Sync {
+  users: UserData[];
+  rooms: RoomData[];
+  unreadMessages: RecvMessage[];
+}
+
 export interface InvitationInsert {
   emailAddress: string;
   firstName: string;
