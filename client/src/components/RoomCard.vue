@@ -56,21 +56,7 @@
           In this room
         </heading>
 
-        <b-list-group class="user-list">
-          <b-list-group-item
-            button
-            v-for="user in users"
-            :key="user.id"
-            @click="toggleExpanded(user)"
-            class="compact"
-          >
-            <user-summary
-              v-bind="user"
-              :long="isExpanded(user)"
-              :heading-context="headingContext + 2"
-            />
-          </b-list-group-item>
-        </b-list-group>
+        <user-list :users="users" />
       </template>
 
       <icon-button
@@ -101,7 +87,7 @@
 <script lang="ts">
 import { Component, Prop, Mixins } from "vue-property-decorator";
 import { Room, User } from "@/models";
-import UserSummary from "@/components/UserSummary.vue";
+import UserList from "@/components/UserList.vue";
 import HeadingContext from "@/mixins/HeadingContext";
 import Heading from "@/components/Heading";
 import _ from "lodash";
@@ -118,11 +104,10 @@ import {
 
 library.add(faComments, faPhone, faEdit, faSave, faTimes, faDoorOpen);
 
-@Component({ components: { UserSummary, Heading } })
+@Component({ components: { UserList, Heading } })
 export default class RoomCard extends Mixins(HeadingContext) {
   readonly topicMaxLength = 50;
   @Prop() readonly room!: Room;
-  selectedUserId: number | null = null;
 
   editingTopic = false;
   saving = false;
@@ -136,7 +121,7 @@ export default class RoomCard extends Mixins(HeadingContext) {
     return this.users.length === 0;
   }
 
-  get users() {
+  get users(): User[] {
     return this.$store.getters.roomUsers(this.room.id);
   }
 
@@ -144,7 +129,7 @@ export default class RoomCard extends Mixins(HeadingContext) {
     return this.$store.getters.currentRoom?.id === this.room.id;
   }
 
-  get currentRoom() {
+  get currentRoom(): Room | null {
     return this.$store.getters.currentRoom;
   }
 
@@ -156,18 +141,6 @@ export default class RoomCard extends Mixins(HeadingContext) {
 
   get showLeave(): boolean {
     return this.isCurrentRoom;
-  }
-
-  isExpanded(user: User) {
-    return user.id === this.selectedUserId;
-  }
-
-  toggleExpanded(user: User) {
-    if (this.isExpanded(user)) {
-      this.selectedUserId = null;
-    } else {
-      this.selectedUserId = user.id;
-    }
   }
 
   joinRoom() {
@@ -230,15 +203,6 @@ export default class RoomCard extends Mixins(HeadingContext) {
   vertical-align: -0.25em;
 }
 
-.user-list {
-  margin-bottom: 1rem;
-}
-
-.user-list span {
-  cursor: default;
-  text-decoration: underline dotted;
-}
-
 .edit-topic {
   display: flex;
   flex: auto;
@@ -251,9 +215,5 @@ export default class RoomCard extends Mixins(HeadingContext) {
 
 .edit-topic .action {
   cursor: pointer;
-}
-
-.list-group-item.compact {
-  padding: 0.5rem 1rem;
 }
 </style>

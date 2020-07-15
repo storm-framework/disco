@@ -9,21 +9,8 @@
         In the Lobby
       </heading>
 
-      <b-list-group class="user-list">
-        <b-list-group-item
-          button
-          v-for="user in users"
-          :key="user.id"
-          @click="toggleExpanded(user)"
-          class="compact"
-        >
-          <user-summary
-            v-bind="user"
-            :long="isExpanded(user)"
-            :heading-context="headingContext + 2"
-          />
-        </b-list-group-item>
-      </b-list-group>
+      <user-list :users="users" />
+
       <icon-button icon="dice" variant="primary" @click="joinRandomRoom">
         Random Room
       </icon-button>
@@ -32,38 +19,23 @@
 </template>
 
 <script lang="ts">
-import { Component, Prop, Mixins } from "vue-property-decorator";
-import { Room, User } from "@/models";
-import UserSummary from "@/components/UserSummary.vue";
+import { Component, Mixins } from "vue-property-decorator";
+import { User } from "../models";
+import UserList from "@/components/UserList.vue";
 import HeadingContext from "@/mixins/HeadingContext";
 import Heading from "@/components/Heading";
-import _ from "lodash";
 
 import { library } from "@fortawesome/fontawesome-svg-core";
 import { faDice } from "@fortawesome/free-solid-svg-icons";
 
 library.add(faDice);
 
-@Component({ components: { UserSummary, Heading } })
+@Component({ components: { UserList, Heading } })
 export default class Lobby extends Mixins(HeadingContext) {
   readonly topicMaxLength = 50;
-  @Prop() readonly room!: Room;
-  selectedUserId: number | null = null;
 
-  get users() {
+  get users(): User[] {
     return this.$store.getters.lobbyUsers;
-  }
-
-  isExpanded(user: User) {
-    return user.id === this.selectedUserId;
-  }
-
-  toggleExpanded(user: User) {
-    if (this.isExpanded(user)) {
-      this.selectedUserId = null;
-    } else {
-      this.selectedUserId = user.id;
-    }
   }
 
   showError(msg: string) {
