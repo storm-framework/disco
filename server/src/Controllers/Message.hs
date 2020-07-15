@@ -4,11 +4,12 @@
 
 {-@ LIQUID "--no-pattern-inline" @-}
 
-module Controllers.Message 
-  (
-    sendMessage, recvMessage, readMessage
-  ) 
-  where
+module Controllers.Message
+  ( sendMessage
+  , recvMessage
+  , readMessage
+  )
+where
 
 import           Data.Text                      ( Text )
 import qualified Data.Text                     as T
@@ -34,9 +35,9 @@ import           Model
 import           JSON
 import           Control.Monad                  ( when )
 
-data SendMessage = SendMessage 
+data SendMessage = SendMessage
   { sendMsgSenderId    :: UserId
-  , sendMsgReceiverId  :: Maybe UserId 
+  , sendMsgReceiverId  :: Maybe UserId
   , sendMsgMessageText :: Text
   , sendMsgTimestamp   :: Int64
   }
@@ -48,12 +49,12 @@ instance FromJSON SendMessage where
 instance ToJSON SendMessage where
   toEncoding = genericToEncoding (stripPrefix "sendMsg")
 
-data RecvMessage = RecvMessage 
+data RecvMessage = RecvMessage
   { recvMsgSenderId    :: UserId
-  , recvMsgReceiverId  :: Maybe UserId 
+  , recvMsgReceiverId  :: Maybe UserId
   , recvMsgMessageText :: Text
   , recvMsgTimestamp   :: Int64
-  , recvMsgMessageId   :: MessageId  
+  , recvMsgMessageId   :: MessageId
   }
   deriving Generic
 
@@ -67,8 +68,8 @@ instance ToJSON RecvMessage where
 
 sendMessage :: Controller ()
 sendMessage = do
-  sender   <- requireAuthUser
-  senderId <- project userId' sender
+  sender               <- requireAuthUser
+  senderId             <- project userId' sender
   msg@SendMessage {..} <- decodeBody
   insert (mkMessage senderId sendMsgReceiverId sendMsgMessageText sendMsgTimestamp)
   respondJSON status200 ("OK:sendMessage" :: Text)
@@ -76,41 +77,44 @@ sendMessage = do
 -- | `readMessage msgId` marks `msgId` as the high-water mark for userId -------------
 
 readMessage :: MessageId -> Controller ()
-readMessage msgId = do 
+readMessage msgId = do
   user   <- requireAuthUser
   userId <- project userId' user
   markMb <- selectFirst (markReadUser' ==. userId)
   case markMb of
-    Nothing -> do 
-      insert (mkMarkRead userId msgId) 
+    Nothing -> do
+      insert (mkMarkRead userId msgId)
       respondJSON status200 ("OK:readMessage:insert" :: Text)
-    Just mark -> do 
+    Just mark -> do
       upto <- project markReadUpto' mark
       updateWhere (markReadUser' ==. userId) (markReadUpto' `assign` (max upto msgId))
       respondJSON status200 ("OK:readMessage:update" :: Text)
 
--- | `recvMessage` responds with all the (recent) messages for the current user ------ 
+-- | `recvMessage` responds with all the (recent) messages for the current user ------
 
 recvMessage :: Controller ()
-recvMessage = do 
+recvMessage = do
   user   <- requireAuthUser
   userId <- project userId' user
   uptoMb <- selectFirst (markReadUser' ==. userId)
   lowerF <- case uptoMb of
-              Nothing   -> return trueF
-              Just upto -> do 
-                uptoId <- project markReadUpto' upto
-                return (messageId' >. uptoId)
-  msgs   <- selectList (lowerF &&: 
-                         (messageReceiver' ==. Nothing
-                         ||: (messageReceiver'  ==. Just userId)))
-  sends  <- mapT extractRecvMessage msgs 
+    Nothing   -> return trueF
+    Just upto -> do
+      uptoId <- project markReadUpto' upto
+      return (messageId' >. uptoId)
+  msgs <- selectList
+    (   lowerF
+    &&: (messageReceiver' ==. Nothing ||: (messageReceiver' ==. Just userId))
+    &&: (messageSender' !=. userId)
+    )
+  sends <- mapT extractRecvMessage msgs
   respondJSON status200 sends
 
 extractRecvMessage :: Entity Message -> Controller RecvMessage
-extractRecvMessage msg = RecvMessage 
-  `fmap` project messageSender'    msg 
-   <*>   project messageReceiver'  msg  
-   <*>   project messageMessage'   msg
-   <*>   project messageTimestamp' msg
-   <*>   project messageId'        msg
+extractRecvMessage msg =
+  RecvMessage
+    `fmap` project messageSender'    msg
+    <*>    project messageReceiver'  msg
+    <*>    project messageMessage'   msg
+    <*>    project messageTimestamp' msg
+    <*>    project messageId'        msg

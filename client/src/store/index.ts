@@ -7,7 +7,7 @@ import Vuex from "vuex";
 Vue.use(Vuex);
 
 interface State {
-  sessionUserId: string | null;
+  sessionUserId: number | null;
   users: { [key: string]: User };
   rooms: { [key: string]: Room };
   receivedMessages: { [key: number]: boolean };
