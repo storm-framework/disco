@@ -32,7 +32,7 @@
         <icon-button
           v-if="showSendMessage"
           icon="comment-alt"
-          variant="outline-success"
+          variant="primary"
           @click.stop="sendMessage"
         >
           Message
