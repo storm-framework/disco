@@ -26,7 +26,7 @@
       </b-navbar-nav>
     </b-navbar>
 
-    <send-message modalId="broadcast-modal" modalTitle="Announce Message" />
+    <send-message modalId="broadcast-modal" />
     <modal-profile id="edit-profile-modal" />
   </div>
 </template>

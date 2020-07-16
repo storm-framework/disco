@@ -1,6 +1,6 @@
 <template>
   <b-modal
-    :title="modalTitle"
+    :title="title"
     :id="modalId"
     :header-bg-variant="'info'"
     :header-text-variant="'light'"
@@ -18,7 +18,7 @@
   >
     <form>
       <div>
-        <b-form-input v-model="message" placeholder="Hello!"></b-form-input>
+        <b-form-textarea v-model="message" placeholder="Hello!" />
       </div>
     </form>
   </b-modal>
@@ -32,18 +32,27 @@ import { User } from "@/models";
 
 @Component({})
 export default class SendMessage extends Vue {
-  @Prop({ default: "message-modal" })
-  modalId!: string;
-
-  @Prop({ default: "Send Message" })
-  modalTitle!: string;
+  @Prop()
+  modalId?: string;
 
   @Prop({ default: null })
   receiver!: number | null;
 
   message = "";
 
-  name = "send-message";
+  get title() {
+    let receiverName: string | null;
+    if (this.receiver) {
+      receiverName = this.$store.getters.userById(this.receiver)?.displayName;
+    } else {
+      receiverName = "everyone";
+    }
+    if (receiverName) {
+      return "Send a message to " + receiverName;
+    } else {
+      return "Send a message";
+    }
+  }
 
   send() {
     const sender: User = this.$store.getters.sessionUser;

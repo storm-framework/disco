@@ -61,7 +61,7 @@
 
       <icon-button
         v-if="showJoin"
-        icon="phone"
+        icon="video"
         variant="primary"
         @click="joinRoom"
       >
@@ -95,14 +95,14 @@ import _ from "lodash";
 import { library } from "@fortawesome/fontawesome-svg-core";
 import {
   faComments,
-  faPhone,
+  faVideo,
   faEdit,
   faSave,
   faTimes,
   faDoorOpen
 } from "@fortawesome/free-solid-svg-icons";
 
-library.add(faComments, faPhone, faEdit, faSave, faTimes, faDoorOpen);
+library.add(faComments, faVideo, faEdit, faSave, faTimes, faDoorOpen);
 
 @Component({ components: { UserList, Heading } })
 export default class RoomCard extends Mixins(HeadingContext) {

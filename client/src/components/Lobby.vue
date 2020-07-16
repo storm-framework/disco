@@ -24,7 +24,7 @@
       </template>
 
       <icon-button icon="dice" variant="primary" @click="joinRandomRoom">
-        Random Room
+        Join random
       </icon-button>
     </b-card-body>
   </article>

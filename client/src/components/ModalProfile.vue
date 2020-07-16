@@ -5,7 +5,7 @@
     :id="id"
     title="Profile"
     ok-title="Save"
-    v-on:ok.prevent="onSave"
+    @ok.prevent="onSave"
     :no-close-on-backdrop="sending"
     :no-close-on-esc="sending"
     :ok-disabled="sending || !valid"
