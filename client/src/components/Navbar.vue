@@ -15,7 +15,7 @@
             Make Announcement
           </b-dropdown-item-button>
         </b-nav-item-dropdown>
-        <b-nav-item-dropdown text="Settings" right>
+        <b-nav-item-dropdown text="Settings" right v-if="loggedIn">
           <b-dropdown-item-button v-b-modal.edit-profile-modal>
             Edit Profile
           </b-dropdown-item-button>
