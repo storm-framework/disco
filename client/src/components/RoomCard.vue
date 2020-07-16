@@ -134,9 +134,8 @@ export default class RoomCard extends Mixins(HeadingContext) {
   }
 
   get showJoin(): boolean {
-    const current = this.$store.getters.currentRoom;
     const isFull = this.$store.getters.roomIsFull(this.room.id);
-    return !current && !isFull;
+    return !this.isCurrentRoom && !isFull;
   }
 
   get showLeave(): boolean {
