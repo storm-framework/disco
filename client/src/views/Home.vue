@@ -13,13 +13,7 @@
     <h2 class="sr-only">Your status</h2>
     <section v-if="sessionUser" class="container mt-4">
       <b-row>
-        <user-summary
-          long
-          editable
-          v-bind="sessionUser"
-          :h-context="3"
-          class="col-6"
-        />
+        <user-summary long v-bind="sessionUser" :h-context="3" class="col-6" />
         <room-card
           v-if="inRoom"
           :room="currentRoom"

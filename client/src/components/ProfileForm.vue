@@ -115,7 +115,11 @@ export default class ProfileForm extends Vue {
     return this.value.bio.length <= this.maxBioSize;
   }
 
-  @Watch("validBio", { immediate: true })
+  get valid() {
+    return this.validBio && this.value.displayName.length > 0;
+  }
+
+  @Watch("valid", { immediate: true })
   emitValid(newValue: boolean, oldValue: boolean) {
     if (newValue != oldValue) {
       this.$emit("state", newValue);
