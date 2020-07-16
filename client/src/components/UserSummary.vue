@@ -12,9 +12,6 @@
         <heading class="name" :level="1" :context="headingContext">
           {{ displayName }}
         </heading>
-        <icon-button v-if="editable" icon="edit" :to="{ name: 'Profile' }">
-          Edit profile
-        </icon-button>
         <dl>
           <div v-if="pronouns" class="info-item">
             <dt>Pronouns</dt>
@@ -68,8 +65,6 @@ library.add(faUser, faUniversity, faLink, faEdit, faCommentAlt);
 
 @Component({ components: { Heading, SendMessage } })
 export default class UserSummary extends Mixins(HeadingContext) {
-  @Prop({ type: Boolean, default: false }) editable!: boolean;
-
   @Prop({ required: true }) displayName!: string;
 
   @Prop({ type: Boolean, default: false }) long!: boolean;

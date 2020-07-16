@@ -8,7 +8,7 @@ Vue.use(Vuex);
 
 interface State {
   sessionUserId: number | null;
-  users: { [key: string]: User };
+  users: { [key: number]: User };
   rooms: { [key: string]: Room };
   receivedMessages: { [key: number]: boolean };
 }
@@ -19,13 +19,6 @@ const initialState: State = {
   rooms: {},
   receivedMessages: {}
 };
-
-function addUsersToRoom(room: Room, users: User[]) {
-  return {
-    users,
-    ...room
-  };
-}
 
 export default new Vuex.Store({
   state: initialState,
@@ -97,27 +90,27 @@ export default new Vuex.Store({
     signOut: ({ commit }) =>
       ApiService.signOut().then(() => commit("removeSessionUser")),
     sync: ({ state, commit }) =>
-      Promise.all([
-        ApiService.rooms(),
-        ApiService.users(),
-        ApiService.recvMessages()
-      ]).then(r => {
+      ApiService.sync().then(sync => {
         const newMessages = _.filter(
-          r[2],
+          sync.unreadMessages,
           m => !state.receivedMessages[m.messageId]
         );
-        commit("sync", { rooms: r[0], users: r[1] });
-        commit("markAsReceived", r[2]);
+        commit("sync", sync);
+        commit("markAsReceived", sync.unreadMessages);
         return newMessages;
       }),
     markAsRead: (_, messageId: MessageId) => ApiService.markRead(messageId),
     selectRoom: ({ commit }, roomId: string) => {
       commit("changeActiveRoom", roomId);
     },
-    joinRoom: async ({ commit }, roomId: string) => {
-      const zoomLink = await ApiService.joinRoom(roomId);
+    joinRoom: async ({ commit }, roomId: number) => {
+      await ApiService.joinRoom(roomId);
       commit("swithToRoom", roomId);
-      return zoomLink;
+    },
+    joinRandom: async ({ commit }) => {
+      const roomId = await ApiService.joinRandom();
+      commit("swithToRoom", roomId);
+      return roomId;
     },
     leaveRoom: ({ commit }) =>
       ApiService.leaveRoom().then(() => commit("leaveRoom"))
@@ -138,20 +131,20 @@ export default new Vuex.Store({
         return getters.rooms;
       }
     },
-    waitingRooms: (_state, getters) =>
-      _.filter(getters.rooms, room => !getters.isVideoRoom(room)),
     roomUsers: ({ users }) => (roomId: string) =>
-      _.filter(_.values(users), u => u.room == roomId),
-    room: ({ rooms }, getters) => (roomId: string) =>
-      rooms[roomId] && addUsersToRoom(rooms[roomId], getters.roomUsers(roomId)),
-    currentRoom: (_state, getters) => {
+      _.filter(_.values(users), u => u.room == roomId && u.isActive),
+    currentRoom: ({ rooms }, getters) => {
       const currentRoomId = getters.sessionUser?.room;
-      return currentRoomId && getters.room(currentRoomId);
+      return currentRoomId && rooms[currentRoomId];
     },
-    isVideoRoom: () => (room: Room) =>
-      room && !room.zoomLink.includes("waiting-room"),
-    lobbyUsers: ({ users }) => _.filter(_.values(users), u => u.room == null),
-    userById: ({ users }) => (userId: string) => users[userId]
+    lobbyUsers: ({ users }) =>
+      _.filter(_.values(users), u => u.room == null && u.isActive),
+    userById: ({ users }) => (userId: number) => users[userId],
+    roomIsFull: ({ rooms }, getters) => (roomId: number) => {
+      const usersCount = getters.roomUsers(roomId).length;
+      const capacity = rooms[roomId]?.capacity || 0;
+      return capacity > 0 && usersCount >= capacity;
+    }
   },
   modules: {},
   strict: process.env.NODE_ENV !== "production"

@@ -1,3 +1,9 @@
+export interface Sync {
+  users: User[];
+  rooms: Room[];
+  unreadMessages: RecvMessage[];
+}
+
 export interface InvitationInsert {
   emailAddress: string;
   firstName: string;
@@ -37,6 +43,7 @@ export interface User extends UserData {
   id: number;
   level: string;
   room: string | null;
+  isActive: boolean;
 }
 
 export interface RoomData {

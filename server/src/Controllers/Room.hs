@@ -27,6 +27,7 @@ import           Binah.Helpers
 import           Binah.Infrastructure
 import           Binah.Templates
 import           Binah.Frankie
+import           Crypto
 
 import           Controllers
 import           Model
@@ -78,6 +79,7 @@ roomUpdate roomId = do
         (roomColor' `assign` insertColor)
           `combine` (roomName' `assign` insertName)
           `combine` (roomTopic' `assign` insertTopic)
+          `combine` (roomCapacity' `assign` insertCapacity)
           `combine` (roomZoomLink' `assign` insertZoomLink)
   _        <- updateWhere (roomId' ==. roomId) up
   room     <- selectFirstOr notFoundJSON (roomId' ==. roomId)
@@ -99,14 +101,17 @@ roomBatchUpdate = do
   _                         <- checkOrganizer viewer
   (PostReq inserts updates) <- decodeBody
 
-  let rooms =
-        map (\RoomInsert {..} -> mkRoom insertColor insertName insertTopic insertZoomLink) inserts
+  let rooms = map
+        (\RoomInsert {..} -> mkRoom insertColor insertName insertTopic insertCapacity insertZoomLink
+        )
+        inserts
   ids <- insertMany rooms
   _   <- forT updates $ \RoomData {..} -> do
     let up =
           (roomColor' `assign` roomColor)
             `combine` (roomName' `assign` roomName)
             `combine` (roomTopic' `assign` roomTopic)
+            `combine` (roomCapacity' `assign` roomCapacity)
             `combine` (roomZoomLink' `assign` roomZoomLink)
     updateWhere (roomId' ==. roomId) up
 
@@ -128,12 +133,42 @@ instance FromJSON PostReq where
 {-@ joinRoom :: _ -> TaggedT<{\_ -> False}, {\_ -> True}> _ _ @-}
 joinRoom :: RoomId -> Controller ()
 joinRoom roomId = do
-  viewer   <- requireAuthUser
-  viewerId <- project userId' viewer
-  room     <- selectFirstOr notFoundJSON (roomId' ==. roomId)
-  _        <- updateWhere (userId' ==. viewerId) (userRoom' `assign` Just roomId)
-  zoomLink <- project roomZoomLink' room
-  respondJSON status200 zoomLink
+  viewer      <- requireAuthUser
+  viewerId    <- project userId' viewer
+  currentRoom <- project userRoom' viewer
+  room        <- selectFirstOr notFoundJSON (roomId' ==. roomId)
+  zoomLink    <- project roomZoomLink' room
+
+  whenT (currentRoom == Just roomId) (respondJSON status200 zoomLink)
+
+  ok <- tryJoinRoom viewerId room
+  if ok
+    then respondTagged (emptyResponse status200)
+    else respondError status409 (Just "Capacity Exceeded")
+
+joinRandom :: Controller ()
+joinRandom = do
+  viewer      <- requireAuthUser
+  viewerId    <- project userId' viewer
+  currentRoom <- project userRoom' viewer
+  rooms       <- selectList trueF
+  forT rooms $ \room -> do
+    ok <- tryJoinRoom viewerId room
+    whenT ok $ do
+      roomId <- project roomId' room
+      respondJSON status200 roomId
+  respondError status409 (Just "All rooms are full")
+
+tryJoinRoom :: UserId -> Entity Room -> Controller Bool
+tryJoinRoom viewerId room = do
+  roomId     <- project roomId' room
+  usersCount <- count (userRoom' ==. Just roomId)
+  capacity   <- project roomCapacity' room
+  if capacity <= 0 || usersCount < capacity
+    then do
+      _ <- updateWhere (userId' ==. viewerId) (userRoom' `assign` Just roomId)
+      return True
+    else return False
 
 ----------------------------------------------------------------------------------------------------
 -- | Leave Room
@@ -155,10 +190,13 @@ leaveRoom = do
 roomGet :: Controller ()
 roomGet = do
   _     <- requireAuthUser
-  rooms <- selectList trueF
-  rooms <- mapT extractRoomData rooms
+  rooms <- allRooms
   respondJSON status200 rooms
 
+allRooms :: Controller [RoomData]
+allRooms = do
+  rooms <- selectList trueF
+  mapT extractRoomData rooms
 
 {-@ extractRoomData :: _ -> TaggedT<{\_ -> True}, {\_ -> False}> _ _ @-}
 extractRoomData :: Entity Room -> Controller RoomData
@@ -168,6 +206,7 @@ extractRoomData room =
     <*>    project roomColor'    room
     <*>    project roomName'     room
     <*>    project roomTopic'    room
+    <*>    project roomCapacity' room
     <*>    project roomZoomLink' room
 
 -- | RoomInsert
@@ -176,6 +215,7 @@ data RoomInsert = RoomInsert
   { insertColor :: Text
   , insertName :: Text
   , insertTopic :: Text
+  , insertCapacity :: Int
   , insertZoomLink :: Text
   }
   deriving Generic
@@ -193,6 +233,7 @@ data RoomData = RoomData
   , roomColor :: Text
   , roomName :: Text
   , roomTopic :: Text
+  , roomCapacity :: Int
   , roomZoomLink :: Text
   }
   deriving Generic

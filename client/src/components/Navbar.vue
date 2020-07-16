@@ -11,15 +11,23 @@
           <b-dropdown-item :to="{ name: 'SendInvitations' }">
             Send Invitations
           </b-dropdown-item>
-          <b-dropdown-item-button v-b-modal="'broadcast-modal'">
+          <b-dropdown-item-button v-b-modal.broadcast-modal>
             Make Announcement
           </b-dropdown-item-button>
         </b-nav-item-dropdown>
-        <b-nav-item v-if="showSignOut" @click="signOut">Sign out</b-nav-item>
+        <b-nav-item-dropdown text="Settings" right>
+          <b-dropdown-item-button v-b-modal.edit-profile-modal>
+            Edit Profile
+          </b-dropdown-item-button>
+          <b-dropdown-item-button @click="signOut">
+            Sign out
+          </b-dropdown-item-button>
+        </b-nav-item-dropdown>
       </b-navbar-nav>
     </b-navbar>
 
     <send-message modalId="broadcast-modal" />
+    <modal-profile id="edit-profile-modal" />
   </div>
 </template>
 
@@ -27,10 +35,11 @@
 import { Component, Vue } from "vue-property-decorator";
 import { mapGetters } from "vuex";
 import SendMessage from "@/components/SendMessage.vue";
+import ModalProfile from "@/components/ModalProfile.vue";
 
 @Component({
   computed: mapGetters(["loggedIn", "currentRoom", "currentVideoRoom"]),
-  components: { SendMessage }
+  components: { SendMessage, ModalProfile }
 })
 export default class Navbar extends Vue {
   // The navBar is in charge of syncing the session user with the backend.
@@ -45,8 +54,7 @@ export default class Navbar extends Vue {
 
   get showSignOut() {
     const current = this.$store.getters.currentRoom;
-    const video = current && this.$store.getters.isVideoRoom(current);
-    return this.$store.getters.loggedIn && !video;
+    return this.$store.getters.loggedIn && current !== null;
   }
 
   signOut() {

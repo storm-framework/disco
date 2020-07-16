@@ -1,75 +1,42 @@
 <template>
   <main v-if="sessionUser" tag="main">
     <h1 class="sr-only">Overview</h1>
-    <h2 class="sr-only" v-if="currentVideoRoom">Current Call</h2>
-    <transition name="appear">
-      <jitsi-call
-        v-if="currentVideoRoom"
-        class="call"
-        :room="currentRoom"
-        :user="sessionUser"
-        @joined="joinRoom"
-        @left="leaveRoom"
-      />
-    </transition>
+    <h2 class="sr-only" v-if="inRoom">Current Call</h2>
+    <jitsi-call
+      class="call"
+      v-if="inRoom"
+      :room="currentRoom"
+      :user="sessionUser"
+      @joined="joinRoom"
+      @left="leaveRoom"
+    />
     <h2 class="sr-only">Your status</h2>
     <section v-if="sessionUser" class="container mt-4">
       <b-row>
         <user-summary
           long
-          editable
           v-bind="sessionUser"
           :h-context="3"
-          class="col-6"
+          class="col-lg-6 mb-5"
         />
         <room-card
-          v-if="currentRoom"
+          v-if="inRoom"
           :room="currentRoom"
           :h-context="4"
-          class="col-6"
+          class="col-lg-6 mb-5"
         />
-        <b-col
-          v-else
-          cols="6"
-          class="align-items-center d-flex flex-column justify-content-center"
-        >
-          <p class="h5">
-            You are invisible to others until you join a room
-          </p>
-          <b-dropdown
-            variant="success"
-            id="dropdown-1"
-            text="Join"
-            class="m-md-2"
-          >
-            <b-dropdown-item
-              v-if="roomsAreAvailable"
-              icon="dice"
-              @click="joinRandomRoom"
-            >
-              Random room
-            </b-dropdown-item>
-            <b-dropdown-item
-              v-if="waitingRooms.length > 0"
-              icon="dice"
-              @click="joinWaitingRoom"
-            >
-              Waiting area
-            </b-dropdown-item>
-          </b-dropdown>
-        </b-col>
+        <lobby v-else :h-context="4" class="col-lg-6 mb-5" />
       </b-row>
     </section>
     <section v-if="roomsAreAvailable" class="container">
-      <h2 v-if="currentRoom" class="mt-5">Other Rooms</h2>
-      <h2 v-else class="mt-5">All Rooms</h2>
+      <h2 v-if="currentRoom">Other Rooms</h2>
+      <h2 v-else>All Rooms</h2>
       <ul class="row list-unstyled mt-4">
-        <li
-          class="mb-4 col-lg-auto"
-          v-for="room in availableRooms"
-          :key="room.id"
-        >
+        <li class="mb-4 col-lg-6" v-for="room in availableRooms" :key="room.id">
           <room-card :room="room" :h-context="3" class="available-room" />
+        </li>
+        <li class="mb-4 col-lg-6" v-if="inRoom" key="lobby">
+          <lobby :h-context="3" />
         </li>
       </ul>
     </section>
@@ -79,11 +46,11 @@
 <script lang="ts">
 import { Component, Vue } from "vue-property-decorator";
 import RoomCard from "@/components/RoomCard.vue";
+import Lobby from "@/components/Lobby.vue";
 import UserSummary from "@/components/UserSummary.vue";
 import JitsiCall from "@/components/JitsiCall.vue";
 import { Room, RecvMessage, User } from "@/models";
 import { mapGetters } from "vuex";
-import _ from "lodash";
 import { faDice } from "@fortawesome/free-solid-svg-icons";
 import { library } from "@fortawesome/fontawesome-svg-core";
 import { BvEvent } from "bootstrap-vue";
@@ -97,8 +64,8 @@ function timeStampString(timeStamp: number) {
 }
 
 @Component({
-  components: { RoomCard, UserSummary, JitsiCall },
-  computed: mapGetters(["sessionUser", "currentRoom", "waitingRooms"])
+  components: { RoomCard, UserSummary, JitsiCall, Lobby },
+  computed: mapGetters(["sessionUser", "currentRoom"])
 })
 export default class Home extends Vue {
   syncing = false;
@@ -107,32 +74,25 @@ export default class Home extends Vue {
   msgQueue: RecvMessage[] = [];
   currentRoom!: Room;
   syncTimerHandler: number | null = null;
-  msgSyncTimerHandler: number | null = null;
 
-  get currentVideoRoom() {
-    const current = this.$store.getters.currentRoom;
-    return current && this.$store.getters.isVideoRoom(current);
+  get inRoom() {
+    return this.$store.getters.currentRoom !== null;
   }
 
   get roomsAreAvailable() {
     return this.availableRooms.length !== 0;
   }
 
-  get emptyRoomsAreAvailable() {
-    return this.emptyRooms.length !== 0;
-  }
-
   get availableRooms(): Room[] {
     return this.$store.getters.availableRooms;
   }
 
-  get emptyRooms(): Room[] {
-    return this.$store.getters.emptyRooms;
-  }
-
   mounted() {
     this.$root.$on("bv::toast:hide", (event: BvEvent) => {
-      this.$store.dispatch("markAsRead", parseInt(event.componentId || "0"));
+      const m = /MESSAGE::(\d+)/.exec(event.componentId || "");
+      if (m && m[1]) {
+        this.$store.dispatch("markAsRead", parseInt(m[1]));
+      }
     });
     this.sync();
   }
@@ -166,7 +126,7 @@ export default class Home extends Vue {
         e("div", {}, message.messageText)
       ]),
       {
-        id: message.messageId.toString(),
+        id: `MESSAGE::${message.messageId}`,
         title: `${sender?.displayName} says ...`,
         solid: true,
         noAutoHide: true,
@@ -176,26 +136,27 @@ export default class Home extends Vue {
     );
   }
 
-  joinRoom(roomId: string) {
-    this.$store.dispatch("joinRoom", roomId);
+  joinRoom(roomId: number) {
+    this.$store.dispatch("joinRoom", roomId).catch(error => {
+      if (error.response?.status == 409) {
+        this.showError("Sorry, but the room is already full");
+      } else {
+        this.showError("An unexpected error happend");
+      }
+    });
   }
 
   leaveRoom() {
     this.$store.dispatch("leaveRoom");
   }
 
-  joinRandomRoom() {
-    const random = _.sample(this.availableRooms);
-    if (random) {
-      this.$store.dispatch("joinRoom", random.id);
-    }
-  }
-
-  joinWaitingRoom() {
-    const random = _.sample(this.$store.getters.waitingRooms);
-    if (random) {
-      this.$store.dispatch("joinRoom", random.id);
-    }
+  showError(msg: string) {
+    this.$bvToast.toast(msg, {
+      title: "Error",
+      toaster: "b-toaster-top-center",
+      variant: "danger",
+      solid: true
+    });
   }
 }
 </script>

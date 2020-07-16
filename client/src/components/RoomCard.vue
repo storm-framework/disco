@@ -56,27 +56,13 @@
           In this room
         </heading>
 
-        <b-list-group class="user-list">
-          <b-list-group-item
-            button
-            v-for="user in users"
-            :key="user.id"
-            @click="toggleExpanded(user)"
-            class="compact"
-          >
-            <user-summary
-              v-bind="user"
-              :long="isExpanded(user)"
-              :heading-context="headingContext + 2"
-            />
-          </b-list-group-item>
-        </b-list-group>
+        <user-list :users="users" />
       </template>
 
       <icon-button
         v-if="showJoin"
         icon="video"
-        variant="outline-success"
+        variant="primary"
         @click="joinRoom"
       >
         Join
@@ -101,7 +87,7 @@
 <script lang="ts">
 import { Component, Prop, Mixins } from "vue-property-decorator";
 import { Room, User } from "@/models";
-import UserSummary from "@/components/UserSummary.vue";
+import UserList from "@/components/UserList.vue";
 import HeadingContext from "@/mixins/HeadingContext";
 import Heading from "@/components/Heading";
 import _ from "lodash";
@@ -109,31 +95,19 @@ import _ from "lodash";
 import { library } from "@fortawesome/fontawesome-svg-core";
 import {
   faComments,
-  faPhone,
   faVideo,
   faEdit,
-  faExternalLinkAlt,
   faSave,
   faTimes,
   faDoorOpen
 } from "@fortawesome/free-solid-svg-icons";
 
-library.add(
-  faComments,
-  faPhone,
-  faVideo,
-  faEdit,
-  faExternalLinkAlt,
-  faSave,
-  faTimes,
-  faDoorOpen
-);
+library.add(faComments, faVideo, faEdit, faSave, faTimes, faDoorOpen);
 
-@Component({ components: { UserSummary, Heading } })
+@Component({ components: { UserList, Heading } })
 export default class RoomCard extends Mixins(HeadingContext) {
   readonly topicMaxLength = 50;
   @Prop() readonly room!: Room;
-  selectedUserId: number | null = null;
 
   editingTopic = false;
   saving = false;
@@ -147,7 +121,7 @@ export default class RoomCard extends Mixins(HeadingContext) {
     return this.users.length === 0;
   }
 
-  get users() {
+  get users(): User[] {
     return this.$store.getters.roomUsers(this.room.id);
   }
 
@@ -155,36 +129,36 @@ export default class RoomCard extends Mixins(HeadingContext) {
     return this.$store.getters.currentRoom?.id === this.room.id;
   }
 
-  get currentRoom() {
+  get currentRoom(): Room | null {
     return this.$store.getters.currentRoom;
   }
 
   get showJoin(): boolean {
-    const current = this.$store.getters.currentRoom;
-    const video = this.$store.getters.isVideoRoom(current);
-    return !current || (!video && !this.isCurrentRoom);
+    const isFull = this.$store.getters.roomIsFull(this.room.id);
+    return !this.isCurrentRoom && !isFull;
   }
 
   get showLeave(): boolean {
-    // const current = this.$store.getters.currentRoom;
-    // const video = this.$store.getters.isVideoRoom(current);
-    return !this.showJoin && this.isCurrentRoom; // && !video;
-  }
-
-  isExpanded(user: User) {
-    return user.id === this.selectedUserId;
-  }
-
-  toggleExpanded(user: User) {
-    if (this.isExpanded(user)) {
-      this.selectedUserId = null;
-    } else {
-      this.selectedUserId = user.id;
-    }
+    return this.isCurrentRoom;
   }
 
   joinRoom() {
-    this.$store.dispatch("joinRoom", this.room.id);
+    this.$store.dispatch("joinRoom", this.room.id).catch(error => {
+      if (error.response?.status == 409) {
+        this.showError("Sorry, but the room is already full");
+      } else {
+        this.showError("An unexpected error happend");
+      }
+    });
+  }
+
+  showError(msg: string) {
+    this.$bvToast.toast(msg, {
+      title: "Error",
+      toaster: "b-toaster-top-center",
+      variant: "danger",
+      solid: true
+    });
   }
 
   leaveRoom() {
@@ -228,15 +202,6 @@ export default class RoomCard extends Mixins(HeadingContext) {
   vertical-align: -0.25em;
 }
 
-.user-list {
-  margin-bottom: 1rem;
-}
-
-.user-list span {
-  cursor: default;
-  text-decoration: underline dotted;
-}
-
 .edit-topic {
   display: flex;
   flex: auto;
@@ -249,9 +214,5 @@ export default class RoomCard extends Mixins(HeadingContext) {
 
 .edit-topic .action {
   cursor: pointer;
-}
-
-.list-group-item.compact {
-  padding: 0.5rem 1rem;
 }
 </style>

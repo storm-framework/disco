@@ -6,6 +6,7 @@ import {
   Room,
   RoomData,
   SendMessage,
+  Sync,
   User,
   UserData,
   UserSignUp
@@ -82,7 +83,7 @@ class ApiService {
   }
 
   updateRoom(id: number, data: RoomData): Promise<Room> {
-    return this.post(`/room/${id}`, data);
+    return this.post(`/room/${id}/update`, data);
   }
 
   updateTopic(id: number, topic: string): Promise<Room> {
@@ -96,8 +97,12 @@ class ApiService {
     });
   }
 
-  joinRoom(roomId: string): Promise<string> {
+  joinRoom(roomId: number): Promise<void> {
     return this.post(`/room/${roomId}/join`);
+  }
+
+  joinRandom(): Promise<number> {
+    return this.post("/room/joinRandom");
   }
 
   leaveRoom(): Promise<void> {
@@ -106,12 +111,11 @@ class ApiService {
 
   // Files
 
-  presignURL(param?: string): Promise<string> {
+  async presignURL(param?: string): Promise<string> {
     if (param) {
       const [id, code] = _.split(param, ".");
-      return axios
-        .get(`${API_URL}/signurl?code=${code}&id=${id}`)
-        .then(r => r.data);
+      const r = await axios.get(`${API_URL}/signurl?code=${code}&id=${id}`);
+      return r.data;
     } else {
       return this.get("/signurl");
     }
@@ -140,10 +144,14 @@ class ApiService {
     return this.post(`/message/send`, msg);
   }
 
-  // Beacon
+  // Sync
+
+  sync(): Promise<Sync> {
+    return this.post("/sync");
+  }
 
   sendBeacon() {
-    navigator.sendBeacon(`${API_URL}/room/current/leave`);
+    navigator.sendBeacon(`${API_URL}/beacon`);
   }
 
   // Raw Requests

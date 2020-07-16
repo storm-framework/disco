@@ -1,5 +1,5 @@
 <template>
-  <b-modal no-fade size="lg" ref="modal" v-on:ok="onOk">
+  <b-modal no-fade size="lg" ref="modal" v-on:ok="onOk" title="Crop your photo">
     <b-overlay
       :show="loading"
       spinner-variant="primary"
@@ -68,7 +68,7 @@ export default class ModalCropper extends Vue {
   min-height: 200px;
 
   img {
-    max-height: 80vh;
+    max-height: 65vh;
   }
 }
 </style>

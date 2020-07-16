@@ -6,6 +6,7 @@ import {
   Room,
   RoomData,
   SendMessage,
+  Sync,
   User,
   UserData,
   UserSignUp
@@ -37,7 +38,8 @@ interface ApiService {
   updateRoom(roomId: number, data: RoomData): Promise<Room>;
   updateTopic(roomId: number, topic: string): Promise<Room>;
   updateRooms(updates: Room[], inserts: RoomData[]): Promise<number[]>;
-  joinRoom(roomId: string): Promise<string>;
+  joinRoom(roomId: number): Promise<void>;
+  joinRandom(): Promise<number>;
   leaveRoom(): Promise<void>;
 
   // Upload Files
@@ -50,8 +52,9 @@ interface ApiService {
   markRead(msgId: MessageId): Promise<string>;
   sendMessage(msg: SendMessage): Promise<string>;
 
-  // Beacon
+  // Sync
 
+  sync(): Promise<Sync>;
   sendBeacon(): void;
 }
 

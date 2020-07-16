@@ -1,15 +1,17 @@
 import {
   Invitation,
   InvitationInsert,
+  MessageId,
+  RecvMessage,
   Room,
   RoomData,
+  SendMessage,
+  Sync,
   User,
   UserData,
-  UserSignUp,
-  RecvMessage,
-  SendMessage,
-  MessageId
+  UserSignUp
 } from "@/models";
+import _ from "lodash";
 
 function delay(ms = 1000) {
   if (process.env.NODE_ENV === "development") {
@@ -96,8 +98,8 @@ const USERS: { [id: string]: User } = {
     bio: "",
     website: "#ThisIsAMisleadingHashtag",
     level: "organizer",
-    room: "1"
-    // room: null
+    room: null,
+    isActive: true
   },
   2: {
     id: 2,
@@ -108,7 +110,8 @@ const USERS: { [id: string]: User } = {
     bio: "",
     website: "https://example.com",
     level: "attendee",
-    room: "1"
+    room: "1",
+    isActive: true
   },
   3: {
     id: 3,
@@ -122,7 +125,8 @@ const USERS: { [id: string]: User } = {
     bio: "A bio",
     website: "",
     level: "attendee",
-    room: "2"
+    room: "2",
+    isActive: true
   },
   4: {
     id: 4,
@@ -135,7 +139,8 @@ const USERS: { [id: string]: User } = {
       "فسقط مشاركة لليابان مع لها. مع وبعض غينيا أما. بـ قام ووصف الحدود, و جيوب فكان الدولارات بحث, مدن احداث تكتيكاً ماليزيا، بـ. ضرب أم بوابة اتّجة, بـ ضمنها للجزر ولم.\nأسيا انتهت فصل مع. إذ وسوء أحدث الستار كلا, جعل سكان فهرست الضغوط ما, مليارات الأوروبيّون لان ثم. هنا؟ مواقعها والكوري حين عل, كل به، الأوضاع والفلبين",
     website: "",
     level: "attendee",
-    room: "2"
+    room: "2",
+    isActive: true
   },
   5: {
     id: 5,
@@ -146,7 +151,8 @@ const USERS: { [id: string]: User } = {
     bio: "",
     website: "",
     level: "attendee",
-    room: "3"
+    room: null,
+    isActive: true
   },
   6: {
     id: 6,
@@ -159,7 +165,8 @@ const USERS: { [id: string]: User } = {
     website:
       "ThisIsALongLineWithNoNaturalBreaks0987654321abcdefghijklmnopqrstuvwxyz1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ",
     level: "attendee",
-    room: "3"
+    room: "3",
+    isActive: true
   },
   9: {
     id: 9, // Skipped a couple of ids on purpose
@@ -170,7 +177,68 @@ const USERS: { [id: string]: User } = {
     bio: "",
     website: "",
     level: "attendee",
-    room: "3"
+    room: "3",
+    isActive: true
+  },
+  10: {
+    id: 10,
+    photoURL: null,
+    displayName: "Display Name 1",
+    institution: "Stone Brewing",
+    pronouns: "",
+    bio: "",
+    website: "",
+    level: "attendee",
+    room: "3",
+    isActive: true
+  },
+  11: {
+    id: 11,
+    photoURL: null,
+    displayName: "Display Name 2",
+    institution: "Stone Brewing",
+    pronouns: "",
+    bio: "",
+    website: "",
+    level: "attendee",
+    room: "3",
+    isActive: true
+  },
+  12: {
+    id: 12,
+    photoURL: null,
+    displayName: "Display Name 3",
+    institution: "Stone Brewing",
+    pronouns: "",
+    bio: "",
+    website: "",
+    level: "attendee",
+    room: "3",
+    isActive: true
+  },
+  13: {
+    id: 13,
+    photoURL: null,
+    displayName: "Display Name 4",
+    institution: "Stone Brewing",
+    pronouns: "",
+    bio: "",
+    website: "",
+    level: "attendee",
+    room: "3",
+    isActive: true
+  },
+  14: {
+    id: 14,
+    photoURL: null,
+    displayName: "Display Name 5",
+    institution: "Stone Brewing",
+    pronouns: "",
+    bio: "",
+    website: "",
+    level: "attendee",
+    room: "3",
+    isActive: true
   }
 };
 
@@ -259,8 +327,13 @@ class ApiService {
     return Promise.reject("Not implemented");
   }
 
-  joinRoom(roomId: string): Promise<string> {
-    return Promise.resolve(ROOMS[roomId].zoomLink);
+  joinRoom(roomId: number): Promise<void> {
+    return Promise.resolve();
+  }
+
+  joinRandom(): Promise<number> {
+    const random = _.sample(Object.keys(ROOMS)) || "1";
+    return Promise.resolve(parseInt(random));
   }
 
   leaveRoom(): Promise<void> {
@@ -278,12 +351,14 @@ class ApiService {
 
   // Messages
 
-  recvMessages(): Promise<RecvMessage[]> {
-    const msgs = MESSAGES.filter(
-      v => this.readUpto < v.messageId && v.messageId <= this.currentClock
+  getUnreadMessages(currentClock: number): RecvMessage[] {
+    return MESSAGES.filter(
+      v => this.readUpto < v.messageId && v.messageId <= currentClock
     );
-    this.currentClock += 1;
-    return Promise.resolve(msgs);
+  }
+
+  recvMessages(): Promise<RecvMessage[]> {
+    return Promise.resolve(this.getUnreadMessages(this.currentClock++));
   }
 
   markRead(msgId: MessageId): Promise<string> {
@@ -303,7 +378,17 @@ class ApiService {
     return Promise.resolve("ok");
   }
 
-  // Beacon
+  // Sync
+
+  async sync(): Promise<Sync> {
+    await delay();
+    const msg = (this.currentClock += 1);
+    return {
+      rooms: Object.values(ROOMS),
+      users: Object.values(USERS),
+      unreadMessages: this.getUnreadMessages(this.currentClock++)
+    };
+  }
 
   sendBeacon() {
     return;

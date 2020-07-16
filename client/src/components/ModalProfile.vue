@@ -1,34 +1,38 @@
 <template>
-  <b-container class="mt-4">
+  <b-modal
+    size="lg"
+    class="mt-4"
+    :id="id"
+    title="Profile"
+    ok-title="Save"
+    @ok.prevent="onSave"
+    :no-close-on-backdrop="sending"
+    :no-close-on-esc="sending"
+    :ok-disabled="sending || !valid"
+    :cancel-disabled="sending"
+  >
     <b-alert :show="error" variant="danger" dismissible>{{ errorMsg }}</b-alert>
     <b-form @submit.prevent="onSubmit">
       <profile-form v-model="profile" @state="valid = $event" />
-
-      <b-button
-        :disabled="sending || !valid"
-        variant="primary"
-        size="lg"
-        type="submit"
-        class="mt-4"
-      >
-        Save
-      </b-button>
     </b-form>
-  </b-container>
+  </b-modal>
 </template>
 
 <script lang="ts">
-import { Component, Vue, Watch } from "vue-property-decorator";
+import { Component, Vue, Watch, Prop } from "vue-property-decorator";
 import { mapGetters } from "vuex";
 import { User, UserData } from "@/models";
 import ApiService from "@/services/api";
 import ProfileForm, { ProfileFormData } from "@/components/ProfileForm.vue";
+import { BvModalEvent, BModal } from "bootstrap-vue";
 
 @Component({
   computed: mapGetters(["sessionUser"]),
   components: { ProfileForm }
 })
 export default class Profile extends Vue {
+  @Prop({ default: null }) readonly id!: string | null;
+
   profile: ProfileFormData = {
     displayName: "",
     institution: "",
@@ -46,13 +50,15 @@ export default class Profile extends Vue {
   errorMsg = "";
   sending = false;
 
-  onSubmit() {
+  onSave(ev: BvModalEvent) {
     if (this.sending || !this.valid) {
       return;
     }
     this.sending = true;
     this.submit()
-      .then(() => this.$router.push({ name: "Home" }))
+      .then(() => {
+        (ev.vueTarget as BModal).hide("profile-saved");
+      })
       .catch(error => {
         if (error.response?.status == 400) {
           this.setError("The data contain errors");

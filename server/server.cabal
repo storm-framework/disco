@@ -1,10 +1,10 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.33.0.
+-- This file has been generated from package.yaml by hpack version 0.34.2.
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 0e22040c8654b667f425b2f524ae012080c86ef86ed86640b2aea5a70b996b53
+-- hash: 5c76665479f401e0614a9b86cd438951e26e34cc396ad10bfc453fb3ad3a8ea1
 
 name:           server
 version:        0.1.0.0
@@ -43,6 +43,7 @@ library
       Controllers.Invitation
       Controllers.Message
       Controllers.Room
+      Controllers.Sync
       Controllers.User
       Crypto
       JSON
@@ -56,6 +57,7 @@ library
       src
   build-depends:
       HaskellNet-SSL
+    , MonadRandom
     , aeson
     , amazonka
     , amazonka-core
@@ -82,6 +84,7 @@ library
     , persistent
     , persistent-sqlite
     , persistent-template
+    , random-shuffle
     , resource-pool
     , scrypt
     , text
@@ -103,6 +106,7 @@ executable disco
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       HaskellNet-SSL
+    , MonadRandom
     , aeson
     , amazonka
     , amazonka-core
@@ -129,6 +133,7 @@ executable disco
     , persistent
     , persistent-sqlite
     , persistent-template
+    , random-shuffle
     , resource-pool
     , scrypt
     , server
@@ -152,6 +157,7 @@ test-suite server-test
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       HaskellNet-SSL
+    , MonadRandom
     , aeson
     , amazonka
     , amazonka-core
@@ -178,6 +184,7 @@ test-suite server-test
     , persistent
     , persistent-sqlite
     , persistent-template
+    , random-shuffle
     , resource-pool
     , scrypt
     , server

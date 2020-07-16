@@ -1,6 +1,5 @@
 import Call from "@/views/Call.vue";
 import Home from "@/views/Home.vue";
-import Profile from "@/views/Profile.vue";
 import SignIn from "@/views/SignIn.vue";
 import SignUp from "@/views/SignUp.vue";
 import Vue from "vue";
@@ -23,11 +22,6 @@ const routes: Array<RouteConfig> = [
     path: "/",
     name: "Home",
     component: Home
-  },
-  {
-    path: "/profile",
-    name: "Profile",
-    component: Profile
   },
   {
     path: "/invitation",

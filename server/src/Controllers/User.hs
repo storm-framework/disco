@@ -10,6 +10,11 @@ import           Data.Text                      ( Text )
 import qualified Data.Text                     as T
 import           Data.Int                       ( Int64 )
 import           Data.Maybe
+import           Data.Time.Clock                ( UTCTime
+                                                , secondsToDiffTime
+                                                , NominalDiffTime
+                                                , addUTCTime
+                                                )
 import           Database.Persist.Sql           ( fromSqlKey
                                                 , toSqlKey
                                                 )
@@ -28,7 +33,12 @@ import           Binah.Frankie
 import           Controllers
 import           Model
 import           JSON
-import           Control.Monad                  ( when )
+import           Crypto
+import           Control.Monad.Time             ( currentTime )
+
+-- Time before a user is consider inactive without showing any activity.
+inactiveTime :: NominalDiffTime
+inactiveTime = 30
 
 ----------------------------------------------------------------------------------------------------
 -- | User List
@@ -38,14 +48,21 @@ import           Control.Monad                  ( when )
 userList :: Controller ()
 userList = do
   _     <- requireAuthUser
-  users <- selectList trueF
-  users <- mapT extractUserData users
+  users <- allUsers
   respondJSON status200 users
+
+allUsers :: Controller [UserData]
+allUsers = do
+  users <- selectList trueF
+  mapT extractUserData users
 
 {-@ extractUserData :: _ -> TaggedT<{\_ -> True}, {\_ -> False}> _ _ @-}
 extractUserData :: Entity User -> Controller UserData
 extractUserData u = do
   visibility <- project userVisibility' u
+  now        <- liftTIO currentTime
+  lastSync   <- project userLastSync' u
+  active     <- project userActive' u
   UserData
     `fmap` project userId'           u
     <*>    project userEmailAddress' u
@@ -56,7 +73,8 @@ extractUserData u = do
     <*>    project userWebsite'      u
     <*>    project userBio'          u
     <*>    project userLevel'        u
-    <*>    if visibility == "public" then project userRoom' u else return Nothing
+    <*>    (if visibility == "public" then project userRoom' u else return Nothing)
+    <*>    return (inactiveTime `addUTCTime` lastSync > now && active)
 
 data UserData = UserData
   { userId :: UserId
@@ -69,6 +87,7 @@ data UserData = UserData
   , userBio:: Text
   , userLevel :: String
   , userRoom :: Maybe RoomId
+  , userIsActive:: Bool
   }
   deriving Generic
 
