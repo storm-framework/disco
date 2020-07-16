@@ -3,13 +3,25 @@
     <b-card-body>
       <heading :level="1" :context="headingContext" class="card-title h4">
         Lobby
+        <span v-if="inLobby" class="badge badge-secondary">
+          Current Room
+        </span>
       </heading>
 
       <heading :level="2" :context="headingContext" class="sr-only">
         In the Lobby
       </heading>
 
-      <user-list :users="users" />
+      <b-card-text v-if="empty">
+        The lobby is empty.
+      </b-card-text>
+      <template v-else>
+        <heading :level="2" :context="headingContext" class="sr-only">
+          In the lobby
+        </heading>
+
+        <user-list :users="users" />
+      </template>
 
       <icon-button icon="dice" variant="primary" @click="joinRandomRoom">
         Random Room
@@ -34,8 +46,16 @@ library.add(faDice);
 export default class Lobby extends Mixins(HeadingContext) {
   readonly topicMaxLength = 50;
 
+  get inLobby() {
+    return this.$store.getters.currentRoom === null;
+  }
+
   get users(): User[] {
     return this.$store.getters.lobbyUsers;
+  }
+
+  get empty() {
+    return this.users.length === 0;
   }
 
   showError(msg: string) {

@@ -36,6 +36,9 @@
         <li class="mb-4 col-lg-6" v-for="room in availableRooms" :key="room.id">
           <room-card :room="room" :h-context="3" class="available-room" />
         </li>
+        <li class="mb-4 col-lg-6" v-if="inRoom" key="lobby">
+          <lobby :h-context="3" />
+        </li>
       </ul>
     </section>
   </main>
