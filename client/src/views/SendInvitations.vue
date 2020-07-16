@@ -12,7 +12,7 @@
             size="sm"
             class="mr-1"
             v-b-modal.import-file-modal
-            variant="outline-success"
+            variant="outline-primary"
             :disabled="sending"
           >
             <font-awesome-icon icon="file-import" /> Import

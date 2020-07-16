@@ -117,7 +117,6 @@ export default new Vuex.Store({
   },
   getters: {
     allowDirectMessages: () => true,
-    actionButtonVariant: () => "outline-success", // or "outline-primary", "success", "primary"
     loggedIn: ({ sessionUserId }) => !!sessionUserId,
     sessionUser: ({ users, sessionUserId }) =>
       sessionUserId && users[sessionUserId],
