@@ -98,7 +98,7 @@ const USERS: { [id: string]: User } = {
     bio: "",
     website: "#ThisIsAMisleadingHashtag",
     level: "organizer",
-    room: "1",
+    room: null,
     isActive: true
   },
   2: {
@@ -172,6 +172,66 @@ const USERS: { [id: string]: User } = {
     id: 9, // Skipped a couple of ids on purpose
     photoURL: null,
     displayName: "واندونيسيا، هو, سكان شاسعة أعلنت ",
+    institution: "Stone Brewing",
+    pronouns: "",
+    bio: "",
+    website: "",
+    level: "attendee",
+    room: "3",
+    isActive: true
+  },
+  10: {
+    id: 10,
+    photoURL: null,
+    displayName: "Display Name 1",
+    institution: "Stone Brewing",
+    pronouns: "",
+    bio: "",
+    website: "",
+    level: "attendee",
+    room: "3",
+    isActive: true
+  },
+  11: {
+    id: 11,
+    photoURL: null,
+    displayName: "Display Name 2",
+    institution: "Stone Brewing",
+    pronouns: "",
+    bio: "",
+    website: "",
+    level: "attendee",
+    room: "3",
+    isActive: true
+  },
+  12: {
+    id: 12,
+    photoURL: null,
+    displayName: "Display Name 3",
+    institution: "Stone Brewing",
+    pronouns: "",
+    bio: "",
+    website: "",
+    level: "attendee",
+    room: "3",
+    isActive: true
+  },
+  13: {
+    id: 13,
+    photoURL: null,
+    displayName: "Display Name 4",
+    institution: "Stone Brewing",
+    pronouns: "",
+    bio: "",
+    website: "",
+    level: "attendee",
+    room: "3",
+    isActive: true
+  },
+  14: {
+    id: 14,
+    photoURL: null,
+    displayName: "Display Name 5",
     institution: "Stone Brewing",
     pronouns: "",
     bio: "",

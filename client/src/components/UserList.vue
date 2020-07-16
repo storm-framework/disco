@@ -51,6 +51,8 @@ export default class Lobby extends Mixins(HeadingContext) {
 <style lang="scss" scoped>
 .user-list {
   margin-bottom: 1rem;
+  max-height: 260px;
+  overflow: scroll;
 }
 
 .user-list span {

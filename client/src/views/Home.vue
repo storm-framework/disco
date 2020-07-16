@@ -33,11 +33,7 @@
       <h2 v-if="currentRoom" class="mt-5">Other Rooms</h2>
       <h2 v-else class="mt-5">All Rooms</h2>
       <ul class="row list-unstyled mt-4">
-        <li
-          class="mb-4 col-lg-auto"
-          v-for="room in availableRooms"
-          :key="room.id"
-        >
+        <li class="mb-4 col-lg-6" v-for="room in availableRooms" :key="room.id">
           <room-card :room="room" :h-context="3" class="available-room" />
         </li>
       </ul>
