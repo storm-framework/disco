@@ -13,19 +13,24 @@
     <h2 class="sr-only">Your status</h2>
     <section v-if="sessionUser" class="container mt-4">
       <b-row>
-        <user-summary long v-bind="sessionUser" :h-context="3" class="col-6" />
+        <user-summary
+          long
+          v-bind="sessionUser"
+          :h-context="3"
+          class="col-lg-6 mb-5"
+        />
         <room-card
           v-if="inRoom"
           :room="currentRoom"
           :h-context="4"
-          class="col-6"
+          class="col-lg-6 mb-5"
         />
-        <lobby v-else :h-context="4" class="col-6" />
+        <lobby v-else :h-context="4" class="col-lg-6 mb-5" />
       </b-row>
     </section>
     <section v-if="roomsAreAvailable" class="container">
-      <h2 v-if="currentRoom" class="mt-5">Other Rooms</h2>
-      <h2 v-else class="mt-5">All Rooms</h2>
+      <h2 v-if="currentRoom">Other Rooms</h2>
+      <h2 v-else>All Rooms</h2>
       <ul class="row list-unstyled mt-4">
         <li class="mb-4 col-lg-6" v-for="room in availableRooms" :key="room.id">
           <room-card :room="room" :h-context="3" class="available-room" />
