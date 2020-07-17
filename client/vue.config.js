@@ -27,17 +27,18 @@ module.exports = {
       config.plugin("bundle-analyzer").use(BundleAnalyzerPlugin);
     }
 
-    const cert = process.env.WEBPACK_DEV_SERVER_HTTPS_CERT;
-    const key = process.env.WEBPACK_DEV_SERVER_HTTPS_KEY;
-    const ca = process.env.WEBPACK_DEV_SERVER_HTTPS_CA;
+    const useHttps =
+      process.env.VUE_DEV_SERVER_USE_HTTPS?.toLowerCase() === "true" ?? false;
+    const cert = process.env.VUE_DEV_SERVER_HTTPS_CERT;
+    const key = process.env.VUE_DEV_SERVER_HTTPS_KEY;
+    const ca = process.env.VUE_DEV_SERVER_HTTPS_CA;
+    let httpsConfig = useHttps;
 
-    if (cert && key) {
-      config.devServer.https({
-        cert,
-        key,
-        ca
-      });
+    if (useHttps && cert && key) {
+      httpsConfig = ca ? { cert, key, ca } : { cert, key };
     }
+
+    config.devServer.https(httpsConfig);
 
     config
       .plugin("script-ext")
