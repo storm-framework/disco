@@ -56,7 +56,7 @@ import { library } from "@fortawesome/fontawesome-svg-core";
 import { BvEvent } from "bootstrap-vue";
 library.add(faDice);
 
-const SYNC_INTERVAL = 10000;
+const SYNC_INTERVAL = 3000;
 
 function timeStampString(timeStamp: number) {
   const date = new Date(timeStamp);
