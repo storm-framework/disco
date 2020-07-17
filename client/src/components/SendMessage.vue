@@ -2,21 +2,24 @@
   <b-modal
     :title="title"
     :id="modalId"
-    :header-bg-variant="'primary'"
-    :header-text-variant="'light'"
-    :body-bg-variant="'light'"
-    :body-text-variant="'dark'"
-    :ok-title="'Send'"
+    header-bg-variant="primary"
+    header-text-variant="light"
+    body-bg-variant="light"
+    body-text-variant="dark"
+    ok-title="Send"
     cancel-variant="outline-secondary"
-    @ok="send"
-    @cancel="clear"
-    @keydown.native.enter="send"
-    hide-header-close
+    @ok.prevent="send"
+    @hidden="clear"
     no-close-on-esc
-    no-close-on-backdrop
+    :ok-disabled="sending"
+    :no-close-on-backdrop="sending"
+    :cancel-disabled="sending"
   >
     <form>
       <div>
+        <b-alert :show="error" variant="danger" dismissible>
+          {{ errorMsg }}
+        </b-alert>
         <b-form-textarea v-model="message" placeholder="Hello!" />
       </div>
     </form>
@@ -28,6 +31,7 @@ import { Component, Prop, Vue } from "vue-property-decorator";
 
 import ApiService from "@/services/api";
 import { User } from "@/models";
+import { BvModalEvent, BModal } from "bootstrap-vue";
 
 @Component({})
 export default class SendMessage extends Vue {
@@ -37,7 +41,10 @@ export default class SendMessage extends Vue {
   @Prop({ default: null })
   receiver!: number | null;
 
+  sending = false;
   message = "";
+  errorMsg = "";
+  error = false;
 
   get title() {
     let receiverName: string | null;
@@ -53,20 +60,35 @@ export default class SendMessage extends Vue {
     }
   }
 
-  send() {
+  send(ev: BvModalEvent) {
+    if (this.sending) {
+      return;
+    }
     const sender: User = this.$store.getters.sessionUser;
     if (sender) {
+      this.sending = true;
       ApiService.sendMessage({
         senderId: sender.id,
         receiverId: this.receiver,
         messageText: this.message,
         timestamp: new Date().getTime()
-      }).then(() => this.clear());
+      })
+        .then(() => (ev.vueTarget as BModal).hide("message-sent"))
+        .catch(() => this.setError("There was an unexpected error."))
+        .finally(() => (this.sending = false));
+    } else {
+      this.setError("There was an unexpected error.");
     }
   }
 
   clear() {
     this.message = "";
+    this.error = false;
+  }
+
+  setError(msg: string) {
+    this.error = true;
+    this.errorMsg = msg;
   }
 }
 </script>

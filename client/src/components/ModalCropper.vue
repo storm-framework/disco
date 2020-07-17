@@ -1,5 +1,12 @@
 <template>
-  <b-modal no-fade size="lg" ref="modal" v-on:ok="onOk" title="Crop your photo">
+  <b-modal
+    no-fade
+    size="lg"
+    ref="modal"
+    v-on:ok="onOk"
+    cancel-variant="outline-secondary"
+    title="Crop your photo"
+  >
     <b-overlay
       :show="loading"
       spinner-variant="primary"

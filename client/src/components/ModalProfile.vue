@@ -1,13 +1,18 @@
 <template>
   <b-modal
     size="lg"
+    header-bg-variant="primary"
+    header-text-variant="light"
+    body-bg-variant="light"
+    body-text-variant="dark"
+    cancel-variant="outline-secondary"
+    ok-title="Save"
     class="mt-4"
     :id="id"
     title="Profile"
-    ok-title="Save"
     @ok.prevent="onSave"
+    no-close-on-esc
     :no-close-on-backdrop="sending"
-    :no-close-on-esc="sending"
     :ok-disabled="sending || !valid"
     :cancel-disabled="sending"
   >

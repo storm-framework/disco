@@ -110,10 +110,7 @@ messagesFor userId = do
       uptoId <- project markReadUpto' upto
       return (messageId' >. uptoId)
   msgs <- selectList
-    (   lowerF
-    &&: (messageReceiver' ==. Nothing ||: (messageReceiver' ==. Just userId))
-    &&: (messageSender' !=. userId)
-    )
+    (lowerF &&: (messageReceiver' ==. Nothing ||: (messageReceiver' ==. Just userId)))
   mapT extractRecvMessage msgs
 
 extractRecvMessage :: Entity Message -> Controller RecvMessage
