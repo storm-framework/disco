@@ -5,53 +5,83 @@
 <script lang="ts">
 import { Vue, Component, Prop, Watch } from "vue-property-decorator";
 import { Room, User } from "@/models";
-import Call from "./Call";
+import { JitsiRoom } from "./JitsiRoom";
 
 @Component
 export default class JitsiCall extends Vue {
   @Prop() room!: Room;
   @Prop() user!: User;
 
-  private call: Call = new Call();
-
-  created() {
-    this.call.on("joined", () => {
-      this.$emit("joined", this.room.id);
-    });
-
-    this.call.on("left", () => {
-      this.$emit("left", this.room.id);
-    });
-  }
+  // There should only ever be multiple rooms for a second when switching
+  private jitsiRooms: Map<string, { id: number; room: JitsiRoom }> = new Map();
+  private unwatch?: () => void;
 
   mounted() {
-    this.call.setParent(this.$refs.callContainer as Element);
-    this.call.enable();
+    this.unwatch = this.$watch("room.zoomLink", this.onZoomLinkChanged, {
+      immediate: true
+    });
   }
 
   beforeDestroy() {
-    this.call.disable();
+    this.unwatch?.();
+    for (const { room } of this.jitsiRooms.values()) {
+      room.disable();
+    }
   }
 
-  @Watch("room.zoomLink", { immediate: true })
-  onLinkChanged(zoomLink: string) {
-    const roomName = zoomLink.split("/")[3];
-    this.call.setRoom(roomName);
+  onZoomLinkChanged(newLink: string, oldLink?: string) {
+    const newRoomName = newLink.split("/")[3];
+
+    if (oldLink !== undefined) {
+      const oldRoomName = oldLink.split("/")[3];
+
+      if (newRoomName === oldRoomName) {
+        return;
+      }
+
+      this.jitsiRooms.get(oldRoomName)?.room.disable();
+    }
+
+    const newVal = {
+      id: this.room.id,
+      room: new JitsiRoom(newRoomName, {
+        displayName: this.user.displayName,
+        avatarUrl: this.user.photoURL ?? ""
+      })
+    };
+
+    this.jitsiRooms.set(newRoomName, newVal);
+    newVal.room.mount(this.$refs.callContainer as Element);
+
+    newVal.room.joined().then(() => {
+      this.$emit("joined", newVal.id);
+    });
+
+    newVal.room.disabled().then(() => {
+      this.$emit("left", newVal.id);
+      this.jitsiRooms.delete(newRoomName);
+    });
   }
 
   @Watch("user.displayName", { immediate: true })
   onDisplayNameChanged(displayName: string) {
-    this.call.setDisplayName(displayName);
+    for (const { room } of this.jitsiRooms.values()) {
+      room.setDisplayName(displayName);
+    }
   }
 
   @Watch("user.photoURL", { immediate: true })
   onAvatarUrlChanged(avatarUrl: string | null) {
-    this.call.setAvatarUrl(avatarUrl);
+    for (const { room } of this.jitsiRooms.values()) {
+      room.setAvatarUrl(avatarUrl ?? "");
+    }
   }
 
   @Watch("room.topic", { immediate: true })
   onTopicChanged(topic: string) {
-    this.call.setTopic(topic);
+    for (const { room } of this.jitsiRooms.values()) {
+      room.setTopic(topic);
+    }
   }
 }
 </script>

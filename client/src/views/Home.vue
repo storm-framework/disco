@@ -146,8 +146,8 @@ export default class Home extends Vue {
     });
   }
 
-  leaveRoom() {
-    this.$store.dispatch("leaveRoom");
+  leaveRoom(roomId: number) {
+    this.$store.dispatch("leaveRoom", roomId);
   }
 
   showError(msg: string) {

@@ -112,8 +112,12 @@ export default new Vuex.Store({
       commit("swithToRoom", roomId);
       return roomId;
     },
-    leaveRoom: ({ commit }) =>
-      ApiService.leaveRoom().then(() => commit("leaveRoom"))
+    leaveRoom: async ({ commit, getters }, roomId: number) => {
+      if (getters.sessionUser?.room === roomId) {
+        await ApiService.leaveRoom();
+        commit("leaveRoom");
+      }
+    }
   },
   getters: {
     allowDirectMessages: () => true,
