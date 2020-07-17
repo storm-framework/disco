@@ -1,8 +1,8 @@
 <template>
   <b-list-group class="user-list">
     <b-list-group-item
-      button
       v-for="user in users"
+      href="#"
       :key="user.id"
       @click="toggleExpanded(user)"
       class="compact"

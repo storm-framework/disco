@@ -210,7 +210,7 @@ class ApiService {
   }
 
   async redirectToSignIn() {
-    if (location.pathname !== "/signin") {
+    if (location.pathname !== "/signin" && location.pathname !== "/signup") {
       location.replace("/signin");
     }
   }
