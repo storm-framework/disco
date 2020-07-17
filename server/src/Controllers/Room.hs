@@ -165,7 +165,7 @@ tryJoinRoom viewerId room = do
   roomId     <- project roomId' room
   usersCount <- count (userRoom' ==. Just roomId)
   capacity   <- project roomCapacity' room
-  if capacity <= 0 || usersCount < capacity
+  if capacity < 0 || usersCount < capacity
     then do
       _ <- updateWhere (userId' ==. viewerId) (userRoom' `assign` Just roomId)
       return True

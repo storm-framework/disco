@@ -125,16 +125,11 @@ export default new Vuex.Store({
     sessionUser: ({ users, sessionUserId }) =>
       sessionUserId && users[sessionUserId],
     rooms: ({ rooms }) => Object.values(rooms),
-    availableRooms: (_state, getters) => {
-      if (getters.currentRoom) {
-        return _.filter(
-          getters.rooms,
-          room => room.id !== getters.currentRoom.id
-        );
-      } else {
-        return getters.rooms;
-      }
-    },
+    availableRooms: (_state, getters) =>
+      _.filter(
+        getters.rooms,
+        room => room.id !== getters.currentRoom?.id && room.capacity !== 0
+      ),
     roomUsers: ({ users }) => (roomId: string) =>
       _.filter(_.values(users), u => u.room == roomId && u.isActive),
     currentRoom: ({ rooms }, getters) => {

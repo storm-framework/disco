@@ -145,7 +145,7 @@ export default class RoomCard extends Mixins(HeadingContext) {
   joinRoom() {
     this.$store.dispatch("joinRoom", this.room.id).catch(error => {
       if (error.response?.status == 409) {
-        this.showError("Sorry, but the room is already full");
+        this.showError("Sorry, but this room is already full");
       } else {
         this.showError("An unexpected error happend");
       }
