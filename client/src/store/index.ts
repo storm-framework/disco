@@ -31,7 +31,7 @@ export default new Vuex.Store({
       // We assume the room is already in the store. if it isn't this won't trigger reactivity
       rooms[room.id] = room;
     },
-    swithToRoom(state, roomId) {
+    switchToRoom(state, roomId) {
       const u = state.sessionUserId && state.users[state.sessionUserId];
       if (u) {
         u.room = roomId;
@@ -105,11 +105,11 @@ export default new Vuex.Store({
     },
     joinRoom: async ({ commit }, roomId: number) => {
       await ApiService.joinRoom(roomId);
-      commit("swithToRoom", roomId);
+      commit("switchToRoom", roomId);
     },
     joinRandom: async ({ commit }) => {
       const roomId = await ApiService.joinRandom();
-      commit("swithToRoom", roomId);
+      commit("switchToRoom", roomId);
       return roomId;
     },
     leaveRoom: async ({ commit, getters }, roomId: number) => {

@@ -152,10 +152,11 @@ joinRandom = do
   viewerId    <- project userId' viewer
   currentRoom <- project userRoom' viewer
   rooms       <- selectList trueF
+  rooms       <- shuffleT rooms
   forT rooms $ \room -> do
-    ok <- tryJoinRoom viewerId room
-    whenT ok $ do
-      roomId <- project roomId' room
+    ok     <- tryJoinRoom viewerId room
+    roomId <- project roomId' room
+    whenT (ok && currentRoom /= Just roomId) $ do
       respondJSON status200 roomId
   respondError status409 (Just "All rooms are full")
 
