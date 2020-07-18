@@ -98,7 +98,8 @@ signOut :: Controller ()
 signOut = do
   viewer   <- requireAuthUser
   viewerId <- project userId' viewer
-  _        <- updateWhere (userId' ==. viewerId) (userRoom' `assign` Nothing)
+  _        <- updateWhere (userId' ==. viewerId)
+                          ((userRoom' `assign` Nothing) `combine` (userActive' `assign` False))
   respondTagged $ expireSessionCookie (emptyResponse status201)
 
 --------------------------------------------------------------------------------
