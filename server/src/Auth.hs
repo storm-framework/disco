@@ -267,7 +267,7 @@ authMethod = AuthMethod
   { authMethodTry     = checkIfAuth
   , authMethodRequire = checkIfAuth >>= \case
                           Just user -> pure user
-                          Nothing   -> respondError status401 Nothing
+                          Nothing   -> respondTagged $ expireSessionCookie (emptyResponse status401)
   }
 
 -- TODO: we can get rid of all the jwt stuffs and just sign the cookie with a mac
