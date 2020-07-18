@@ -60,13 +60,19 @@
       </template>
 
       <icon-button
-        v-if="showJoin"
+        v-if="!isCurrentRoom"
+        :disabled="isFull"
         icon="video"
         variant="primary"
         @click="joinRoom"
       >
         Join
       </icon-button>
+      <div>
+        <small v-if="isFull" class="mt-1 text-muted">
+          This room is at capacity right now, please join another one.
+        </small>
+      </div>
 
       <icon-button
         v-if="showLeave"
@@ -133,9 +139,8 @@ export default class RoomCard extends Mixins(HeadingContext) {
     return this.$store.getters.currentRoom;
   }
 
-  get showJoin(): boolean {
-    const isFull = this.$store.getters.roomIsFull(this.room.id);
-    return !this.isCurrentRoom && !isFull;
+  get isFull(): boolean {
+    return this.$store.getters.roomIsFull(this.room.id);
   }
 
   get showLeave(): boolean {

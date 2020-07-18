@@ -53,7 +53,7 @@ import { Room, RecvMessage, User } from "@/models";
 import { mapGetters } from "vuex";
 import { BvEvent } from "bootstrap-vue";
 
-const SYNC_INTERVAL = 3000;
+const SYNC_INTERVAL = 2500;
 
 function timeStampString(timeStamp: number) {
   const date = new Date(timeStamp);
