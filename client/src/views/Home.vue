@@ -51,10 +51,7 @@ import UserSummary from "@/components/UserSummary.vue";
 import JitsiCall from "@/components/JitsiCall.vue";
 import { Room, RecvMessage, User } from "@/models";
 import { mapGetters } from "vuex";
-import { faDice } from "@fortawesome/free-solid-svg-icons";
-import { library } from "@fortawesome/fontawesome-svg-core";
 import { BvEvent } from "bootstrap-vue";
-library.add(faDice);
 
 const SYNC_INTERVAL = 3000;
 

@@ -4,11 +4,13 @@
       <b-navbar-brand to="/">Distant Socialing</b-navbar-brand>
       <b-navbar-nav class="ml-auto">
         <b-nav-item-dropdown text="Admin" right v-if="isOrganizer">
-          <b-dropdown-item :to="{ name: 'Admin' }">Rooms</b-dropdown-item>
-          <b-dropdown-item :to="{ name: 'Invitations' }">
-            Invitations
+          <b-dropdown-item :to="{ name: 'Admin' }" target="_blank">
+            Manage Rooms
           </b-dropdown-item>
-          <b-dropdown-item :to="{ name: 'SendInvitations' }">
+          <b-dropdown-item :to="{ name: 'Invitations' }" target="_blank">
+            See Invitations
+          </b-dropdown-item>
+          <b-dropdown-item :to="{ name: 'SendInvitations' }" target="_blank">
             Send Invitations
           </b-dropdown-item>
           <b-dropdown-item-button v-b-modal.broadcast-modal>
