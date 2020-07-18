@@ -3,56 +3,86 @@
     <h1>Manage rooms</h1>
     <b-form class="form-send-invitations" @submit.prevent="onSubmit">
       <b-alert :show="fatalError" variant="danger">{{ errorMsg }}</b-alert>
-      <fieldset v-if="!loading" :disabled="fatalError">
-        <table class="rooms-table">
-          <thead>
-            <tr>
-              <th class="room-color sr-only">Color</th>
-              <th class="room-name">Name</th>
-              <th class="room-topic">Topic</th>
-              <th class="room-capacity">Capacity</th>
-              <th class="room-url">URL</th>
-            </tr>
-          </thead>
-          <tbody v-for="group in roomGroups" :key="group">
-            <tr
-              v-for="(room, index) in groupRooms(group)"
-              :key="keyFor(group, index)"
-            >
-              <td class="room-color">
-                <b-form-input type="color" v-model="room.color" />
-              </td>
-              <td class="room-name">
-                <b-form-input type="text" v-model="room.name" required />
-              </td>
-              <td class="room-topic">
-                <b-form-input type="text" v-model="room.topic" />
-              </td>
-              <td class="room-capacity">
-                <b-form-input type="number" v-model="room.capacity" />
-              </td>
-              <td class="room-url">
-                <b-form-input type="url" v-model="room.zoomLink" required />
-              </td>
-            </tr>
-            <tr v-if="group === 'new'">
-              <td colspan="3" class="new-row">
-                <icon-button icon="plus" class="add-room" @click="add">
-                  Add Room
-                </icon-button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-        <b-button
-          type="submit"
-          variant="primary"
-          class="save"
-          :disabled="saving"
-        >
-          Save
-        </b-button>
-      </fieldset>
+      <b-form-text>
+        <dl class="row">
+          <div class="col-3">
+            <dt>capacity &gt; 0</dt>
+            <dd>max capacity</dd>
+          </div>
+          <div class="col-3">
+            <dt>capacity = 0</dt>
+            <dd>room will be hidden</dd>
+          </div>
+          <div class="col-3">
+            <dt>capacity &lt; 0</dt>
+            <dd>infinite capacity</dd>
+          </div>
+        </dl>
+      </b-form-text>
+      <b-overlay
+        :show="loading"
+        spinner-variant="primary"
+        spinner-type="grow"
+        spinner-small
+        rounded="sm"
+        class="form-signup"
+        bg-color="#f5f5f5"
+      >
+        <fieldset :disabled="fatalError">
+          <table class="rooms-table">
+            <thead>
+              <tr>
+                <th class="room-color sr-only">Color</th>
+                <th class="room-name">Name</th>
+                <th class="room-topic">Topic</th>
+                <th
+                  class="room-capacity"
+                  id="capacity-header"
+                  v-b-tooltip.hover
+                  title="Tooltip directive content"
+                >
+                  Capacity
+                </th>
+              </tr>
+            </thead>
+            <tbody v-for="group in roomGroups" :key="group">
+              <tr
+                v-for="(room, index) in groupRooms(group)"
+                :key="keyFor(group, index)"
+              >
+                <td class="room-color">
+                  <b-form-input type="color" v-model="room.color" />
+                </td>
+                <td class="room-name">
+                  <b-form-input type="text" v-model="room.name" required />
+                </td>
+                <td class="room-topic">
+                  <b-form-input type="text" v-model="room.topic" />
+                </td>
+                <td class="room-capacity">
+                  <b-form-input type="number" v-model="room.capacity" />
+                </td>
+              </tr>
+              <tr v-if="group === 'new'">
+                <td colspan="3" class="new-row">
+                  <icon-button icon="plus" class="add-room" @click="add">
+                    Add Room
+                  </icon-button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <b-button
+            type="submit"
+            variant="primary"
+            class="save"
+            :disabled="saving"
+          >
+            Save
+            <font-awesome-icon icon="check" class="ml-1" v-if="showCheck" />
+          </b-button>
+        </fieldset>
+      </b-overlay>
     </b-form>
   </main>
 </template>
@@ -64,8 +94,8 @@ import ApiService from "@/services/api";
 import NTC from "@/vendor/ntc";
 
 import { library } from "@fortawesome/fontawesome-svg-core";
-import { faPlus } from "@fortawesome/free-solid-svg-icons";
-library.add(faPlus);
+import { faPlus, faCheck } from "@fortawesome/free-solid-svg-icons";
+library.add(faPlus, faCheck);
 
 interface OldRoom {
   id: number;
@@ -149,6 +179,8 @@ function randomJitsiLink() {
 type AnyRoom = OldRoom | NewRoom;
 type RoomGroup = "old" | "new";
 
+const HIDE_CHECK_TIME = 2000;
+
 @Component
 export default class SignIn extends Vue {
   loading = false;
@@ -157,6 +189,8 @@ export default class SignIn extends Vue {
   newRooms: NewRoom[] = [];
   fatalError = false;
   errorMsg = "";
+  showCheck = false;
+  hideCheckTimerHandler: number | null = null;
   readonly roomGroups = ["old", "new"];
 
   groupRooms(group: RoomGroup): AnyRoom[] {
@@ -210,7 +244,7 @@ export default class SignIn extends Vue {
       name: `${name} Room`,
       zoomLink: randomJitsiLink(),
       topic: "",
-      capacity: "0",
+      capacity: "-1",
       color: color
     });
   }
@@ -222,12 +256,19 @@ export default class SignIn extends Vue {
     const updates = this.oldRooms.map(parseOldRoom);
     const inserts = this.newRooms.map(parseNewRoom);
     this.saving = true;
+    this.showCheck = false;
     ApiService.updateRooms(updates, inserts)
       .then(ids => {
         for (const i in this.newRooms) {
           this.oldRooms.push({ id: ids[i], ...this.newRooms[i] });
         }
         this.newRooms = [];
+        this.showCheck = true;
+        this.hideCheckTimerHandler && clearTimeout(this.hideCheckTimerHandler);
+        this.hideCheckTimerHandler = setTimeout(
+          () => (this.showCheck = false),
+          HIDE_CHECK_TIME
+        );
       })
       .finally(() => {
         this.saving = false;
@@ -286,19 +327,15 @@ main {
 }
 
 .room-name {
-  @include make-col(3);
-}
-
-.room-topic {
   @include make-col(4);
 }
 
-.room-capacity {
-  @include make-col(1);
+.room-topic {
+  @include make-col(5);
 }
 
-.room-url {
-  @include make-col(3);
+.room-capacity {
+  @include make-col(2);
 }
 
 .save {
