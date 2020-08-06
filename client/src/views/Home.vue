@@ -105,13 +105,17 @@ export default class Home extends Vue {
       return;
     }
     this.syncing = true;
-    this.$store.dispatch("sync").then((messages: RecvMessage[]) => {
-      this.syncing = false;
-      for (const m of messages) {
-        this.showMessage(m);
-      }
-      this.syncTimerHandler = setTimeout(this.sync, SYNC_INTERVAL);
-    });
+    this.$store
+      .dispatch("sync")
+      .then((messages: RecvMessage[]) => {
+        for (const m of messages) {
+          this.showMessage(m);
+        }
+      })
+      .finally(() => {
+        this.syncing = false;
+        this.syncTimerHandler = setTimeout(this.sync, SYNC_INTERVAL);
+      });
   }
 
   showMessage(message: RecvMessage) {
