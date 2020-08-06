@@ -54,7 +54,7 @@ data AWSConfig = AWSConfig
   , awsBucket :: S3.BucketName
   }
 
-type Controller = TaggedT (ReaderT SqlBackend (ConfigT Config (ControllerT TIO)))
+type Controller = TaggedT (Entity User) (ReaderT SqlBackend (ConfigT Config (ControllerT TIO)))
 
 instance Frankie.Auth.HasAuthMethod (Entity User) Controller Config where
   getAuthMethod = configAuthMethod
@@ -62,7 +62,7 @@ instance Frankie.Auth.HasAuthMethod (Entity User) Controller Config where
 instance HasTemplateCache Config where
   getTemplateCache = configTemplateCache
 
-type Task = TaggedT (ReaderT SqlBackend (ConfigT Config TIO))
+type Task = TaggedT (Entity User) (ReaderT SqlBackend (ConfigT Config TIO))
 
 runTask :: Task () -> Controller ()
 runTask task = do

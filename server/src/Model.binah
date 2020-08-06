@@ -1,6 +1,7 @@
 import Data.ByteString (ByteString)
 import Data.Int        (Int64)
 import Data.Time.Clock (UTCTime)
+import Data.Text       (Text)
 
 Invitation
   code Text

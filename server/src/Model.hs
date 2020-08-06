@@ -5,14 +5,14 @@
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE DerivingStrategies #-}
+{-# LANGUAGE StandaloneDeriving #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 {-@ LIQUID "--compile-spec" @-}
 
 module Model
-  ( EntityFieldWrapper(..)
-  , migrateAll
-  , BinahRecord
-  , persistentRecord
+  ( migrateAll
   , mkInvitation
   , mkUser
   , mkRoom
@@ -66,8 +66,8 @@ module Model
   , MessageId
   , MarkReadId
   )
-
 where
+
 
 import           Database.Persist               ( Key )
 import           Database.Persist.TH            ( share
@@ -76,7 +76,6 @@ import           Database.Persist.TH            ( share
                                                 , sqlSettings
                                                 , persistLowerCase
                                                 )
-import           Data.Text                      ( Text )
 import qualified Database.Persist              as Persist
 
 import           Binah.Core
@@ -84,6 +83,17 @@ import           Binah.Core
 import Data.ByteString (ByteString)
 import Data.Int        (Int64)
 import Data.Time.Clock (UTCTime)
+import Data.Text       (Text)
+
+--------------------------------------------------------------------------------
+-- | Inline
+--------------------------------------------------------------------------------
+
+
+
+--------------------------------------------------------------------------------
+-- | Persistent
+--------------------------------------------------------------------------------
 
 share [mkPersist sqlSettings, mkMigrate "migrateAll"] [persistLowerCase|
 Invitation
@@ -134,20 +144,6 @@ MarkRead
   
 |]
 
-{-@
-data EntityFieldWrapper record typ < querypolicy :: Entity record -> Entity User -> Bool
-                                   , selector :: Entity record -> typ -> Bool
-                                   , flippedselector :: typ -> Entity record -> Bool
-                                   , capability :: Entity record -> Bool
-                                   , updatepolicy :: Entity record -> Entity record -> Entity User -> Bool
-                                   > = EntityFieldWrapper _
-@-}
-
-data EntityFieldWrapper record typ = EntityFieldWrapper (Persist.EntityField record typ)
-{-@ data variance EntityFieldWrapper covariant covariant invariant invariant invariant invariant invariant @-}
-
-{-@ measure currentUser :: Entity User @-}
-
 --------------------------------------------------------------------------------
 -- | Predicates
 --------------------------------------------------------------------------------
@@ -168,20 +164,6 @@ data EntityFieldWrapper record typ = EntityFieldWrapper (Persist.EntityField rec
 -- | Records
 --------------------------------------------------------------------------------
 
-{-@ data BinahRecord record <
-    p :: Entity record -> Bool
-  , insertpolicy :: Entity record -> Entity User -> Bool
-  , querypolicy  :: Entity record -> Entity User -> Bool
-  >
-  = BinahRecord _
-@-}
-data BinahRecord record = BinahRecord record
-{-@ data variance BinahRecord invariant covariant invariant invariant @-}
-
-{-@ persistentRecord :: BinahRecord record -> record @-}
-persistentRecord :: BinahRecord record -> record
-persistentRecord (BinahRecord record) = record
-
 {-@ measure getJust :: Key record -> Entity record @-}
 
 -- * Invitation
@@ -193,13 +175,14 @@ persistentRecord (BinahRecord record) = record
   -> x_4: Text
   -> x_5: Bool
   -> x_6: String
-  -> x_7: (Maybe String)
+  -> x_7: Maybe String
   -> BinahRecord <
        {\row -> invitationCode (entityVal row) == x_0 && invitationEmailAddress (entityVal row) == x_1 && invitationFirstName (entityVal row) == x_2 && invitationLastName (entityVal row) == x_3 && invitationInstitution (entityVal row) == x_4 && invitationAccepted (entityVal row) == x_5 && invitationEmailStatus (entityVal row) == x_6 && invitationEmailError (entityVal row) == x_7}
      , {\invitation viewer -> not (invitationAccepted (entityVal invitation)) && IsOrganizer viewer && invitationEmailStatus (entityVal invitation) == "not_sent"}
      , {\x_0 x_1 -> False}
-     > Invitation
+     > (Entity User) Invitation
 @-}
+mkInvitation :: Text -> Text -> Text -> Text -> Text -> Bool -> String -> Maybe String -> BinahRecord (Entity User) Invitation
 mkInvitation x_0 x_1 x_2 x_3 x_4 x_5 x_6 x_7 = BinahRecord (Invitation x_0 x_1 x_2 x_3 x_4 x_5 x_6 x_7)
 
 {-@ invariant {v: Entity Invitation | v == getJust (entityKey v)} @-}
@@ -212,9 +195,9 @@ mkInvitation x_0 x_1 x_2 x_3 x_4 x_5 x_6 x_7 = BinahRecord (Invitation x_0 x_1 x
   , {\field row  -> field == entityKey row}
   , {\_ -> False}
   , {\_ _ _ -> True}
-  > Invitation InvitationId
+  > (Entity User) Invitation InvitationId
 @-}
-invitationId' :: EntityFieldWrapper Invitation InvitationId
+invitationId' :: EntityFieldWrapper (Entity User) Invitation InvitationId
 invitationId' = EntityFieldWrapper InvitationId
 
 {-@ measure invitationCode :: Invitation -> Text @-}
@@ -227,9 +210,9 @@ invitationId' = EntityFieldWrapper InvitationId
   , {\field row -> field == invitationCode (entityVal row)}
   , {\old -> invitationCodeCap old}
   , {\old _ _ -> invitationCodeCap old}
-  > Invitation Text
+  > (Entity User) Invitation Text
 @-}
-invitationCode' :: EntityFieldWrapper Invitation Text
+invitationCode' :: EntityFieldWrapper (Entity User) Invitation Text
 invitationCode' = EntityFieldWrapper InvitationCode
 
 {-@ measure invitationEmailAddress :: Invitation -> Text @-}
@@ -242,9 +225,9 @@ invitationCode' = EntityFieldWrapper InvitationCode
   , {\field row -> field == invitationEmailAddress (entityVal row)}
   , {\old -> invitationEmailAddressCap old}
   , {\old _ _ -> invitationEmailAddressCap old}
-  > Invitation Text
+  > (Entity User) Invitation Text
 @-}
-invitationEmailAddress' :: EntityFieldWrapper Invitation Text
+invitationEmailAddress' :: EntityFieldWrapper (Entity User) Invitation Text
 invitationEmailAddress' = EntityFieldWrapper InvitationEmailAddress
 
 {-@ measure invitationFirstName :: Invitation -> Text @-}
@@ -257,9 +240,9 @@ invitationEmailAddress' = EntityFieldWrapper InvitationEmailAddress
   , {\field row -> field == invitationFirstName (entityVal row)}
   , {\old -> invitationFirstNameCap old}
   , {\old _ _ -> invitationFirstNameCap old}
-  > Invitation Text
+  > (Entity User) Invitation Text
 @-}
-invitationFirstName' :: EntityFieldWrapper Invitation Text
+invitationFirstName' :: EntityFieldWrapper (Entity User) Invitation Text
 invitationFirstName' = EntityFieldWrapper InvitationFirstName
 
 {-@ measure invitationLastName :: Invitation -> Text @-}
@@ -272,9 +255,9 @@ invitationFirstName' = EntityFieldWrapper InvitationFirstName
   , {\field row -> field == invitationLastName (entityVal row)}
   , {\old -> invitationLastNameCap old}
   , {\old _ _ -> invitationLastNameCap old}
-  > Invitation Text
+  > (Entity User) Invitation Text
 @-}
-invitationLastName' :: EntityFieldWrapper Invitation Text
+invitationLastName' :: EntityFieldWrapper (Entity User) Invitation Text
 invitationLastName' = EntityFieldWrapper InvitationLastName
 
 {-@ measure invitationInstitution :: Invitation -> Text @-}
@@ -287,9 +270,9 @@ invitationLastName' = EntityFieldWrapper InvitationLastName
   , {\field row -> field == invitationInstitution (entityVal row)}
   , {\old -> invitationInstitutionCap old}
   , {\old _ _ -> invitationInstitutionCap old}
-  > Invitation Text
+  > (Entity User) Invitation Text
 @-}
-invitationInstitution' :: EntityFieldWrapper Invitation Text
+invitationInstitution' :: EntityFieldWrapper (Entity User) Invitation Text
 invitationInstitution' = EntityFieldWrapper InvitationInstitution
 
 {-@ measure invitationAccepted :: Invitation -> Bool @-}
@@ -302,9 +285,9 @@ invitationInstitution' = EntityFieldWrapper InvitationInstitution
   , {\field row -> field == invitationAccepted (entityVal row)}
   , {\old -> invitationAcceptedCap old}
   , {\x_0 x_1 x_2 -> ((not (invitationAccepted (entityVal x_0)) && invitationAccepted (entityVal x_1))) => (invitationAcceptedCap x_0)}
-  > Invitation Bool
+  > (Entity User) Invitation Bool
 @-}
-invitationAccepted' :: EntityFieldWrapper Invitation Bool
+invitationAccepted' :: EntityFieldWrapper (Entity User) Invitation Bool
 invitationAccepted' = EntityFieldWrapper InvitationAccepted
 
 {-@ measure invitationEmailStatus :: Invitation -> String @-}
@@ -317,9 +300,9 @@ invitationAccepted' = EntityFieldWrapper InvitationAccepted
   , {\field row -> field == invitationEmailStatus (entityVal row)}
   , {\old -> invitationEmailStatusCap old}
   , {\x_0 x_1 x_2 -> (((invitationEmailStatus (entityVal x_1) == "sent" || invitationEmailStatus (entityVal x_1) == "error"))) => (invitationEmailStatusCap x_0)}
-  > Invitation String
+  > (Entity User) Invitation String
 @-}
-invitationEmailStatus' :: EntityFieldWrapper Invitation String
+invitationEmailStatus' :: EntityFieldWrapper (Entity User) Invitation String
 invitationEmailStatus' = EntityFieldWrapper InvitationEmailStatus
 
 {-@ measure invitationEmailError :: Invitation -> (Maybe String) @-}
@@ -332,16 +315,16 @@ invitationEmailStatus' = EntityFieldWrapper InvitationEmailStatus
   , {\field row -> field == invitationEmailError (entityVal row)}
   , {\old -> invitationEmailErrorCap old}
   , {\old _ _ -> invitationEmailErrorCap old}
-  > Invitation (Maybe String)
+  > (Entity User) Invitation (Maybe String)
 @-}
-invitationEmailError' :: EntityFieldWrapper Invitation (Maybe String)
+invitationEmailError' :: EntityFieldWrapper (Entity User) Invitation (Maybe String)
 invitationEmailError' = EntityFieldWrapper InvitationEmailError
 
 -- * User
 {-@ mkUser ::
      x_0: Text
   -> x_1: ByteString
-  -> x_2: (Maybe Text)
+  -> x_2: Maybe Text
   -> x_3: Text
   -> x_4: Text
   -> x_5: Text
@@ -349,15 +332,16 @@ invitationEmailError' = EntityFieldWrapper InvitationEmailError
   -> x_7: Text
   -> x_8: String
   -> x_9: String
-  -> x_10: (Maybe RoomId)
+  -> x_10: Maybe RoomId
   -> x_11: Bool
   -> x_12: UTCTime
   -> BinahRecord <
        {\row -> userEmailAddress (entityVal row) == x_0 && userPassword (entityVal row) == x_1 && userPhotoURL (entityVal row) == x_2 && userDisplayName (entityVal row) == x_3 && userInstitution (entityVal row) == x_4 && userPronouns (entityVal row) == x_5 && userWebsite (entityVal row) == x_6 && userBio (entityVal row) == x_7 && userLevel (entityVal row) == x_8 && userVisibility (entityVal row) == x_9 && userRoom (entityVal row) == x_10 && userActive (entityVal row) == x_11 && userLastSync (entityVal row) == x_12}
      , {\new viewer -> IsOrganizer viewer || userLevel (entityVal new) == "attendee"}
      , {\x_0 x_1 -> (userVisibility (entityVal x_0) == "public" || IsSelf x_0 x_1) || (x_0 == x_1)}
-     > User
+     > (Entity User) User
 @-}
+mkUser :: Text -> ByteString -> Maybe Text -> Text -> Text -> Text -> Text -> Text -> String -> String -> Maybe RoomId -> Bool -> UTCTime -> BinahRecord (Entity User) User
 mkUser x_0 x_1 x_2 x_3 x_4 x_5 x_6 x_7 x_8 x_9 x_10 x_11 x_12 = BinahRecord (User x_0 x_1 x_2 x_3 x_4 x_5 x_6 x_7 x_8 x_9 x_10 x_11 x_12)
 
 {-@ invariant {v: Entity User | v == getJust (entityKey v)} @-}
@@ -370,9 +354,9 @@ mkUser x_0 x_1 x_2 x_3 x_4 x_5 x_6 x_7 x_8 x_9 x_10 x_11 x_12 = BinahRecord (Use
   , {\field row  -> field == entityKey row}
   , {\_ -> False}
   , {\_ _ _ -> True}
-  > User UserId
+  > (Entity User) User UserId
 @-}
-userId' :: EntityFieldWrapper User UserId
+userId' :: EntityFieldWrapper (Entity User) User UserId
 userId' = EntityFieldWrapper UserId
 
 {-@ measure userEmailAddress :: User -> Text @-}
@@ -385,9 +369,9 @@ userId' = EntityFieldWrapper UserId
   , {\field row -> field == userEmailAddress (entityVal row)}
   , {\old -> userEmailAddressCap old}
   , {\x_0 x_1 x_2 -> ((False)) => (userEmailAddressCap x_0)}
-  > User Text
+  > (Entity User) User Text
 @-}
-userEmailAddress' :: EntityFieldWrapper User Text
+userEmailAddress' :: EntityFieldWrapper (Entity User) User Text
 userEmailAddress' = EntityFieldWrapper UserEmailAddress
 
 {-@ measure userPassword :: User -> ByteString @-}
@@ -400,9 +384,9 @@ userEmailAddress' = EntityFieldWrapper UserEmailAddress
   , {\field row -> field == userPassword (entityVal row)}
   , {\old -> userPasswordCap old}
   , {\x_0 x_1 x_2 -> ((False)) => (userPasswordCap x_0)}
-  > User ByteString
+  > (Entity User) User ByteString
 @-}
-userPassword' :: EntityFieldWrapper User ByteString
+userPassword' :: EntityFieldWrapper (Entity User) User ByteString
 userPassword' = EntityFieldWrapper UserPassword
 
 {-@ measure userPhotoURL :: User -> (Maybe Text) @-}
@@ -415,9 +399,9 @@ userPassword' = EntityFieldWrapper UserPassword
   , {\field row -> field == userPhotoURL (entityVal row)}
   , {\old -> userPhotoURLCap old}
   , {\x_0 x_1 x_2 -> ((IsSelf x_0 x_2)) => (userPhotoURLCap x_0)}
-  > User (Maybe Text)
+  > (Entity User) User (Maybe Text)
 @-}
-userPhotoURL' :: EntityFieldWrapper User (Maybe Text)
+userPhotoURL' :: EntityFieldWrapper (Entity User) User (Maybe Text)
 userPhotoURL' = EntityFieldWrapper UserPhotoURL
 
 {-@ measure userDisplayName :: User -> Text @-}
@@ -430,9 +414,9 @@ userPhotoURL' = EntityFieldWrapper UserPhotoURL
   , {\field row -> field == userDisplayName (entityVal row)}
   , {\old -> userDisplayNameCap old}
   , {\x_0 x_1 x_2 -> ((IsSelf x_0 x_2)) => (userDisplayNameCap x_0)}
-  > User Text
+  > (Entity User) User Text
 @-}
-userDisplayName' :: EntityFieldWrapper User Text
+userDisplayName' :: EntityFieldWrapper (Entity User) User Text
 userDisplayName' = EntityFieldWrapper UserDisplayName
 
 {-@ measure userInstitution :: User -> Text @-}
@@ -445,9 +429,9 @@ userDisplayName' = EntityFieldWrapper UserDisplayName
   , {\field row -> field == userInstitution (entityVal row)}
   , {\old -> userInstitutionCap old}
   , {\x_0 x_1 x_2 -> ((IsSelf x_0 x_2)) => (userInstitutionCap x_0)}
-  > User Text
+  > (Entity User) User Text
 @-}
-userInstitution' :: EntityFieldWrapper User Text
+userInstitution' :: EntityFieldWrapper (Entity User) User Text
 userInstitution' = EntityFieldWrapper UserInstitution
 
 {-@ measure userPronouns :: User -> Text @-}
@@ -460,9 +444,9 @@ userInstitution' = EntityFieldWrapper UserInstitution
   , {\field row -> field == userPronouns (entityVal row)}
   , {\old -> userPronounsCap old}
   , {\old _ _ -> userPronounsCap old}
-  > User Text
+  > (Entity User) User Text
 @-}
-userPronouns' :: EntityFieldWrapper User Text
+userPronouns' :: EntityFieldWrapper (Entity User) User Text
 userPronouns' = EntityFieldWrapper UserPronouns
 
 {-@ measure userWebsite :: User -> Text @-}
@@ -475,9 +459,9 @@ userPronouns' = EntityFieldWrapper UserPronouns
   , {\field row -> field == userWebsite (entityVal row)}
   , {\old -> userWebsiteCap old}
   , {\old _ _ -> userWebsiteCap old}
-  > User Text
+  > (Entity User) User Text
 @-}
-userWebsite' :: EntityFieldWrapper User Text
+userWebsite' :: EntityFieldWrapper (Entity User) User Text
 userWebsite' = EntityFieldWrapper UserWebsite
 
 {-@ measure userBio :: User -> Text @-}
@@ -490,9 +474,9 @@ userWebsite' = EntityFieldWrapper UserWebsite
   , {\field row -> field == userBio (entityVal row)}
   , {\old -> userBioCap old}
   , {\old _ _ -> userBioCap old}
-  > User Text
+  > (Entity User) User Text
 @-}
-userBio' :: EntityFieldWrapper User Text
+userBio' :: EntityFieldWrapper (Entity User) User Text
 userBio' = EntityFieldWrapper UserBio
 
 {-@ measure userLevel :: User -> String @-}
@@ -505,9 +489,9 @@ userBio' = EntityFieldWrapper UserBio
   , {\field row -> field == userLevel (entityVal row)}
   , {\old -> userLevelCap old}
   , {\x_0 x_1 x_2 -> ((False)) => (userLevelCap x_0)}
-  > User String
+  > (Entity User) User String
 @-}
-userLevel' :: EntityFieldWrapper User String
+userLevel' :: EntityFieldWrapper (Entity User) User String
 userLevel' = EntityFieldWrapper UserLevel
 
 {-@ measure userVisibility :: User -> String @-}
@@ -520,9 +504,9 @@ userLevel' = EntityFieldWrapper UserLevel
   , {\field row -> field == userVisibility (entityVal row)}
   , {\old -> userVisibilityCap old}
   , {\old _ _ -> userVisibilityCap old}
-  > User String
+  > (Entity User) User String
 @-}
-userVisibility' :: EntityFieldWrapper User String
+userVisibility' :: EntityFieldWrapper (Entity User) User String
 userVisibility' = EntityFieldWrapper UserVisibility
 
 {-@ measure userRoom :: User -> (Maybe RoomId) @-}
@@ -535,9 +519,9 @@ userVisibility' = EntityFieldWrapper UserVisibility
   , {\field row -> field == userRoom (entityVal row)}
   , {\old -> userRoomCap old}
   , {\x_0 x_1 x_2 -> ((IsSelf x_0 x_2)) => (userRoomCap x_0)}
-  > User (Maybe RoomId)
+  > (Entity User) User (Maybe RoomId)
 @-}
-userRoom' :: EntityFieldWrapper User (Maybe RoomId)
+userRoom' :: EntityFieldWrapper (Entity User) User (Maybe RoomId)
 userRoom' = EntityFieldWrapper UserRoom
 
 {-@ measure userActive :: User -> Bool @-}
@@ -550,9 +534,9 @@ userRoom' = EntityFieldWrapper UserRoom
   , {\field row -> field == userActive (entityVal row)}
   , {\old -> userActiveCap old}
   , {\old _ _ -> userActiveCap old}
-  > User Bool
+  > (Entity User) User Bool
 @-}
-userActive' :: EntityFieldWrapper User Bool
+userActive' :: EntityFieldWrapper (Entity User) User Bool
 userActive' = EntityFieldWrapper UserActive
 
 {-@ measure userLastSync :: User -> UTCTime @-}
@@ -565,9 +549,9 @@ userActive' = EntityFieldWrapper UserActive
   , {\field row -> field == userLastSync (entityVal row)}
   , {\old -> userLastSyncCap old}
   , {\old _ _ -> userLastSyncCap old}
-  > User UTCTime
+  > (Entity User) User UTCTime
 @-}
-userLastSync' :: EntityFieldWrapper User UTCTime
+userLastSync' :: EntityFieldWrapper (Entity User) User UTCTime
 userLastSync' = EntityFieldWrapper UserLastSync
 
 -- * Room
@@ -581,8 +565,9 @@ userLastSync' = EntityFieldWrapper UserLastSync
        {\row -> roomColor (entityVal row) == x_0 && roomName (entityVal row) == x_1 && roomTopic (entityVal row) == x_2 && roomCapacity (entityVal row) == x_3 && roomZoomLink (entityVal row) == x_4}
      , {\_ viewer -> IsOrganizer viewer}
      , {\x_0 x_1 -> False}
-     > Room
+     > (Entity User) Room
 @-}
+mkRoom :: Text -> Text -> Text -> Int -> Text -> BinahRecord (Entity User) Room
 mkRoom x_0 x_1 x_2 x_3 x_4 = BinahRecord (Room x_0 x_1 x_2 x_3 x_4)
 
 {-@ invariant {v: Entity Room | v == getJust (entityKey v)} @-}
@@ -595,9 +580,9 @@ mkRoom x_0 x_1 x_2 x_3 x_4 = BinahRecord (Room x_0 x_1 x_2 x_3 x_4)
   , {\field row  -> field == entityKey row}
   , {\_ -> False}
   , {\_ _ _ -> True}
-  > Room RoomId
+  > (Entity User) Room RoomId
 @-}
-roomId' :: EntityFieldWrapper Room RoomId
+roomId' :: EntityFieldWrapper (Entity User) Room RoomId
 roomId' = EntityFieldWrapper RoomId
 
 {-@ measure roomColor :: Room -> Text @-}
@@ -610,9 +595,9 @@ roomId' = EntityFieldWrapper RoomId
   , {\field row -> field == roomColor (entityVal row)}
   , {\old -> roomColorCap old}
   , {\old _ _ -> roomColorCap old}
-  > Room Text
+  > (Entity User) Room Text
 @-}
-roomColor' :: EntityFieldWrapper Room Text
+roomColor' :: EntityFieldWrapper (Entity User) Room Text
 roomColor' = EntityFieldWrapper RoomColor
 
 {-@ measure roomName :: Room -> Text @-}
@@ -625,9 +610,9 @@ roomColor' = EntityFieldWrapper RoomColor
   , {\field row -> field == roomName (entityVal row)}
   , {\old -> roomNameCap old}
   , {\x_0 x_1 x_2 -> ((IsOrganizer x_2)) => (roomNameCap x_0)}
-  > Room Text
+  > (Entity User) Room Text
 @-}
-roomName' :: EntityFieldWrapper Room Text
+roomName' :: EntityFieldWrapper (Entity User) Room Text
 roomName' = EntityFieldWrapper RoomName
 
 {-@ measure roomTopic :: Room -> Text @-}
@@ -640,9 +625,9 @@ roomName' = EntityFieldWrapper RoomName
   , {\field row -> field == roomTopic (entityVal row)}
   , {\old -> roomTopicCap old}
   , {\x_0 x_1 x_2 -> ((IsInRoom x_2 x_0) || (IsOrganizer x_2)) => (roomTopicCap x_0)}
-  > Room Text
+  > (Entity User) Room Text
 @-}
-roomTopic' :: EntityFieldWrapper Room Text
+roomTopic' :: EntityFieldWrapper (Entity User) Room Text
 roomTopic' = EntityFieldWrapper RoomTopic
 
 {-@ measure roomCapacity :: Room -> Int @-}
@@ -655,9 +640,9 @@ roomTopic' = EntityFieldWrapper RoomTopic
   , {\field row -> field == roomCapacity (entityVal row)}
   , {\old -> roomCapacityCap old}
   , {\x_0 x_1 x_2 -> ((IsOrganizer x_2)) => (roomCapacityCap x_0)}
-  > Room Int
+  > (Entity User) Room Int
 @-}
-roomCapacity' :: EntityFieldWrapper Room Int
+roomCapacity' :: EntityFieldWrapper (Entity User) Room Int
 roomCapacity' = EntityFieldWrapper RoomCapacity
 
 {-@ measure roomZoomLink :: Room -> Text @-}
@@ -670,23 +655,24 @@ roomCapacity' = EntityFieldWrapper RoomCapacity
   , {\field row -> field == roomZoomLink (entityVal row)}
   , {\old -> roomZoomLinkCap old}
   , {\x_0 x_1 x_2 -> ((IsOrganizer x_2)) => (roomZoomLinkCap x_0)}
-  > Room Text
+  > (Entity User) Room Text
 @-}
-roomZoomLink' :: EntityFieldWrapper Room Text
+roomZoomLink' :: EntityFieldWrapper (Entity User) Room Text
 roomZoomLink' = EntityFieldWrapper RoomZoomLink
 
 -- * Message
 {-@ mkMessage ::
      x_0: UserId
-  -> x_1: (Maybe UserId)
+  -> x_1: Maybe UserId
   -> x_2: Text
   -> x_3: Int64
   -> BinahRecord <
        {\row -> messageSender (entityVal row) == x_0 && messageReceiver (entityVal row) == x_1 && messageMessage (entityVal row) == x_2 && messageTimestamp (entityVal row) == x_3}
      , {\_ _ -> True}
      , {\x_0 x_1 -> False}
-     > Message
+     > (Entity User) Message
 @-}
+mkMessage :: UserId -> Maybe UserId -> Text -> Int64 -> BinahRecord (Entity User) Message
 mkMessage x_0 x_1 x_2 x_3 = BinahRecord (Message x_0 x_1 x_2 x_3)
 
 {-@ invariant {v: Entity Message | v == getJust (entityKey v)} @-}
@@ -699,9 +685,9 @@ mkMessage x_0 x_1 x_2 x_3 = BinahRecord (Message x_0 x_1 x_2 x_3)
   , {\field row  -> field == entityKey row}
   , {\_ -> False}
   , {\_ _ _ -> True}
-  > Message MessageId
+  > (Entity User) Message MessageId
 @-}
-messageId' :: EntityFieldWrapper Message MessageId
+messageId' :: EntityFieldWrapper (Entity User) Message MessageId
 messageId' = EntityFieldWrapper MessageId
 
 {-@ measure messageSender :: Message -> UserId @-}
@@ -714,9 +700,9 @@ messageId' = EntityFieldWrapper MessageId
   , {\field row -> field == messageSender (entityVal row)}
   , {\old -> messageSenderCap old}
   , {\old _ _ -> messageSenderCap old}
-  > Message UserId
+  > (Entity User) Message UserId
 @-}
-messageSender' :: EntityFieldWrapper Message UserId
+messageSender' :: EntityFieldWrapper (Entity User) Message UserId
 messageSender' = EntityFieldWrapper MessageSender
 
 {-@ measure messageReceiver :: Message -> (Maybe UserId) @-}
@@ -729,9 +715,9 @@ messageSender' = EntityFieldWrapper MessageSender
   , {\field row -> field == messageReceiver (entityVal row)}
   , {\old -> messageReceiverCap old}
   , {\old _ _ -> messageReceiverCap old}
-  > Message (Maybe UserId)
+  > (Entity User) Message (Maybe UserId)
 @-}
-messageReceiver' :: EntityFieldWrapper Message (Maybe UserId)
+messageReceiver' :: EntityFieldWrapper (Entity User) Message (Maybe UserId)
 messageReceiver' = EntityFieldWrapper MessageReceiver
 
 {-@ measure messageMessage :: Message -> Text @-}
@@ -744,9 +730,9 @@ messageReceiver' = EntityFieldWrapper MessageReceiver
   , {\field row -> field == messageMessage (entityVal row)}
   , {\old -> messageMessageCap old}
   , {\old _ _ -> messageMessageCap old}
-  > Message Text
+  > (Entity User) Message Text
 @-}
-messageMessage' :: EntityFieldWrapper Message Text
+messageMessage' :: EntityFieldWrapper (Entity User) Message Text
 messageMessage' = EntityFieldWrapper MessageMessage
 
 {-@ measure messageTimestamp :: Message -> Int64 @-}
@@ -759,9 +745,9 @@ messageMessage' = EntityFieldWrapper MessageMessage
   , {\field row -> field == messageTimestamp (entityVal row)}
   , {\old -> messageTimestampCap old}
   , {\old _ _ -> messageTimestampCap old}
-  > Message Int64
+  > (Entity User) Message Int64
 @-}
-messageTimestamp' :: EntityFieldWrapper Message Int64
+messageTimestamp' :: EntityFieldWrapper (Entity User) Message Int64
 messageTimestamp' = EntityFieldWrapper MessageTimestamp
 
 -- * MarkRead
@@ -772,8 +758,9 @@ messageTimestamp' = EntityFieldWrapper MessageTimestamp
        {\row -> markReadUser (entityVal row) == x_0 && markReadUpto (entityVal row) == x_1}
      , {\_ _ -> True}
      , {\x_0 x_1 -> False}
-     > MarkRead
+     > (Entity User) MarkRead
 @-}
+mkMarkRead :: UserId -> MessageId -> BinahRecord (Entity User) MarkRead
 mkMarkRead x_0 x_1 = BinahRecord (MarkRead x_0 x_1)
 
 {-@ invariant {v: Entity MarkRead | v == getJust (entityKey v)} @-}
@@ -786,9 +773,9 @@ mkMarkRead x_0 x_1 = BinahRecord (MarkRead x_0 x_1)
   , {\field row  -> field == entityKey row}
   , {\_ -> False}
   , {\_ _ _ -> True}
-  > MarkRead MarkReadId
+  > (Entity User) MarkRead MarkReadId
 @-}
-markReadId' :: EntityFieldWrapper MarkRead MarkReadId
+markReadId' :: EntityFieldWrapper (Entity User) MarkRead MarkReadId
 markReadId' = EntityFieldWrapper MarkReadId
 
 {-@ measure markReadUser :: MarkRead -> UserId @-}
@@ -801,9 +788,9 @@ markReadId' = EntityFieldWrapper MarkReadId
   , {\field row -> field == markReadUser (entityVal row)}
   , {\old -> markReadUserCap old}
   , {\old _ _ -> markReadUserCap old}
-  > MarkRead UserId
+  > (Entity User) MarkRead UserId
 @-}
-markReadUser' :: EntityFieldWrapper MarkRead UserId
+markReadUser' :: EntityFieldWrapper (Entity User) MarkRead UserId
 markReadUser' = EntityFieldWrapper MarkReadUser
 
 {-@ measure markReadUpto :: MarkRead -> MessageId @-}
@@ -816,13 +803,7 @@ markReadUser' = EntityFieldWrapper MarkReadUser
   , {\field row -> field == markReadUpto (entityVal row)}
   , {\old -> markReadUptoCap old}
   , {\old _ _ -> markReadUptoCap old}
-  > MarkRead MessageId
+  > (Entity User) MarkRead MessageId
 @-}
-markReadUpto' :: EntityFieldWrapper MarkRead MessageId
+markReadUpto' :: EntityFieldWrapper (Entity User) MarkRead MessageId
 markReadUpto' = EntityFieldWrapper MarkReadUpto
-
---------------------------------------------------------------------------------
--- | Inline
---------------------------------------------------------------------------------
-
-

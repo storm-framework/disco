@@ -16,12 +16,12 @@ packages:
   original:
     url: https://github.com/PLSysSec/frankie/archive/b9ee2c0f7667025d0d0ac3a43ded43d1d1d63c28.tar.gz
 - completed:
-    hackage: mime-mail-0.4.14@sha256:22e54d99c3f9f21004c929f0cf0c7ab75fcee5e0666c03517157be61be6fea93,1647
+    hackage: lens-4.19.2@sha256:f0570ca0e4624d9daa57256f00f514e87be155401583fa1665faba47376c63a7,16053
     pantry-tree:
-      size: 439
-      sha256: 85b015dbc632b2796dfc1b6b750f4a7906c62c4067af0f27460fbf38c712b6e4
+      size: 8330
+      sha256: 97df1b96d825fb74400e75847e2a6ce2c37c9d1baeb71f5804a3a97694a4f881
   original:
-    hackage: mime-mail-0.4.14@sha256:22e54d99c3f9f21004c929f0cf0c7ab75fcee5e0666c03517157be61be6fea93,1647
+    hackage: lens-4.19.2
 - completed:
     hackage: amazonka-1.6.1@sha256:f58b63e83876f93aa03c54e54b3eb8ba9358af93819d41f4a5a8f8b7d8b8399c,3544
     pantry-tree:
@@ -44,36 +44,15 @@ packages:
   original:
     hackage: amazonka-s3-1.6.1@sha256:9d07240fca59ad5197fb614ce3051e701e4951e6d4625a2dab4a9c17a1900194,6317
 - completed:
-    hackage: connection-0.2.8@sha256:b33ed18b274e9d65ffefcda46ba3d6ff852bec1e7ffcb686985228dc52631c2e,1525
+    hackage: smtp-mail-0.3.0.0@sha256:2e6d9cb29d09a5a04d77a905eb1b570b94b5654e24d40630ea96aa374474c12f,1239
     pantry-tree:
-      size: 386
-      sha256: c551e941b8b047a1f2ae6a44c15a405ddeb12132953dd6c782041c070ee3e358
+      size: 450
+      sha256: 4d319cb6c22b35ca043a83210cd09bfbf99eec3dca4945cd53ed5b7c96f7daca
   original:
-    hackage: connection-0.2.8@sha256:b33ed18b274e9d65ffefcda46ba3d6ff852bec1e7ffcb686985228dc52631c2e,1525
-- completed:
-    hackage: socks-0.5.6@sha256:bb051589a00d18301556dbff82d89955a5534baf91a5e050e5f3a65f3415609c,1299
-    pantry-tree:
-      size: 693
-      sha256: 4ef36ec31595199c8a18a9d33749aee3802b6ec056ec99effeb528262db9fd62
-  original:
-    hackage: socks-0.5.6@sha256:bb051589a00d18301556dbff82d89955a5534baf91a5e050e5f3a65f3415609c,1299
-- completed:
-    hackage: HaskellNet-0.5.1@sha256:53f2cfffb140740691296f905a70143c859b571eea3f5cf5f7a4642851d9e38a,1584
-    pantry-tree:
-      size: 1437
-      sha256: e0806ea13b946dfc785bf9580e126cfcb8d3c6f21e1fbe313374745c3a8a8b99
-  original:
-    hackage: HaskellNet-0.5.1@sha256:53f2cfffb140740691296f905a70143c859b571eea3f5cf5f7a4642851d9e38a,1584
-- completed:
-    hackage: HaskellNet-SSL-0.3.4.1@sha256:3ca14dd69460a380cf69aed40654fb10c4c03e344632b6a9986568c87feda157,1843
-    pantry-tree:
-      size: 577
-      sha256: 33fbfd0d8bbaa689f0169d442861dafcdcd4fe795a4b42aa0bedbfa41aa65b23
-  original:
-    hackage: HaskellNet-SSL-0.3.4.1@sha256:3ca14dd69460a380cf69aed40654fb10c4c03e344632b6a9986568c87feda157,1843
+    hackage: smtp-mail-0.3.0.0
 snapshots:
 - completed:
-    size: 523700
-    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/14/7.yaml
-    sha256: 8e3f3c894be74d71fa4bf085e0a8baae7e4d7622d07ea31a52736b80f8b9bb1a
-  original: lts-14.7
+    size: 496111
+    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/15/14.yaml
+    sha256: c442d702d66b8c129b3473a32c609050aabf1dc2f8e8502402c143271a8fb141
+  original: lts-15.14

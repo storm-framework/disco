@@ -190,7 +190,11 @@ sendFile path = do
 
 -- TODO find a way to provide this without exposing the instance of MonadBaseControl
 
-initFromPool :: Config -> Pool SqlBackend -> Controller () -> TaggedT (ControllerT TIO) ()
+initFromPool
+  :: Config
+  -> Pool SqlBackend
+  -> Controller ()
+  -> TaggedT (Entity User) (ControllerT TIO) ()
 initFromPool cfg pool = mapTaggedT run
     where run act = Pool.withResource pool $ configure cfg . runReaderT act
 

@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 5c76665479f401e0614a9b86cd438951e26e34cc396ad10bfc453fb3ad3a8ea1
+-- hash: d56fbd5b8865b9addbc3b388025c43a8da0ed3edd6e8ba30b2ee8acd31320b4d
 
 name:           server
 version:        0.1.0.0
@@ -36,6 +36,7 @@ library
       Binah.Helpers
       Binah.Infrastructure
       Binah.Insert
+      Binah.SMTP
       Binah.Templates
       Binah.Updates
       Concurrent
@@ -50,14 +51,12 @@ library
       Lib
       Model
       Server
-      SMTP
   other-modules:
       Paths_server
   hs-source-dirs:
       src
   build-depends:
-      HaskellNet-SSL
-    , MonadRandom
+      MonadRandom
     , aeson
     , amazonka
     , amazonka-core
@@ -87,6 +86,7 @@ library
     , random-shuffle
     , resource-pool
     , scrypt
+    , smtp-mail
     , text
     , time
     , transformers
@@ -105,8 +105,7 @@ executable disco
       app
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
-      HaskellNet-SSL
-    , MonadRandom
+      MonadRandom
     , aeson
     , amazonka
     , amazonka-core
@@ -137,6 +136,7 @@ executable disco
     , resource-pool
     , scrypt
     , server
+    , smtp-mail
     , text
     , time
     , transformers
@@ -156,8 +156,7 @@ test-suite server-test
       test
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
-      HaskellNet-SSL
-    , MonadRandom
+      MonadRandom
     , aeson
     , amazonka
     , amazonka-core
@@ -188,6 +187,7 @@ test-suite server-test
     , resource-pool
     , scrypt
     , server
+    , smtp-mail
     , text
     , time
     , transformers
