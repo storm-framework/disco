@@ -34,7 +34,7 @@ import           JSON
 -- | Sync
 ----------------------------------------------------------------------------------------------------
 
-{-@ sync :: TaggedT<{\_ -> False}, {\_ -> True}> _ _ @-}
+{-@ sync :: TaggedT<{\_ -> False}, {\_ -> True}> _ _ _ @-}
 sync :: Controller ()
 sync = do
   user   <- requireAuthUser
@@ -62,7 +62,7 @@ instance ToJSON SyncResponse where
 -- | Beacon
 ----------------------------------------------------------------------------------------------------
 
-{-@ beacon :: TaggedT<{\_ -> False}, {\_ -> True}> _ _ @-}
+{-@ beacon :: TaggedT<{\_ -> False}, {\_ -> True}> _ _ _ @-}
 beacon :: Controller ()
 beacon = do
   user   <- requireAuthUser

@@ -31,7 +31,8 @@ instance Random.MonadRandom TIO where
 instance MonadTime TIO where
   currentTime = TIO currentTime
 
-shuffleT :: MonadTIO m => [a] -> m [a]
+{-@ assume shuffleT :: [a] => TaggedT<{\_ -> True}, {\_ -> False}> user m [a] @-}
+shuffleT :: MonadTIO m => [a] -> TaggedT user m [a]
 shuffleT = liftTIO . Shuffle.shuffleM
 
 ----------------------------------------------------------------------------------------------------

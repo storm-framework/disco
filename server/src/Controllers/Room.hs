@@ -3,8 +3,6 @@
 {-# LANGUAGE DeriveGeneric #-}
 
 {-@ LIQUID "--no-pattern-inline" @-}
-{-@ LIQUID "--exact-data-con" @-}
-
 
 module Controllers.Room where
 
@@ -32,35 +30,34 @@ import           Crypto
 import           Controllers
 import           Model
 import           JSON
-import           Control.Monad                  ( when )
 
 ----------------------------------------------------------------------------------------------------
 -- | Update Topic
 ----------------------------------------------------------------------------------------------------
 
-{-@ updateTopic :: _ -> TaggedT<{\_ -> False}, {\_ -> True}> _ () @-}
+{-@ updateTopic :: _ -> TaggedT<{\_ -> False}, {\_ -> True}> _ _ () @-}
 updateTopic :: RoomId -> Controller ()
 updateTopic roomId = do
   viewer   <- requireAuthUser
   userRoom <- project userRoom' viewer
   vis      <- project userVisibility' viewer
-  case userRoom == Just roomId of
-    True | vis == "public" -> do
+  case userRoom of
+    Just roomId | vis == "public" -> do
       UpdateTopicReq {..} <- decodeBody
-      _                   <- validateTopic updateTopicReqTopic
+      validateTopic updateTopicReqTopic
       _ <- updateWhere (roomId' ==. roomId) (roomTopic' `assign` updateTopicReqTopic)
       room                <- selectFirstOr notFoundJSON (roomId' ==. roomId)
       roomData            <- extractRoomData room
       respondJSON status200 roomData
-    True  -> respondError status409 (Just "This operation may leak information")
-    False -> respondError status403 Nothing
+    Just _  -> respondError status409 (Just "This operation may leak information")
+    Nothing -> respondError status403 Nothing
 
 newtype UpdateTopicReq = UpdateTopicReq { updateTopicReqTopic :: Text } deriving Generic
 
 instance FromJSON UpdateTopicReq where
   parseJSON = genericParseJSON (stripPrefix "updateTopicReq")
 
-{-@ validateTopic :: _ -> TaggedT<{\_ -> True}, {\v -> v == currentUser}> _ _ @-}
+{-@ validateTopic :: _ -> TaggedT<{\_ -> True}, {\v -> v == currentUser 0}> _ _ _ @-}
 validateTopic :: Text -> Controller ()
 validateTopic topic = whenT (T.length topic > 50) $ respondError status400 (Just "Topic too long")
 
@@ -68,7 +65,7 @@ validateTopic topic = whenT (T.length topic > 50) $ respondError status400 (Just
 -- | Room Update
 ----------------------------------------------------------------------------------------------------
 
-{-@ roomUpdate :: _ -> TaggedT<{\_ -> False}, {\_ -> True}> _ _ @-}
+{-@ roomUpdate :: _ -> TaggedT<{\_ -> False}, {\_ -> True}> _ _ _ @-}
 roomUpdate :: RoomId -> Controller ()
 roomUpdate roomId = do
   viewer            <- requireAuthUser
@@ -86,7 +83,7 @@ roomUpdate roomId = do
   roomData <- extractRoomData room
   respondJSON status200 roomData
 
-{-@ validateRoom :: _ -> TaggedT<{\_ -> True}, {\v -> v == currentUser}> _ _ @-}
+{-@ validateRoom :: _ -> TaggedT<{\_ -> True}, {\v -> v == currentUser 0}> _ _ _ @-}
 validateRoom :: RoomInsert -> Controller ()
 validateRoom RoomInsert {..} = validateTopic insertTopic
 
@@ -94,7 +91,7 @@ validateRoom RoomInsert {..} = validateTopic insertTopic
 -- | Room Batch Update
 ----------------------------------------------------------------------------------------------------
 
-{-@ roomBatchUpdate :: TaggedT<{\_ -> False}, {\_ -> True}> _ _ @-}
+{-@ roomBatchUpdate :: TaggedT<{\_ -> False}, {\_ -> True}> _ _ _ @-}
 roomBatchUpdate :: Controller ()
 roomBatchUpdate = do
   viewer                    <- requireAuthUser
@@ -130,7 +127,7 @@ instance FromJSON PostReq where
 -- | Join Room
 ----------------------------------------------------------------------------------------------------
 
-{-@ joinRoom :: _ -> TaggedT<{\_ -> False}, {\_ -> True}> _ _ @-}
+{-@ joinRoom :: _ -> TaggedT<{\_ -> False}, {\_ -> True}> _ _ _ @-}
 joinRoom :: RoomId -> Controller ()
 joinRoom roomId = do
   viewer      <- requireAuthUser
@@ -146,6 +143,7 @@ joinRoom roomId = do
     then respondTagged (emptyResponse status200)
     else respondError status409 (Just "Capacity Exceeded")
 
+{-@ joinRandom :: TaggedT<{\_ -> False}, {\_ -> True}> _ _ _ @-}
 joinRandom :: Controller ()
 joinRandom = do
   viewer      <- requireAuthUser
@@ -156,18 +154,22 @@ joinRandom = do
   forT rooms $ \room -> do
     ok     <- tryJoinRoom viewerId room
     roomId <- project roomId' room
-    whenT (ok && currentRoom /= Just roomId) $ do
+    whenT (True && currentRoom /= Just roomId) $ do
       respondJSON status200 roomId
   respondError status409 (Just "All rooms are full")
 
+{-@ tryJoinRoom
+  :: u: {v: UserId | v == entityKey (currentUser 0)}
+  -> Entity Room
+  -> TaggedT<{\_ -> True}, {\v -> entityKey v == u || userVisibility (entityVal (getJust u)) == "public"}> _ _ _ @-}
 tryJoinRoom :: UserId -> Entity Room -> Controller Bool
 tryJoinRoom viewerId room = do
   roomId     <- project roomId' room
-  usersCount <- count (userRoom' ==. Just roomId)
+  usersCount <- count (userRoom' ==. Just roomId &&: userVisibility' ==. "public")
   capacity   <- project roomCapacity' room
   if capacity < 0 || usersCount < capacity
     then do
-      _ <- updateWhere (userId' ==. viewerId) (userRoom' `assign` Just roomId)
+      updateWhere (userId' ==. viewerId) (userRoom' `assign` Just roomId)
       return True
     else return False
 
@@ -175,7 +177,7 @@ tryJoinRoom viewerId room = do
 -- | Leave Room
 ----------------------------------------------------------------------------------------------------
 
-{-@ leaveRoom :: TaggedT<{\_ -> False}, {\_ -> True}> _ _ @-}
+{-@ leaveRoom :: TaggedT<{\_ -> False}, {\_ -> True}> _ _ _ @-}
 leaveRoom :: Controller ()
 leaveRoom = do
   viewer   <- requireAuthUser
@@ -187,19 +189,20 @@ leaveRoom = do
 -- | Room Get
 ----------------------------------------------------------------------------------------------------
 
-{-@ roomGet :: TaggedT<{\_ -> False}, {\_ -> True}> _ _ @-}
+{-@ roomGet :: TaggedT<{\_ -> False}, {\_ -> True}> _ _ _ @-}
 roomGet :: Controller ()
 roomGet = do
   _     <- requireAuthUser
   rooms <- allRooms
   respondJSON status200 rooms
 
+{-@ allRooms :: TaggedT<{\_ -> True}, {\_ -> False}> _ _ _ @-}
 allRooms :: Controller [RoomData]
 allRooms = do
   rooms <- selectList trueF
   mapT extractRoomData rooms
 
-{-@ extractRoomData :: _ -> TaggedT<{\_ -> True}, {\_ -> False}> _ _ @-}
+{-@ extractRoomData :: _ -> TaggedT<{\_ -> True}, {\_ -> False}> _ _ _ @-}
 extractRoomData :: Entity Room -> Controller RoomData
 extractRoomData room =
   RoomData

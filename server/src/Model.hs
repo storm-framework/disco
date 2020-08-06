@@ -443,7 +443,7 @@ userInstitution' = EntityFieldWrapper UserInstitution
   , {\row field -> field == userPronouns (entityVal row)}
   , {\field row -> field == userPronouns (entityVal row)}
   , {\old -> userPronounsCap old}
-  , {\old _ _ -> userPronounsCap old}
+  , {\x_0 x_1 x_2 -> ((IsSelf x_0 x_2)) => (userPronounsCap x_0)}
   > (Entity User) User Text
 @-}
 userPronouns' :: EntityFieldWrapper (Entity User) User Text
@@ -458,7 +458,7 @@ userPronouns' = EntityFieldWrapper UserPronouns
   , {\row field -> field == userWebsite (entityVal row)}
   , {\field row -> field == userWebsite (entityVal row)}
   , {\old -> userWebsiteCap old}
-  , {\old _ _ -> userWebsiteCap old}
+  , {\x_0 x_1 x_2 -> ((IsSelf x_0 x_2)) => (userWebsiteCap x_0)}
   > (Entity User) User Text
 @-}
 userWebsite' :: EntityFieldWrapper (Entity User) User Text
@@ -473,7 +473,7 @@ userWebsite' = EntityFieldWrapper UserWebsite
   , {\row field -> field == userBio (entityVal row)}
   , {\field row -> field == userBio (entityVal row)}
   , {\old -> userBioCap old}
-  , {\old _ _ -> userBioCap old}
+  , {\x_0 x_1 x_2 -> ((IsSelf x_0 x_2)) => (userBioCap x_0)}
   > (Entity User) User Text
 @-}
 userBio' :: EntityFieldWrapper (Entity User) User Text
@@ -503,7 +503,7 @@ userLevel' = EntityFieldWrapper UserLevel
   , {\row field -> field == userVisibility (entityVal row)}
   , {\field row -> field == userVisibility (entityVal row)}
   , {\old -> userVisibilityCap old}
-  , {\old _ _ -> userVisibilityCap old}
+  , {\x_0 x_1 x_2 -> ((IsSelf x_0 x_2)) => (userVisibilityCap x_0)}
   > (Entity User) User String
 @-}
 userVisibility' :: EntityFieldWrapper (Entity User) User String
@@ -533,7 +533,7 @@ userRoom' = EntityFieldWrapper UserRoom
   , {\row field -> field == userActive (entityVal row)}
   , {\field row -> field == userActive (entityVal row)}
   , {\old -> userActiveCap old}
-  , {\old _ _ -> userActiveCap old}
+  , {\x_0 x_1 x_2 -> ((IsSelf x_0 x_2)) => (userActiveCap x_0)}
   > (Entity User) User Bool
 @-}
 userActive' :: EntityFieldWrapper (Entity User) User Bool
@@ -548,7 +548,7 @@ userActive' = EntityFieldWrapper UserActive
   , {\row field -> field == userLastSync (entityVal row)}
   , {\field row -> field == userLastSync (entityVal row)}
   , {\old -> userLastSyncCap old}
-  , {\old _ _ -> userLastSyncCap old}
+  , {\x_0 x_1 x_2 -> ((IsSelf x_0 x_2)) => (userLastSyncCap x_0)}
   > (Entity User) User UTCTime
 @-}
 userLastSync' :: EntityFieldWrapper (Entity User) User UTCTime
