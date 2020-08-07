@@ -47,7 +47,7 @@ import           Crypto
 -- | Invitation Put (create invitations)
 --------------------------------------------------------------------------------
 
-{-@ invitationPut :: TaggedT<{\_ -> False}, {\_ -> True}> _ _ @-}
+{-@ invitationPut :: TaggedT<{\_ -> False}, {\_ -> True}> _ _ _ @-}
 invitationPut :: Controller ()
 invitationPut = do
   viewer           <- requireAuthUser
@@ -70,7 +70,7 @@ invitationPut = do
   _   <- runTask (sendEmails ids)
   respondJSON status201 (object ["keys" .= map fromSqlKey ids])
 
-{-@ genRandomCode :: TaggedT<{\_ -> True}, {\_ -> False}> _ _@-}
+{-@ genRandomCode :: TaggedT<{\_ -> True}, {\_ -> False}> _ _ _ @-}
 genRandomCode :: Controller Text
 genRandomCode = do
   bytes <- liftTIO (getRandomBytes 24)
@@ -133,7 +133,7 @@ sendEmail' conn invitation = do
       updateWhere (invitationId' ==. id) up
     Right _ -> updateWhere (invitationId' ==. id) (invitationEmailStatus' `assign` "sent")
 
-{-@ renderEmail :: _ -> TaggedT<{\_ -> True}, {\_ -> False}> _ _ @-}
+{-@ renderEmail :: _ -> TaggedT<{\_ -> True}, {\_ -> False}> _ _ _ @-}
 renderEmail :: Entity Invitation -> Task (Address (Entity User), Address (Entity User), T.Text, LT.Text)
 renderEmail invitation = do
   id           <- project invitationId' invitation
@@ -156,7 +156,7 @@ instance FromJSON PutReq where
 -- | Invitation Get
 --------------------------------------------------------------------------------
 
-{-@ invitationGet :: _ -> TaggedT<{\_ -> False}, {\_ -> True}> _ _ @-}
+{-@ invitationGet :: _ -> TaggedT<{\_ -> False}, {\_ -> True}> _ _ _ @-}
 invitationGet :: InvitationId -> Controller ()
 invitationGet id = do
   code <- listToMaybe <$> queryParams "code"
@@ -173,7 +173,7 @@ invitationGet id = do
 -- | Invitation List
 --------------------------------------------------------------------------------
 
-{-@ invitationList :: TaggedT<{\_ -> False}, {\_ -> True}> _ _ @-}
+{-@ invitationList :: TaggedT<{\_ -> False}, {\_ -> True}> _ _ _ @-}
 invitationList :: Controller ()
 invitationList = do
   viewer      <- requireAuthUser
@@ -207,7 +207,7 @@ data InvitationData = InvitationData
   }
   deriving Generic
 
-{-@ extractInvitationData :: _ -> TaggedT<{\_ -> True}, {\_ -> False}> _ _ @-}
+{-@ extractInvitationData :: _ -> TaggedT<{\_ -> True}, {\_ -> False}> _ _ _ @-}
 extractInvitationData :: Entity Invitation -> Controller InvitationData
 extractInvitationData invitation =
   InvitationData

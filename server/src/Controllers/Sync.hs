@@ -1,5 +1,7 @@
 {-# LANGUAGE DeriveGeneric #-}
 
+{-@ LIQUID "--no-pattern-inline" @-}
+
 module Controllers.Sync where
 
 import           Data.Text                      ( Text )

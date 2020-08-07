@@ -154,6 +154,8 @@ MarkRead
 -- | Policies
 --------------------------------------------------------------------------------
 
+{-@ predicate CanReadMessage MESSAGE VIEWER = fromJust (messageReceiver (entityVal MESSAGE)) == entityKey VIEWER || not (isJust (messageReceiver (entityVal MESSAGE))) @-}
+
 {-@ predicate IsInRoom VIEWER ROOM = userRoom (entityVal VIEWER) == Just (entityKey ROOM) @-}
 
 {-@ predicate IsSelf USER VIEWER = USER == VIEWER @-}
@@ -669,7 +671,7 @@ roomZoomLink' = EntityFieldWrapper RoomZoomLink
   -> BinahRecord <
        {\row -> messageSender (entityVal row) == x_0 && messageReceiver (entityVal row) == x_1 && messageMessage (entityVal row) == x_2 && messageTimestamp (entityVal row) == x_3}
      , {\_ _ -> True}
-     , {\x_0 x_1 -> False}
+     , {\x_0 x_1 -> (fromJust (messageReceiver (entityVal x_0)) == entityKey x_1 || not (isJust (messageReceiver (entityVal x_0))))}
      > (Entity User) Message
 @-}
 mkMessage :: UserId -> Maybe UserId -> Text -> Int64 -> BinahRecord (Entity User) Message
@@ -725,7 +727,7 @@ messageReceiver' = EntityFieldWrapper MessageReceiver
 {-@ measure messageMessageCap :: Entity Message -> Bool @-}
 
 {-@ assume messageMessage' :: EntityFieldWrapper <
-    {\_ _ -> True}
+    {\x_0 x_1 -> (fromJust (messageReceiver (entityVal x_0)) == entityKey x_1 || not (isJust (messageReceiver (entityVal x_0))))}
   , {\row field -> field == messageMessage (entityVal row)}
   , {\field row -> field == messageMessage (entityVal row)}
   , {\old -> messageMessageCap old}

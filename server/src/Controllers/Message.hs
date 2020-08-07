@@ -68,6 +68,7 @@ instance ToJSON RecvMessage where
 
 -- | `sendMessage` accepts a new message from the current userId ---------------------
 
+{-@ sendMessage :: TaggedT<{\_ -> False}, {\_ -> True}> _ _ _ @-}
 sendMessage :: Controller ()
 sendMessage = do
   sender               <- requireAuthUser
@@ -78,6 +79,7 @@ sendMessage = do
 
 -- | `readMessage msgId` marks `msgId` as the high-water mark for userId -------------
 
+{-@ readMessage :: _ -> TaggedT<{\_ -> False}, {\_ -> True}> _ _ _ @-}
 readMessage :: MessageId -> Controller ()
 readMessage msgId = do
   user   <- requireAuthUser
@@ -94,6 +96,7 @@ readMessage msgId = do
 
 -- | `recvMessage` responds with all the (recent) messages for the current user ------
 
+{-@ recvMessage :: TaggedT<{\_ -> False}, {\_ -> True}> _ _ _ @-}
 recvMessage :: Controller ()
 recvMessage = do
   user   <- requireAuthUser
@@ -101,6 +104,7 @@ recvMessage = do
   sends  <- messagesFor userId
   respondJSON status200 sends
 
+{-@ messagesFor :: u: _ -> TaggedT<{\v -> entityKey v == u}, {\_ -> False}> _ _ _ @-}
 messagesFor :: UserId -> Controller [RecvMessage]
 messagesFor userId = do
   uptoMb <- selectFirst (markReadUser' ==. userId)
@@ -113,6 +117,7 @@ messagesFor userId = do
     (lowerF &&: (messageReceiver' ==. Nothing ||: (messageReceiver' ==. Just userId)))
   mapT extractRecvMessage msgs
 
+{-@ extractRecvMessage :: m: _ -> TaggedT<{\v -> CanReadMessage m v}, {\_ -> False}> _ _ _ @-}
 extractRecvMessage :: Entity Message -> Controller RecvMessage
 extractRecvMessage msg =
   RecvMessage

@@ -86,10 +86,14 @@ Message
   message   Text
   timestamp Int64
 
+  read [ message ] @CanReadMessage
+
 MarkRead
   user      UserId
   upto      MessageId
 
+policy CanReadMessage = \message viewer ->
+  fromJust (messageReceiver message) == entityKey viewer || not (isJust (messageReceiver message))
 
 policy IsInRoom = \viewer room ->
   userRoom viewer == Just (entityKey room)

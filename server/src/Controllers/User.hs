@@ -44,7 +44,7 @@ inactiveTime = 30
 -- | User List
 ----------------------------------------------------------------------------------------------------
 
-{-@ userList :: TaggedT<{\_ -> False}, {\_ -> True}> _ _ @-}
+{-@ userList :: TaggedT<{\_ -> False}, {\_ -> True}> _ _ _ @-}
 userList :: Controller ()
 userList = do
   _     <- requireAuthUser
@@ -56,7 +56,7 @@ allUsers = do
   users <- selectList trueF
   mapT extractUserData users
 
-{-@ extractUserData :: _ -> TaggedT<{\_ -> True}, {\_ -> False}> _ _ @-}
+{-@ extractUserData :: _ -> TaggedT<{\_ -> True}, {\_ -> False}> _ _ _ @-}
 extractUserData :: Entity User -> Controller UserData
 extractUserData u = do
   visibility <- project userVisibility' u
@@ -98,7 +98,7 @@ instance ToJSON UserData where
 -- | User Get
 ----------------------------------------------------------------------------------------------------
 
-{-@ userGet :: _ -> TaggedT<{\_ -> False}, {\_ -> True}> _ _ @-}
+{-@ userGet :: _ -> TaggedT<{\_ -> False}, {\_ -> True}> _ _ _ @-}
 userGet :: UserIdOrMe -> Controller ()
 userGet userIdOrMe = do
   viewer <- requireAuthUser
@@ -118,7 +118,7 @@ instance Parseable UserIdOrMe where
 -- | User Update
 ----------------------------------------------------------------------------------------------------
 
-{-@ userUpdateMe :: TaggedT<{\_ -> False}, {\_ -> True}> _ _ @-}
+{-@ userUpdateMe :: TaggedT<{\_ -> False}, {\_ -> True}> _ _ _ @-}
 userUpdateMe :: Controller ()
 userUpdateMe = do
   user               <- requireAuthUser
@@ -137,7 +137,7 @@ userUpdateMe = do
   userData <- extractUserData user
   respondJSON status200 userData
 
-{-@ validateUser :: _ -> TaggedT<{\_ -> True}, {\v -> v == currentUser}> _ _ @-}
+{-@ validateUser :: _ -> TaggedT<{\_ -> True}, {\v -> v == currentUser 0}> _ _ _ @-}
 validateUser :: UserUpdate -> Controller ()
 validateUser UserUpdate {..} = do
   whenT (T.length userUpdateDisplayName == 0) $ respondError status400 (Just "missing displayName")
