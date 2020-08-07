@@ -114,7 +114,7 @@ messagesFor userId = do
       uptoId <- project markReadUpto' upto
       return (messageId' >. uptoId)
   msgs <- selectList
-    (lowerF &&: (messageReceiver' ==. Nothing ||: (messageReceiver' ==. Just userId)))
+    (lowerF &&: ((messageReceiver' ==. Nothing) ||: (messageReceiver' ==. Just userId)))
   mapT extractRecvMessage msgs
 
 {-@ extractRecvMessage :: m: _ -> TaggedT<{\v -> CanReadMessage m v}, {\_ -> False}> _ _ _ @-}

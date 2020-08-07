@@ -40,4 +40,4 @@ shuffleT = liftTIO . Shuffle.shuffleM
 ----------------------------------------------------------------------------------------------------
 
 encryptPassTIO' :: MonadTIO m => Pass -> m EncryptedPass
-encryptPassTIO' = liftTIO . TIO . encryptPassIO'
+encryptPassTIO' pass = liftTIO (TIO (encryptPassIO' pass))

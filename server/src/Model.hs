@@ -156,7 +156,7 @@ MarkRead
 
 {-@ predicate CanReadMessage MESSAGE VIEWER = fromJust (messageReceiver (entityVal MESSAGE)) == entityKey VIEWER || not (isJust (messageReceiver (entityVal MESSAGE))) @-}
 
-{-@ predicate IsInRoom VIEWER ROOM = userRoom (entityVal VIEWER) == Just (entityKey ROOM) @-}
+{-@ predicate IsInRoom VIEWER ROOM = fromJust (userRoom (entityVal VIEWER)) == entityKey ROOM @-}
 
 {-@ predicate IsSelf USER VIEWER = USER == VIEWER @-}
 

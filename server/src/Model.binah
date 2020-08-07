@@ -96,7 +96,7 @@ policy CanReadMessage = \message viewer ->
   fromJust (messageReceiver message) == entityKey viewer || not (isJust (messageReceiver message))
 
 policy IsInRoom = \viewer room ->
-  userRoom viewer == Just (entityKey room)
+  fromJust (userRoom viewer) == entityKey room
 
 policy IsSelf = \user viewer ->
   user == viewer
