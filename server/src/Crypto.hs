@@ -31,8 +31,8 @@ instance Random.MonadRandom TIO where
 instance MonadTime TIO where
   currentTime = TIO currentTime
 
-{-@ assume shuffleT :: [a] -> TaggedT<{\_ -> True}, {\_ -> False}> _ [a] @-}
-shuffleT :: MonadTIO m => [a] -> TaggedT m [a]
+{-@ assume shuffleT :: [a] -> TaggedT<{\_ -> True}, {\_ -> False}> user m [a] @-}
+shuffleT :: MonadTIO m => [a] -> TaggedT user m [a]
 shuffleT = liftTIO . Shuffle.shuffleM
 
 ----------------------------------------------------------------------------------------------------
@@ -40,4 +40,4 @@ shuffleT = liftTIO . Shuffle.shuffleM
 ----------------------------------------------------------------------------------------------------
 
 encryptPassTIO' :: MonadTIO m => Pass -> m EncryptedPass
-encryptPassTIO' = liftTIO . TIO . encryptPassIO'
+encryptPassTIO' pass = liftTIO (TIO (encryptPassIO' pass))

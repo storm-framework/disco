@@ -1,6 +1,7 @@
 import Data.ByteString (ByteString)
 import Data.Int        (Int64)
 import Data.Time.Clock (UTCTime)
+import Data.Text       (Text)
 
 Invitation
   code Text
@@ -54,9 +55,18 @@ User
 
   update [ password, level, emailAddress ] {\_ _ _ -> False}
 
-  update [ photoURL, firstName, lastName, displayName, institution, room ] {\old _ viewer ->
-    IsSelf old viewer
-  }
+  update [ photoURL
+         , displayName
+         , institution
+         , pronouns
+         , website
+         , bio
+         , visibility
+         , room
+         , active
+         , lastSync
+         ]
+         {\old _ viewer -> IsSelf old viewer }
 
 Room
   color Text
@@ -76,13 +86,17 @@ Message
   message   Text
   timestamp Int64
 
+  read [ message ] @CanReadMessage
+
 MarkRead
   user      UserId
   upto      MessageId
 
+policy CanReadMessage = \message viewer ->
+  fromJust (messageReceiver message) == entityKey viewer || not (isJust (messageReceiver message))
 
 policy IsInRoom = \viewer room ->
-  userRoom viewer == Just (entityKey room)
+  fromJust (userRoom viewer) == entityKey room
 
 policy IsSelf = \user viewer ->
   user == viewer

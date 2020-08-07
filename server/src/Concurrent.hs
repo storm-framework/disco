@@ -14,4 +14,4 @@ import           Binah.Infrastructure
 import           Model
 
 forkTIO :: MonadTIO m => TIO () -> m ThreadId
-forkTIO = liftTIO . TIO . forkIO . runTIO
+forkTIO act = liftTIO (TIO (forkIO (runTIO act)))

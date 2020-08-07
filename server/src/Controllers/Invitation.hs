@@ -34,12 +34,12 @@ import           Binah.Helpers
 import           Binah.Infrastructure
 import           Binah.Templates
 import           Binah.Frankie
+import           Binah.SMTP
 
 import           Controllers
 import           Model
 import           JSON
 import           Text.Read                      ( readMaybe )
-import           SMTP
 import           Crypto.Random                  ( getRandomBytes )
 import           Crypto
 
@@ -47,7 +47,7 @@ import           Crypto
 -- | Invitation Put (create invitations)
 --------------------------------------------------------------------------------
 
-{-@ invitationPut :: TaggedT<{\_ -> False}, {\_ -> True}> _ _ @-}
+{-@ invitationPut :: TaggedT<{\_ -> False}, {\_ -> True}> _ _ _ @-}
 invitationPut :: Controller ()
 invitationPut = do
   viewer           <- requireAuthUser
@@ -70,7 +70,7 @@ invitationPut = do
   _   <- runTask (sendEmails ids)
   respondJSON status201 (object ["keys" .= map fromSqlKey ids])
 
-{-@ genRandomCode :: TaggedT<{\_ -> True}, {\_ -> False}> _ _@-}
+{-@ genRandomCode :: TaggedT<{\_ -> True}, {\_ -> False}> _ _ _ @-}
 genRandomCode :: Controller Text
 genRandomCode = do
   bytes <- liftTIO (getRandomBytes 24)
@@ -88,26 +88,25 @@ instance TemplateData EmailData where
 
 data EmailRender = EmailRender
   { emailRenderBodyPlain :: LT.Text
-  , emailRenderSubject :: String
-  , emailRenderFrom :: String
+  , emailRenderSubject :: T.Text
+  , emailRenderFrom :: T.Text
   }
   deriving (Generic, Show)
 
 instance FromJSON EmailRender where
   parseJSON = genericParseJSON (stripPrefix "emailRender")
 
-{-@ sendEmails :: _ -> TaggedT<{\_ -> True}, {\_ -> True}> _ () @-}
+{-@ sendEmails :: _ -> TaggedT<{\_ -> True}, {\_ -> True}> _ _ () @-}
 sendEmails :: [InvitationId] -> Task ()
 sendEmails ids = do
   SMTPConfig {..} <- configSMTP <$> getConfig
   invitations     <- selectList (invitationId' <-. ids)
-  let settings = defaultSettingsSMTPSSL { sslPort = smtpPort }
-  conn <- connectSMTPSSLWithSettings smtpHost settings
-  _    <- authenticate LOGIN smtpUser smtpPass conn
+  conn            <- connectSMTPS' smtpHost smtpPort
+  _               <- login conn smtpUser smtpPass
   mapT (sendEmail' conn) invitations
   return ()
 
-{-@ sendEmail :: _ -> TaggedT<{\_ -> True}, {\_ -> True}> _ () @-}
+{-@ sendEmail :: _ -> TaggedT<{\_ -> True}, {\_ -> True}> _ _ () @-}
 sendEmail :: Int64 -> Task ()
 sendEmail iid = do
   let invitationId = toSqlKey iid
@@ -115,18 +114,17 @@ sendEmail iid = do
   invitation      <- selectFirst (invitationId' ==. invitationId)
   case invitation of
     Just invitation -> do
-      let settings = defaultSettingsSMTPSSL { sslPort = smtpPort }
-      conn <- connectSMTPSSLWithSettings smtpHost settings
-      _    <- authenticate LOGIN smtpUser smtpPass conn
+      conn <- connectSMTPS' smtpHost smtpPort
+      _    <- login conn smtpHost smtpPass
       sendEmail' conn invitation
     Nothing -> return ()
 
-{-@ sendEmail' :: _ -> _ -> TaggedT<{\_ -> True}, {\_ -> True}> _ () @-}
+{-@ sendEmail' :: _ -> _ -> TaggedT<{\_ -> True}, {\_ -> True}> _ _ () @-}
 sendEmail' :: SMTPConnection -> Entity Invitation -> Task ()
 sendEmail' conn invitation = do
   id                        <- project invitationId' invitation
   (to, from, subject, body) <- renderEmail invitation
-  res                       <- sendPlainTextMail to from subject body conn
+  res                       <- renderAndSend conn (simpleMail' to from subject body)
   case res of
     Left err -> do
       let up =
@@ -135,16 +133,16 @@ sendEmail' conn invitation = do
       updateWhere (invitationId' ==. id) up
     Right _ -> updateWhere (invitationId' ==. id) (invitationEmailStatus' `assign` "sent")
 
-{-@ renderEmail :: _ -> TaggedT<{\_ -> True}, {\_ -> False}> _ _ @-}
-renderEmail :: Entity Invitation -> Task (Address, Address, String, LT.Text)
+{-@ renderEmail :: _ -> TaggedT<{\_ -> True}, {\_ -> False}> _ _ _ @-}
+renderEmail :: Entity Invitation -> Task (Address (Entity User), Address (Entity User), T.Text, LT.Text)
 renderEmail invitation = do
   id           <- project invitationId' invitation
   emailAddress <- project invitationEmailAddress' invitation
   code         <- project invitationCode' invitation
   raw          <- renderTemplate (EmailData id code)
   let EmailRender {..} = fromJust $ decode (LT.encodeUtf8 (LT.fromStrict raw))
-  let to               = mkPublicAddress (T.unpack emailAddress)
-  let from             = mkPublicAddress emailRenderFrom
+  let to               = publicAddress emailAddress
+  let from             = publicAddress emailRenderFrom
   return (to, from, emailRenderSubject, emailRenderBodyPlain)
 
 
@@ -158,7 +156,7 @@ instance FromJSON PutReq where
 -- | Invitation Get
 --------------------------------------------------------------------------------
 
-{-@ invitationGet :: _ -> TaggedT<{\_ -> False}, {\_ -> True}> _ _ @-}
+{-@ invitationGet :: _ -> TaggedT<{\_ -> False}, {\_ -> True}> _ _ _ @-}
 invitationGet :: InvitationId -> Controller ()
 invitationGet id = do
   code <- listToMaybe <$> queryParams "code"
@@ -175,7 +173,7 @@ invitationGet id = do
 -- | Invitation List
 --------------------------------------------------------------------------------
 
-{-@ invitationList :: TaggedT<{\_ -> False}, {\_ -> True}> _ _ @-}
+{-@ invitationList :: TaggedT<{\_ -> False}, {\_ -> True}> _ _ _ @-}
 invitationList :: Controller ()
 invitationList = do
   viewer      <- requireAuthUser
@@ -209,7 +207,7 @@ data InvitationData = InvitationData
   }
   deriving Generic
 
-{-@ extractInvitationData :: _ -> TaggedT<{\_ -> True}, {\_ -> False}> _ _ @-}
+{-@ extractInvitationData :: _ -> TaggedT<{\_ -> True}, {\_ -> False}> _ _ _ @-}
 extractInvitationData :: Entity Invitation -> Controller InvitationData
 extractInvitationData invitation =
   InvitationData

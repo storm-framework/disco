@@ -54,11 +54,11 @@ dependencies:
   - amazonka-core
   - scrypt
   - network
-  - HaskellNet-SSL
   - mime-mail
   - cryptonite
   - MonadRandom
   - random-shuffle
+  - smtp-mail
 
 library:
   source-dirs: src

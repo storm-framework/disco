@@ -54,7 +54,7 @@ data AWSConfig = AWSConfig
   , awsBucket :: S3.BucketName
   }
 
-type Controller = TaggedT (ReaderT SqlBackend (ConfigT Config (ControllerT TIO)))
+type Controller = TaggedT (Entity User) (ReaderT SqlBackend (ConfigT Config (ControllerT TIO)))
 
 instance Frankie.Auth.HasAuthMethod (Entity User) Controller Config where
   getAuthMethod = configAuthMethod
@@ -62,7 +62,7 @@ instance Frankie.Auth.HasAuthMethod (Entity User) Controller Config where
 instance HasTemplateCache Config where
   getTemplateCache = configTemplateCache
 
-type Task = TaggedT (ReaderT SqlBackend (ConfigT Config TIO))
+type Task = TaggedT (Entity User) (ReaderT SqlBackend (ConfigT Config TIO))
 
 runTask :: Task () -> Controller ()
 runTask task = do
@@ -79,7 +79,7 @@ runTask task = do
 defaultHeaders :: ResponseHeaders
 defaultHeaders = [(hContentType, "application/json")]
 
-{-@ respondJSON :: _ -> _ -> TaggedT<{\_ -> True}, {\v -> v == currentUser}> _ _ @-}
+{-@ respondJSON :: _ -> _ -> TaggedT<{\_ -> True}, {\v -> v == currentUser 0}> _ _ _ @-}
 respondJSON :: ToJSON a => Status -> a -> Controller b
 respondJSON status a = respondTagged (jsonResponse status a)
 
@@ -89,7 +89,7 @@ jsonResponse status a = Response status defaultHeaders (encode a)
 emptyResponse :: Status -> Response
 emptyResponse status = Response status defaultHeaders ""
 
-{-@ respondError :: _ -> _ -> TaggedT<{\_ -> True}, {\v -> v == currentUser}> _ _ @-}
+{-@ respondError :: _ -> _ -> TaggedT<{\_ -> True}, {\v -> v == currentUser 0}> _ _ _ @-}
 respondError :: Status -> Maybe String -> Controller a
 respondError status error = respondTagged (errorResponse status error)
 
@@ -109,7 +109,7 @@ notFoundJSON = errorResponse status404 Nothing
 hAccessControlAllowOrigin :: HeaderName
 hAccessControlAllowOrigin = "Access-Control-Allow-Origin"
 
-{-@ decodeBody :: TaggedT<{\_ -> True}, {\v -> v == currentUser}> _ _ @-}
+{-@ decodeBody :: TaggedT<{\_ -> True}, {\v -> v == currentUser 0}> _ _ _ @-}
 decodeBody :: FromJSON a => Controller a
 decodeBody = do
   req  <- requestT
@@ -119,7 +119,7 @@ decodeBody = do
     Right a -> return a
 
 {-@ checkOrganizer ::
-  u: _ -> TaggedT<{\_ -> True}, {\v -> v == currentUser}> _ {v: () | IsOrganizer u}
+  u: _ -> TaggedT<{\_ -> True}, {\v -> v == currentUser 0}> _ _ {v: () | IsOrganizer u}
 @-}
 checkOrganizer :: Entity User -> Controller ()
 checkOrganizer user = do
