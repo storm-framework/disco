@@ -124,7 +124,7 @@ sendEmail' :: SMTPConnection -> Entity Invitation -> Task ()
 sendEmail' conn invitation = do
   id                        <- project invitationId' invitation
   (to, from, subject, body) <- renderEmail invitation
-  res                       <- renderAndSend conn (simpleMail' from to subject body)
+  res                       <- renderAndSend conn (simpleMail' to from subject body)
   case res of
     Left err -> do
       let up =
