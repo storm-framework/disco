@@ -29,11 +29,11 @@ import           Binah.Helpers
 import           Binah.Infrastructure
 import           Binah.Templates
 import           Binah.Frankie
+import           Binah.Time
 
 import           Controllers
 import           Model
 import           JSON
-import           Crypto
 import           Control.Monad.Time             ( currentTime )
 
 -- Time before a user is consider inactive without showing any activity.

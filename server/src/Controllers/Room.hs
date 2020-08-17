@@ -25,7 +25,7 @@ import           Binah.Helpers
 import           Binah.Infrastructure
 import           Binah.Templates
 import           Binah.Frankie
-import           Crypto
+import           Binah.Random
 
 import           Controllers
 import           Model

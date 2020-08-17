@@ -49,6 +49,7 @@ import           Binah.Helpers
 import           Binah.Infrastructure
 import           Binah.Templates
 import           Binah.Frankie
+import           Binah.Crypto
 
 import           Controllers
 import           Controllers.User               ( extractUserData
@@ -56,7 +57,6 @@ import           Controllers.User               ( extractUserData
                                                 )
 import           Model
 import           JSON
-import           Crypto
 import           AWS
 import           Network.AWS.S3
 

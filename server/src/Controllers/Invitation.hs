@@ -13,6 +13,7 @@ import qualified Data.Text.Lazy                as LT
 import qualified Data.Text.Lazy.Encoding       as LT
 import           Data.Int                       ( Int64 )
 import           Data.Maybe
+import           Control.Monad.Random
 import           Data.Aeson.Types
 import           Database.Persist.Sql           ( fromSqlKey
                                                 , toSqlKey
@@ -23,6 +24,7 @@ import           Text.Mustache                  ( (~>) )
 import qualified Text.Mustache.Types           as Mustache
 import qualified Network.Mail.Mime             as M
 import           Frankie.Config
+import qualified Data.ByteString               as BS
 import qualified Data.ByteString.Base64.URL    as B64Url
 
 import           Binah.Core
@@ -35,13 +37,12 @@ import           Binah.Infrastructure
 import           Binah.Templates
 import           Binah.Frankie
 import           Binah.SMTP
+import           Binah.Random
 
 import           Controllers
 import           Model
 import           JSON
 import           Text.Read                      ( readMaybe )
-import           Crypto.Random                  ( getRandomBytes )
-import           Crypto
 
 --------------------------------------------------------------------------------
 -- | Invitation Put (create invitations)
@@ -73,8 +74,8 @@ invitationPut = do
 {-@ genRandomCode :: TaggedT<{\_ -> True}, {\_ -> False}> _ _ _ @-}
 genRandomCode :: Controller Text
 genRandomCode = do
-  bytes <- liftTIO (getRandomBytes 24)
-  return $ T.decodeUtf8 $ B64Url.encode bytes
+  bytes <- liftTIO getRandoms
+  return $ T.decodeUtf8 $ B64Url.encode $ BS.pack (take 24 bytes)
 
 
 data EmailData = EmailData
