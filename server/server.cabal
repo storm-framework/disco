@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: d56fbd5b8865b9addbc3b388025c43a8da0ed3edd6e8ba30b2ee8acd31320b4d
+-- hash: 5defceed5fdf3be520b0aa491d7f8b4d666386be8169dc51a367fb3a2e45c4e1
 
 name:           server
 version:        0.1.0.0
@@ -30,6 +30,7 @@ library
       Auth
       AWS
       Binah.Actions
+      Binah.Concurrent
       Binah.Core
       Binah.Filters
       Binah.Frankie
@@ -39,7 +40,6 @@ library
       Binah.SMTP
       Binah.Templates
       Binah.Updates
-      Concurrent
       Controllers
       Controllers.Invitation
       Controllers.Message
@@ -68,6 +68,7 @@ library
     , cryptonite
     , directory
     , either
+    , exceptions
     , filepath
     , frankie
     , jose
@@ -117,6 +118,7 @@ executable disco
     , cryptonite
     , directory
     , either
+    , exceptions
     , filepath
     , frankie
     , jose
@@ -168,6 +170,7 @@ test-suite server-test
     , cryptonite
     , directory
     , either
+    , exceptions
     , filepath
     , frankie
     , jose

@@ -59,6 +59,7 @@ dependencies:
   - MonadRandom
   - random-shuffle
   - smtp-mail
+  - exceptions
 
 library:
   source-dirs: src
