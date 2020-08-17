@@ -8,42 +8,35 @@
 module Auth where
 
 import           Data.Aeson
-import           Control.Monad.Trans.Class      ( lift )
 import           Control.Monad.Time             ( MonadTime(..) )
 import           Control.Monad.Except           ( runExceptT )
 import           Control.Monad                  ( replicateM
                                                 , when
                                                 )
-import           Control.Lens.Operators         ( (?~)
-                                                , (^.)
-                                                , (^?)
-                                                , (<&>)
-                                                )
-import           Control.Lens.Combinators
-                                         hiding ( assign )
-import           Control.Lens.Lens              ( (&) )
-import           Control.Lens.Internal.ByteString
-                                                ( unpackLazy8 )
+import qualified Crypto.Hash                   as Crypto
+import qualified Crypto.MAC.HMAC               as Crypto
+import qualified Data.ByteArray                as BA
 import           Frankie.Auth
-import           Crypto.JWT
-import           Crypto.JOSE.Types              ( Base64Octets(..) )
 import           Data.Text                      ( Text(..) )
 import qualified Data.Text                     as T
 import qualified Data.Text.Encoding            as T
 import qualified Data.Text.Lazy.Encoding       as L
 import           Data.ByteString                ( ByteString )
 import qualified Data.ByteString               as ByteString
+import qualified Data.ByteString.Char8         as Char8
 import qualified Data.ByteString.Base64.URL    as B64Url
 import qualified Data.ByteString.Lazy          as L
 import           Data.Int                       ( Int64 )
 import           Data.Maybe                     ( listToMaybe )
-import           Data.Time.Clock                ( secondsToDiffTime )
+import qualified Data.Time.Format              as Time
+import           Data.Time.Clock                ( UTCTime
+                                                , secondsToDiffTime
+                                                )
 import           Database.Persist.Sql           ( toSqlKey
                                                 , fromSqlKey
                                                 )
 import           GHC.Generics
 import           Text.Read                      ( readMaybe )
-import           Text.Printf                    ( printf )
 import           Frankie.Config
 import           Frankie.Cookie
 
@@ -66,7 +59,6 @@ import           JSON
 import           Crypto
 import           AWS
 import           Network.AWS.S3
-import           Network.AWS.Data.Text          ( toText )
 
 
 {-@ ignore addOrganizer @-}
@@ -112,7 +104,7 @@ signIn = do
   (SignInReq emailAddress password) <- decodeBody
   user                              <- authUser emailAddress password
   userId                            <- project userId' user
-  token                             <- genJwt userId
+  token                             <- genToken userId
   userData                          <- extractUserData user
 
   respondTagged $ setSessionCookie token (jsonResponse status201 userData)
@@ -171,7 +163,7 @@ signUp = do
   userId   <- insert user
   _        <- updateWhere (invitationId' ==. id) (invitationAccepted' `assign` True)
   user     <- selectFirstOr notFoundJSON (userId' ==. userId)
-  token    <- genJwt userId
+  token    <- genToken userId
   userData <- extractUserData user
   respondTagged $ setSessionCookie token (jsonResponse status201 userData)
 
@@ -226,10 +218,10 @@ expireSessionCookie :: Response -> Response
 expireSessionCookie =
   setCookie (defaultSetCookie { setCookieName = "session", setCookieMaxAge = Just 0 })
 
-setSessionCookie :: L.ByteString -> Response -> Response
+setSessionCookie :: SessionToken -> Response -> Response
 setSessionCookie token = setCookie
   (defaultSetCookie { setCookieName   = "session"
-                    , setCookieValue  = L.toStrict token
+                    , setCookieValue  = L.toStrict (encode token)
                     , setCookieMaxAge = Just $ secondsToDiffTime 604800 -- 1 week
                     }
   )
@@ -271,55 +263,51 @@ authMethod = AuthMethod
                           Nothing   -> respondTagged $ expireSessionCookie (emptyResponse status401)
   }
 
--- TODO: we can get rid of all the jwt stuffs and just sign the cookie with a mac
 {-@ ignore checkIfAuth @-}
 checkIfAuth :: Controller (Maybe (Entity User))
 checkIfAuth = do
-  key    <- configSecretKey <$> getConfig
-  token  <- listToMaybe <$> getCookie "session"
-  -- authHeader <- requestHeader hAuthorization
-  -- let token = authHeader >>= ByteString.stripPrefix "Bearer "
-  claims <- liftTIO $ mapM (doVerify key . L.fromStrict) token
-  case claims of
-    Just (Right claims) -> do
-      let sub    = claims ^. claimSub ^? _Just . string
-      let userId = sub <&> T.unpack >>= readMaybe <&> toSqlKey
-      case userId of
-        Nothing     -> return Nothing
-        Just userId -> selectFirst (userId' ==. userId)
+  cookie  <- listToMaybe <$> getCookie "session"
+  case cookie >>= decode . L.fromStrict of
+    Just t@SessionToken{..} -> do
+      valid <- verifyToken t
+      if valid then selectFirst (userId' ==. stUserId) else return Nothing
     _ -> return Nothing
 
 -------------------------------------------------------------------------------
--- | JWT
+-- | Session Tokens
 -------------------------------------------------------------------------------
 
-{-@ genJwt :: _ -> TaggedT<{\_ -> True}, {\v -> v == currentUser}> _ _ @-}
-genJwt :: UserId -> Controller L.ByteString
-genJwt userId = do
-  key    <- configSecretKey `fmap` getConfigT
-  claims <- liftTIO $ mkClaims userId
-  jwt    <- liftTIO $ doJwtSign key claims
-  case jwt of
-    Right jwt                         -> return (encodeCompact jwt)
-    Left  (JWSError                e) -> respondError status500 (Just (show e))
-    Left  (JWTClaimsSetDecodeError s) -> respondError status400 (Just s)
-    Left  JWTExpired                  -> respondError status401 (Just "expired token")
-    Left  _                           -> respondError status401 Nothing
+data SessionToken = SessionToken
+  { stUserId :: UserId
+  , stTime   :: UTCTime
+  , stHash   :: Text
+  }
+  deriving Generic
 
+instance ToJSON SessionToken where
+  toEncoding = genericToEncoding (stripPrefix "st")
 
-mkClaims :: UserId -> TIO ClaimsSet
-mkClaims userId = do
-  t <- currentTime
-  return $ emptyClaimsSet & (claimSub ?~ uid ^. re string) & (claimIat ?~ NumericDate t)
-  where uid = T.pack (show (fromSqlKey userId))
+instance FromJSON SessionToken where
+  parseJSON = genericParseJSON (stripPrefix "st")
 
-doJwtSign :: JWK -> ClaimsSet -> TIO (Either JWTError SignedJWT)
-doJwtSign key claims = runExceptT $ do
-  alg <- bestJWSAlg key
-  signClaims key (newJWSHeader ((), alg)) claims
+genToken :: UserId -> Controller SessionToken
+genToken userId = do
+  key  <- configSecretKey `fmap` getConfigT
+  time <- currentTime
+  return (SessionToken userId time (doHmac key userId time))
 
-doVerify :: JWK -> L.ByteString -> TIO (Either JWTError ClaimsSet)
-doVerify key s = runExceptT $ do
-  let audCheck = const True
-  s' <- decodeCompact s
-  verifyClaims (defaultJWTValidationSettings audCheck) key s'
+verifyToken :: SessionToken -> Controller Bool
+verifyToken SessionToken{..} = do
+  key <- configSecretKey `fmap` getConfigT
+  return (doHmac key stUserId stTime == stHash)
+
+doHmac :: ByteString -> UserId -> UTCTime -> Text
+doHmac key userId time = T.decodeUtf8 . B64Url.encode . ByteString.pack $ h
+  where
+    t   = show time
+    u   = show (fromSqlKey userId)
+    msg = Char8.pack (t ++ ":" ++ u)
+    h   = BA.unpack (hs256 key msg)
+
+hs256 :: ByteString -> ByteString -> Crypto.HMAC Crypto.SHA256
+hs256 = Crypto.hmac

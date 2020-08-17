@@ -25,11 +25,11 @@ import           Database.Persist.Sqlite        ( SqlBackend
                                                 , runMigration
                                                 , createSqlitePool
                                                 )
-import           Crypto.JWT                    as JWT
 import           System.FilePath               as P
 import           System.Directory
 import           System.Environment
 import qualified Data.ByteString.Lazy          as LBS
+import qualified Data.ByteString               as BS
 import           Network.Mime
 import           Frankie.Config
 import           Frankie.Auth
@@ -46,7 +46,6 @@ import           Control.Monad.Trans.Control    ( MonadBaseControl(..)
 import           Control.Monad.Trans.Class      ( lift )
 import           Control.Monad.Logger           ( runNoLoggingT )
 import qualified Control.Concurrent.MVar       as MVar
-import           Control.Lens.Lens              ( (&) )
 import           Control.Lens.Operators         ( (^.) )
 import qualified Text.Mustache.Types           as Mustache
 import           Text.Read                      ( readMaybe )
@@ -139,10 +138,10 @@ readConfig =
     Config authMethod <$> MVar.newMVar mempty <*> readAWSConfig <*> readSMTPConfig <*> readSecretKey
 
 
-readSecretKey :: IO JWT.JWK
+readSecretKey :: IO BS.ByteString
 readSecretKey = do
     secret <- fromMaybe "sb8NHmF@_-nsf*ymt!wJ3.KXmTDPsNoy" <$> lookupEnv "DISCO_SECRET_KEY"
-    return $ JWT.fromOctets . T.encodeUtf8 . T.pack $ secret
+    return $ T.encodeUtf8 . T.pack $ secret
 
 
 readAWSConfig :: IO AWSConfig

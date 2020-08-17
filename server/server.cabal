@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 5defceed5fdf3be520b0aa491d7f8b4d666386be8169dc51a367fb3a2e45c4e1
+-- hash: 085635b83935b50b97129b5133c6eff9d0a617a4505a281e3fe4301a37e06202
 
 name:           server
 version:        0.1.0.0
@@ -71,8 +71,8 @@ library
     , exceptions
     , filepath
     , frankie
-    , jose
     , lens
+    , memory
     , mime-mail
     , mime-types
     , monad-control
@@ -121,8 +121,8 @@ executable disco
     , exceptions
     , filepath
     , frankie
-    , jose
     , lens
+    , memory
     , mime-mail
     , mime-types
     , monad-control
@@ -173,8 +173,8 @@ test-suite server-test
     , exceptions
     , filepath
     , frankie
-    , jose
     , lens
+    , memory
     , mime-mail
     , mime-types
     , monad-control

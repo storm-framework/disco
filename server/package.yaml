@@ -21,7 +21,6 @@ description: Please see the README on GitHub at <https://github.com/nilehmann/se
 
 dependencies:
   - aeson
-  - jose
   - base >= 4.7 && < 5
   - base64-bytestring
   - bytestring
@@ -60,6 +59,7 @@ dependencies:
   - random-shuffle
   - smtp-mail
   - exceptions
+  - memory
 
 library:
   source-dirs: src
