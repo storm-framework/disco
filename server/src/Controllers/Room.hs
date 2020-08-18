@@ -15,6 +15,7 @@ import           Database.Persist.Sql           ( fromSqlKey
                                                 , toSqlKey
                                                 )
 import           GHC.Generics
+import           System.Random.Shuffle          ( shuffleM )
 
 import           Binah.Core
 import           Binah.Actions
@@ -150,7 +151,7 @@ joinRandom = do
   viewerId    <- project userId' viewer
   currentRoom <- project userRoom' viewer
   rooms       <- selectList trueF
-  rooms       <- shuffleT rooms
+  rooms       <- liftTIO $ shuffleM rooms
   forT rooms $ \room -> do
     ok     <- tryJoinRoom viewerId room
     roomId <- project roomId' room
