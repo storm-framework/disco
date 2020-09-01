@@ -6,17 +6,11 @@
 
 module Controllers.User where
 
-import           Data.Text                      ( Text )
 import qualified Data.Text                     as T
-import           Data.Int                       ( Int64 )
-import           Data.Maybe
 import           Data.Time.Clock                ( UTCTime
                                                 , secondsToDiffTime
                                                 , NominalDiffTime
                                                 , addUTCTime
-                                                )
-import           Database.Persist.Sql           ( fromSqlKey
-                                                , toSqlKey
                                                 )
 import           GHC.Generics
 
@@ -30,6 +24,7 @@ import           Binah.Infrastructure
 import           Binah.Templates
 import           Binah.Frankie
 import           Binah.Time
+import           Binah.JSON
 
 import           Controllers
 import           Model
@@ -78,13 +73,13 @@ extractUserData u = do
 
 data UserData = UserData
   { userId :: UserId
-  , userEmailAddress :: Text
-  , userPhotoURL :: Maybe Text
-  , userDisplayName :: Text
-  , userInstitution :: Text
-  , userPronouns :: Text
-  , userWebsite :: Text
-  , userBio:: Text
+  , userEmailAddress :: T.Text
+  , userPhotoURL :: Maybe T.Text
+  , userDisplayName :: T.Text
+  , userInstitution :: T.Text
+  , userPronouns :: T.Text
+  , userWebsite :: T.Text
+  , userBio:: T.Text
   , userLevel :: String
   , userRoom :: Maybe RoomId
   , userIsActive:: Bool
@@ -144,12 +139,12 @@ validateUser UserUpdate {..} = do
   whenT (T.length userUpdateBio > 300) $ respondError status400 (Just "bio too long")
 
 data UserUpdate = UserUpdate
-  { userUpdatePhotoURL :: Maybe Text
-  , userUpdateDisplayName :: Text
-  , userUpdateInstitution :: Text
-  , userUpdatePronouns:: Text
-  , userUpdateWebsite:: Text
-  , userUpdateBio:: Text
+  { userUpdatePhotoURL :: Maybe T.Text
+  , userUpdateDisplayName :: T.Text
+  , userUpdateInstitution :: T.Text
+  , userUpdatePronouns:: T.Text
+  , userUpdateWebsite:: T.Text
+  , userUpdateBio:: T.Text
   }
   deriving Generic
 

@@ -7,27 +7,18 @@
 
 module Auth where
 
-import           Data.Aeson
 import           Control.Monad.Time             ( MonadTime(..) )
-import           Control.Monad.Except           ( runExceptT )
-import           Control.Monad                  ( replicateM
-                                                , when
-                                                )
 import qualified Crypto.Hash                   as Crypto
 import qualified Crypto.MAC.HMAC               as Crypto
 import qualified Data.ByteArray                as BA
 import           Frankie.Auth
-import           Data.Text                      ( Text(..) )
 import qualified Data.Text                     as T
 import qualified Data.Text.Encoding            as T
-import qualified Data.Text.Lazy.Encoding       as L
-import           Data.ByteString                ( ByteString )
-import qualified Data.ByteString               as ByteString
+import qualified Data.ByteString               as BS
 import qualified Data.ByteString.Char8         as Char8
 import qualified Data.ByteString.Base64.URL    as B64Url
 import qualified Data.ByteString.Lazy          as L
-import           Data.Int                       ( Int64 )
-import           Data.Maybe                     ( listToMaybe )
+import           Data.Maybe
 import qualified Data.Time.Format              as Time
 import           Data.Time.Clock                ( UTCTime
                                                 , secondsToDiffTime
@@ -37,7 +28,6 @@ import           Database.Persist.Sql           ( toSqlKey
                                                 )
 import           GHC.Generics
 import           Text.Read                      ( readMaybe )
-import           Frankie.Config
 import           Frankie.Cookie
 
 import           Binah.Core
@@ -50,6 +40,7 @@ import           Binah.Infrastructure
 import           Binah.Templates
 import           Binah.Frankie
 import           Binah.Crypto
+import           Binah.JSON
 
 import           Controllers
 import           Controllers.User               ( extractUserData
@@ -111,7 +102,7 @@ signIn = do
 
 {-@ ignore authUser @-}
 {-@ authUser :: _ -> _ -> TaggedT<{\_ -> True}, {\v -> v == currentUser}> _ _ @-}
-authUser :: Text -> Text -> Controller (Entity User)
+authUser :: T.Text -> T.Text -> Controller (Entity User)
 authUser emailAddress password = do
   user <- selectFirstOr (errorResponse status401 (Just "Incorrect credentials"))
                         (userEmailAddress' ==. emailAddress)
@@ -121,8 +112,8 @@ authUser emailAddress password = do
     else respondError status401 (Just "Incorrect credentials")
 
 data SignInReq = SignInReq
-  { signInReqEmailAddress :: Text
-  , signInReqPassword :: Text
+  { signInReqEmailAddress :: T.Text
+  , signInReqPassword :: T.Text
   }
   deriving Generic
 
@@ -169,12 +160,12 @@ signUp = do
 
 validateUser :: UserCreate -> Controller ()
 validateUser UserCreate {..} = do
-  when (T.length emailAddress == 0) $ respondError status400 (Just "missing email address")
-  when (T.length password == 0) $ respondError status400 (Just "missing password")
-  when (T.length displayName == 0) $ respondError status400 (Just "missing displayName")
-  when (T.length bio > 300) $ respondError status400 (Just "bio too long")
+  whenT (T.length emailAddress == 0) $ respondError status400 (Just "missing email address")
+  whenT (T.length password == 0) $ respondError status400 (Just "missing password")
+  whenT (T.length displayName == 0) $ respondError status400 (Just "missing displayName")
+  whenT (T.length bio > 300) $ respondError status400 (Just "bio too long")
 
-data InvitationCode = InvitationCode InvitationId Text deriving Generic
+data InvitationCode = InvitationCode InvitationId T.Text deriving Generic
 
 instance FromJSON InvitationCode where
   parseJSON = withText "InvitationCode" parse
@@ -183,7 +174,7 @@ instance FromJSON InvitationCode where
       Nothing -> fail "Invalid invitation id"
       Just id -> return id
 
-parseCode :: Text -> Maybe InvitationCode
+parseCode :: T.Text -> Maybe InvitationCode
 parseCode text = case readMaybe (T.unpack h) of
   Nothing -> Nothing
   Just id -> Just $ InvitationCode (toSqlKey id) (T.drop 1 t)
@@ -200,14 +191,14 @@ instance FromJSON SignUpReq where
   parseJSON = genericParseJSON (stripPrefix "signUpReq")
 
 data UserCreate = UserCreate
-  { emailAddress :: Text
-  , password :: Text
-  , photoURL :: Maybe Text
-  , displayName :: Text
-  , institution :: Text
-  , pronouns :: Text
-  , website :: Text
-  , bio :: Text
+  { emailAddress :: T.Text
+  , password :: T.Text
+  , photoURL :: Maybe T.Text
+  , displayName :: T.Text
+  , institution :: T.Text
+  , pronouns :: T.Text
+  , website :: T.Text
+  , bio :: T.Text
   }
   deriving Generic
 
@@ -242,7 +233,7 @@ presignS3URL = do
       project invitationEmailAddress' invitation
     _ -> requireAuthUser >>= project userEmailAddress'
   t              <- liftTIO currentTime
-  AWSConfig {..} <- configAWS <$> getConfig
+  AWSConfig {..} <- configAWS `fmap` getConfigT
   let objectKey = textBase64 emailAddress
   let request   = putObject awsBucket (ObjectKey objectKey) ""
   signedUrl <- presignURL awsAuth awsRegion t 900 request
@@ -280,7 +271,7 @@ checkIfAuth = do
 data SessionToken = SessionToken
   { stUserId :: UserId
   , stTime   :: UTCTime
-  , stHash   :: Text
+  , stHash   :: T.Text
   }
   deriving Generic
 
@@ -301,13 +292,13 @@ verifyToken SessionToken{..} = do
   key <- configSecretKey `fmap` getConfigT
   return (doHmac key stUserId stTime == stHash)
 
-doHmac :: ByteString -> UserId -> UTCTime -> Text
-doHmac key userId time = T.decodeUtf8 . B64Url.encode . ByteString.pack $ h
+doHmac :: BS.ByteString -> UserId -> UTCTime -> T.Text
+doHmac key userId time = T.decodeUtf8 . B64Url.encode . BS.pack $ h
   where
     t   = show time
     u   = show (fromSqlKey userId)
     msg = Char8.pack (t ++ ":" ++ u)
     h   = BA.unpack (hs256 key msg)
 
-hs256 :: ByteString -> ByteString -> Crypto.HMAC Crypto.SHA256
+hs256 :: BS.ByteString -> BS.ByteString -> Crypto.HMAC Crypto.SHA256
 hs256 = Crypto.hmac

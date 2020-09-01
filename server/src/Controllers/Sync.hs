@@ -4,13 +4,7 @@
 
 module Controllers.Sync where
 
-import           Data.Text                      ( Text )
-import qualified Data.Text                     as T
-import           Data.Int                       ( Int64 )
 import           Data.Maybe
-import           Database.Persist.Sql           ( fromSqlKey
-                                                , toSqlKey
-                                                )
 import           GHC.Generics
 import           Control.Monad.Time             ( MonadTime(..) )
 
@@ -24,6 +18,7 @@ import           Binah.Infrastructure
 import           Binah.Templates
 import           Binah.Frankie
 import           Binah.Time
+import           Binah.JSON
 
 import           Controllers
 import           Controllers.User

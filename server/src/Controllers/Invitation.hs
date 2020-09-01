@@ -6,7 +6,6 @@
 
 module Controllers.Invitation where
 
-import           Data.Text                      ( Text )
 import qualified Data.Text                     as T
 import qualified Data.Text.Encoding            as T
 import qualified Data.Text.Lazy                as LT
@@ -14,16 +13,10 @@ import qualified Data.Text.Lazy.Encoding       as LT
 import           Data.Int                       ( Int64 )
 import           Data.Maybe
 import           Control.Monad.Random
-import           Data.Aeson.Types
-import           Database.Persist.Sql           ( fromSqlKey
-                                                , toSqlKey
-                                                )
-import           Control.Exception              ( SomeException(..) )
+import           Database.Persist.Sql           ( toSqlKey )
 import           GHC.Generics
 import           Text.Mustache                  ( (~>) )
 import qualified Text.Mustache.Types           as Mustache
-import qualified Network.Mail.Mime             as M
-import           Frankie.Config
 import qualified Data.ByteString               as BS
 import qualified Data.ByteString.Base64.URL    as B64Url
 
@@ -38,6 +31,7 @@ import           Binah.Templates
 import           Binah.Frankie
 import           Binah.SMTP
 import           Binah.Random
+import           Binah.JSON
 
 import           Controllers
 import           Model
@@ -69,10 +63,10 @@ invitationPut = do
         codes
   ids <- insertMany invitations
   _   <- runTask (sendEmails ids)
-  respondJSON status201 (object ["keys" .= map fromSqlKey ids])
+  respondJSON status201 (object ["keys" .= ids])
 
 {-@ genRandomCode :: TaggedT<{\_ -> True}, {\_ -> False}> _ _ _ @-}
-genRandomCode :: Controller Text
+genRandomCode :: Controller T.Text
 genRandomCode = do
   bytes <- liftTIO getRandoms
   return $ T.decodeUtf8 $ B64Url.encode $ BS.pack (take 24 bytes)
@@ -80,7 +74,7 @@ genRandomCode = do
 
 data EmailData = EmailData
   { emailDataInvitationId :: InvitationId
-  , emailDataInvitationCode :: Text
+  , emailDataInvitationCode :: T.Text
   }
 
 instance TemplateData EmailData where
@@ -100,7 +94,7 @@ instance FromJSON EmailRender where
 {-@ sendEmails :: _ -> TaggedT<{\_ -> True}, {\_ -> True}> _ _ () @-}
 sendEmails :: [InvitationId] -> Task ()
 sendEmails ids = do
-  SMTPConfig {..} <- configSMTP <$> getConfig
+  SMTPConfig {..} <- configSMTP `fmap` getConfigT
   invitations     <- selectList (invitationId' <-. ids)
   conn            <- connectSMTPS' smtpHost smtpPort
   _               <- login conn smtpUser smtpPass
@@ -111,7 +105,7 @@ sendEmails ids = do
 sendEmail :: Int64 -> Task ()
 sendEmail iid = do
   let invitationId = toSqlKey iid
-  SMTPConfig {..} <- configSMTP <$> getConfig
+  SMTPConfig {..} <- configSMTP `fmap` getConfigT
   invitation      <- selectFirst (invitationId' ==. invitationId)
   case invitation of
     Just invitation -> do
@@ -135,7 +129,8 @@ sendEmail' conn invitation = do
     Right _ -> updateWhere (invitationId' ==. id) (invitationEmailStatus' `assign` "sent")
 
 {-@ renderEmail :: _ -> TaggedT<{\_ -> True}, {\_ -> False}> _ _ _ @-}
-renderEmail :: Entity Invitation -> Task (Address (Entity User), Address (Entity User), T.Text, LT.Text)
+renderEmail :: Entity Invitation
+            -> Task (Address (Entity User), Address (Entity User), T.Text, LT.Text)
 renderEmail invitation = do
   id           <- project invitationId' invitation
   emailAddress <- project invitationEmailAddress' invitation
@@ -188,10 +183,10 @@ invitationList = do
 --------------------------------------------------------------------------------
 
 data InvitationInsert = InvitationInsert
-  { insertEmailAddress :: Text
-  , insertFirstName    :: Text
-  , insertLastName     :: Text
-  , insertInstitution  :: Text
+  { insertEmailAddress :: T.Text
+  , insertFirstName    :: T.Text
+  , insertLastName     :: T.Text
+  , insertInstitution  :: T.Text
   }
   deriving Generic
 
@@ -200,10 +195,10 @@ instance FromJSON InvitationInsert where
 
 data InvitationData = InvitationData
   { invitationId           :: InvitationId
-  , invitationEmailAddress :: Text
-  , invitationFirstName    :: Text
-  , invitationLastName     :: Text
-  , invitationInstitution  :: Text
+  , invitationEmailAddress :: T.Text
+  , invitationFirstName    :: T.Text
+  , invitationLastName     :: T.Text
+  , invitationInstitution  :: T.Text
   , invitationAccepted     :: Bool
   }
   deriving Generic

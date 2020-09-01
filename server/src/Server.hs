@@ -15,7 +15,6 @@ module Server
     )
 where
 
-import           Control.Monad                  ( when )
 import           Control.Monad.IO.Class         ( MonadIO(..) )
 import           Control.Monad.Reader           ( MonadReader(..)
                                                 , ReaderT(..)
@@ -37,7 +36,6 @@ import           Data.Maybe
 import qualified Data.Text                     as T
 import qualified Data.Text.Encoding            as T
 
-import           Data.Pool                      ( Pool )
 import qualified Data.Pool                     as Pool
 import           Control.Monad.Base             ( MonadBase(..) )
 import           Control.Monad.Trans.Control    ( MonadBaseControl(..)
@@ -50,8 +48,7 @@ import           Control.Lens.Operators         ( (^.) )
 import qualified Text.Mustache.Types           as Mustache
 import           Text.Read                      ( readMaybe )
 import           Data.Typeable
-import           Data.Data
-
+import           Data.Data                      ( Data )
 
 import           Binah.Core
 import           Binah.Frankie
@@ -59,6 +56,7 @@ import           Binah.Infrastructure
 import           Binah.Insert
 import           Binah.Actions
 import           Binah.Filters
+import           Binah.JSON
 
 import           Controllers
 import           Controllers.Invitation
@@ -191,7 +189,7 @@ sendFile path = do
 
 initFromPool
   :: Config
-  -> Pool SqlBackend
+  -> Pool.Pool SqlBackend
   -> Controller ()
   -> TaggedT (Entity User) (ControllerT TIO) ()
 initFromPool cfg pool = mapTaggedT run

@@ -13,13 +13,8 @@ module Controllers.Message
   )
 where
 
-import           Data.Text                      ( Text )
 import qualified Data.Text                     as T
 import           Data.Int                       ( Int64 )
-import           Data.Maybe
-import           Database.Persist.Sql           ( fromSqlKey
-                                                , toSqlKey
-                                                )
 import           GHC.Generics
 
 import           Binah.Core
@@ -31,16 +26,16 @@ import           Binah.Helpers
 import           Binah.Infrastructure
 import           Binah.Templates
 import           Binah.Frankie
+import           Binah.JSON
 
 import           Controllers
 import           Model
 import           JSON
-import           Control.Monad                  ( when )
 
 data SendMessage = SendMessage
   { sendMsgSenderId    :: UserId
   , sendMsgReceiverId  :: Maybe UserId
-  , sendMsgMessageText :: Text
+  , sendMsgMessageText :: T.Text
   , sendMsgTimestamp   :: Int64
   }
   deriving Generic
@@ -54,7 +49,7 @@ instance ToJSON SendMessage where
 data RecvMessage = RecvMessage
   { recvMsgSenderId    :: UserId
   , recvMsgReceiverId  :: Maybe UserId
-  , recvMsgMessageText :: Text
+  , recvMsgMessageText :: T.Text
   , recvMsgTimestamp   :: Int64
   , recvMsgMessageId   :: MessageId
   }
@@ -75,7 +70,7 @@ sendMessage = do
   senderId             <- project userId' sender
   msg@SendMessage {..} <- decodeBody
   insert (mkMessage senderId sendMsgReceiverId sendMsgMessageText sendMsgTimestamp)
-  respondJSON status200 ("OK:sendMessage" :: Text)
+  respondJSON status200 ("OK:sendMessage" :: String)
 
 -- | `readMessage msgId` marks `msgId` as the high-water mark for userId -------------
 
@@ -88,11 +83,11 @@ readMessage msgId = do
   case markMb of
     Nothing -> do
       insert (mkMarkRead userId msgId)
-      respondJSON status200 ("OK:readMessage:insert" :: Text)
+      respondJSON status200 ("OK:readMessage:insert" :: String)
     Just mark -> do
       upto <- project markReadUpto' mark
       updateWhere (markReadUser' ==. userId) (markReadUpto' `assign` (max upto msgId))
-      respondJSON status200 ("OK:readMessage:update" :: Text)
+      respondJSON status200 ("OK:readMessage:update" :: String)
 
 -- | `recvMessage` responds with all the (recent) messages for the current user ------
 

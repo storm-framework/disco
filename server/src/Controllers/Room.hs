@@ -8,12 +8,7 @@ module Controllers.Room where
 
 import           Data.Text                      ( Text )
 import qualified Data.Text                     as T
-import           Data.Text.Encoding             ( encodeUtf8 )
-import           Data.Int                       ( Int64 )
 import           Data.Maybe
-import           Database.Persist.Sql           ( fromSqlKey
-                                                , toSqlKey
-                                                )
 import           GHC.Generics
 import           System.Random.Shuffle          ( shuffleM )
 
@@ -27,6 +22,7 @@ import           Binah.Infrastructure
 import           Binah.Templates
 import           Binah.Frankie
 import           Binah.Random
+import           Binah.JSON
 
 import           Controllers
 import           Model
@@ -160,9 +156,11 @@ joinRandom = do
   respondError status409 (Just "All rooms are full")
 
 {-@ tryJoinRoom
-  :: u: {v: UserId | v == entityKey (currentUser 0)}
+  :: u:{v: UserId | v == entityKey (currentUser 0)}
   -> Entity Room
-  -> TaggedT<{\_ -> True}, {\v -> entityKey v == u || userVisibility (entityVal (getJust u)) == "public"}> _ _ _ @-}
+  -> TaggedT< {\_ -> True}
+            , {\v -> entityKey v == u || userVisibility (entityVal (getJust u)) == "public"}
+            > _ _ _ @-}
 tryJoinRoom :: UserId -> Entity Room -> Controller Bool
 tryJoinRoom viewerId room = do
   roomId     <- project roomId' room

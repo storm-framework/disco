@@ -26,6 +26,7 @@ import           Binah.Infrastructure
 import           Binah.Filters
 import           Binah.Templates
 import           Binah.Concurrent
+import           Binah.JSON
 import qualified Network.AWS                   as AWS
 import qualified Network.AWS.S3                as S3
 import           Network.Socket                 ( PortNumber )
@@ -70,52 +71,6 @@ runTask task = do
   flip mapTaggedT task $ \t -> do
     forkTIO $ configure cfg (t `runReaderT` backend)
   return ()
-
---------------------------------------------------------------------------------
--- | Responses
---------------------------------------------------------------------------------
-
-defaultHeaders :: ResponseHeaders
-defaultHeaders = [(hContentType, "application/json")]
-
-{-@ respondJSON :: _ -> _ -> TaggedT<{\_ -> True}, {\v -> v == currentUser 0}> _ _ _ @-}
-respondJSON :: ToJSON a => Status -> a -> Controller b
-respondJSON status a = respondTagged (jsonResponse status a)
-
-jsonResponse :: ToJSON a => Status -> a -> Response
-jsonResponse status a = Response status defaultHeaders (encode a)
-
-emptyResponse :: Status -> Response
-emptyResponse status = Response status defaultHeaders ""
-
-{-@ respondError :: _ -> _ -> TaggedT<{\_ -> True}, {\v -> v == currentUser 0}> _ _ _ @-}
-respondError :: Status -> Maybe String -> Controller a
-respondError status error = respondTagged (errorResponse status error)
-
-errorResponse :: Status -> Maybe String -> Response
-errorResponse status error = Response status defaultHeaders (encodeError error)
- where
-  encodeError Nothing  = encode $ object []
-  encodeError (Just e) = encode $ object ["error" .= e]
-
-notFoundJSON :: Response
-notFoundJSON = errorResponse status404 Nothing
-
---------------------------------------------------------------------------------
--- | Misc
---------------------------------------------------------------------------------
-
-hAccessControlAllowOrigin :: HeaderName
-hAccessControlAllowOrigin = "Access-Control-Allow-Origin"
-
-{-@ decodeBody :: TaggedT<{\_ -> True}, {\v -> v == currentUser 0}> _ _ _ @-}
-decodeBody :: FromJSON a => Controller a
-decodeBody = do
-  req  <- requestT
-  body <- liftTIO $ reqBody req
-  case eitherDecode body of
-    Left  s -> respondError status400 (Just s)
-    Right a -> return a
 
 {-@ checkOrganizer ::
   u: _ -> TaggedT<{\_ -> True}, {\v -> v == currentUser 0}> _ _ {v: () | IsOrganizer u}

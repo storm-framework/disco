@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: b8f3df3195191aa675db1bf83baef55c82a5acef38b5150e41413244b8cb7b6c
+-- hash: 3e351c83c9ed45776758846d6e262dccb8717a82b68f6c417d438372958e3957
 
 name:           server
 version:        0.1.0.0
@@ -38,6 +38,7 @@ library
       Binah.Helpers
       Binah.Infrastructure
       Binah.Insert
+      Binah.JSON
       Binah.Random
       Binah.SMTP
       Binah.Templates
