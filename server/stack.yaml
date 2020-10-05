@@ -12,10 +12,6 @@ extra-deps:
 - smtp-mail-0.3.0.0
 - amazonka-1.6.1
 - unliftio-core-0.1.2.0
-# - unliftio-core-0.1.2.0@sha256:7f9b48adef8e36da0202e6e70a733a5e210263ed4177c93e47a4b3f89694194b,1081
-
-# - amazonka-core-1.6.1
-# - amazonka-s3-1.6.1
 
 - github: PLSysSec/frankie
   commit: b9ee2c0f7667025d0d0ac3a43ded43d1d1d63c28
