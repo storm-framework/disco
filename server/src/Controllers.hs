@@ -72,9 +72,8 @@ runTask task = do
     forkTIO $ configure cfg (t `runReaderT` backend)
   return ()
 
-{-@ checkOrganizer ::
-  u: _ -> TaggedT<{\_ -> True}, {\v -> v == currentUser 0}> _ _ {v: () | IsOrganizer u}
-@-}
+{-@ checkOrganizer :: u: _ -> TaggedT<{\_ -> True}, {\v -> v == currentUser 0}> _ _ {v: () | IsOrganizer u}
+  @-}
 checkOrganizer :: Entity User -> Controller ()
 checkOrganizer user = do
   level <- project userLevel' user

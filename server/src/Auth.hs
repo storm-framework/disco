@@ -4,6 +4,7 @@
 {-# LANGUAGE LambdaCase #-}
 
 {-@ LIQUID "--no-pattern-inline" @-}
+{-@ LIQUID "--compile-spec"      @-}
 
 module Auth where
 
@@ -76,7 +77,7 @@ addOrganizer UserCreate {..} = do
 -- | SignOut
 --------------------------------------------------------------------------------
 
-{-@ signOut :: TaggedT<{\_ -> False}, {\_ -> True}> _ () @-}
+{-@ signOut :: TaggedT<{\_ -> False}, {\_ -> True}> _ _ () @-}
 signOut :: Controller ()
 signOut = do
   viewer   <- requireAuthUser
@@ -89,7 +90,7 @@ signOut = do
 -- | SignIn
 --------------------------------------------------------------------------------
 
-{-@ signIn :: TaggedT<{\_ -> False}, {\_ -> True}> _ () @-}
+{-@ signIn :: TaggedT<{\_ -> False}, {\_ -> True}> _ _ () @-}
 signIn :: Controller ()
 signIn = do
   (SignInReq emailAddress password) <- decodeBody
@@ -101,7 +102,7 @@ signIn = do
   respondTagged $ setSessionCookie token (jsonResponse status201 userData)
 
 {-@ ignore authUser @-}
-{-@ authUser :: _ -> _ -> TaggedT<{\_ -> True}, {\v -> v == currentUser}> _ _ @-}
+{-@ authUser :: _ -> _ -> TaggedT<{\_ -> True}, {\v -> v == currentUser 0}> _ _ _ @-}
 authUser :: T.Text -> T.Text -> Controller (Entity User)
 authUser emailAddress password = do
   user <- selectFirstOr (errorResponse status401 (Just "Incorrect credentials"))
@@ -123,8 +124,8 @@ instance FromJSON SignInReq where
 -------------------------------------------------------------------------------
 -- | SignUp
 -------------------------------------------------------------------------------
-
-{-@ signUp :: TaggedT<{\_ -> False}, {\_ -> True}> _ () @-}
+{-@ ignore signUp @-}
+{-@ signUp :: TaggedT<{\_ -> False}, {\_ -> True}> _ _ () @-}
 signUp :: Controller ()
 signUp = do
   (SignUpReq (InvitationCode id code) uc@UserCreate {..}) <- decodeBody
@@ -221,7 +222,8 @@ setSessionCookie token = setCookie
 -- | presignS3URL
 --------------------------------------------------------------------------------
 
-{-@ presignS3URL :: TaggedT<{\_ -> False}, {\_ -> True}> _ _ @-}
+{-@ ignore presignS3URL @-}
+{-@ presignS3URL :: TaggedT <{\_ -> False}, {\_ -> True}> _ _ () @-}
 presignS3URL :: Controller ()
 presignS3URL = do
   code         <- listToMaybe <$> queryParams "code"
@@ -281,6 +283,7 @@ instance ToJSON SessionToken where
 instance FromJSON SessionToken where
   parseJSON = genericParseJSON (stripPrefix "st")
 
+{-@ ignore genToken @-}
 genToken :: UserId -> Controller SessionToken
 genToken userId = do
   key  <- configSecretKey `fmap` getConfigT

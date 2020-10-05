@@ -1,6 +1,6 @@
 name: server
 version: 0.1.0.0
-github: "nilehmann/server"
+github: "binah-framework/disco"
 license: BSD3
 author: "Nico Lehmann"
 maintainer: "nlehmann@eng.ucsd.edu"
@@ -21,11 +21,12 @@ description: Please see the README on GitHub at <https://github.com/nilehmann/se
 
 dependencies:
   - aeson
-  - base >= 4.7 && < 5
+  # - base >= 4.7 && < 5
   - base64-bytestring
   - bytestring
   - either
   - frankie
+  - binah
   - mtl
   - mustache
   - persistent
@@ -60,9 +61,12 @@ dependencies:
   - smtp-mail
   - exceptions
   - memory
+  - liquid-base
+  - liquidhaskell >= 0.8.10
 
 library:
   source-dirs: src
+  ghc-options: -fplugin=LiquidHaskell
 
 executables:
   disco:

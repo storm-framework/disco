@@ -1,16 +1,16 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.34.2.
+-- This file has been generated from package.yaml by hpack version 0.33.0.
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 3e351c83c9ed45776758846d6e262dccb8717a82b68f6c417d438372958e3957
+-- hash: ec996e4b1d813b346679903b603dd9c0d9dd87917224fa425e90abf76323f237
 
 name:           server
 version:        0.1.0.0
 description:    Please see the README on GitHub at <https://github.com/nilehmann/server#readme>
-homepage:       https://github.com/nilehmann/server#readme
-bug-reports:    https://github.com/nilehmann/server/issues
+homepage:       https://github.com/binah-framework/disco#readme
+bug-reports:    https://github.com/binah-framework/disco/issues
 author:         Nico Lehmann
 maintainer:     nlehmann@eng.ucsd.edu
 copyright:      2020 Nico Lehmann
@@ -23,27 +23,12 @@ extra-source-files:
 
 source-repository head
   type: git
-  location: https://github.com/nilehmann/server
+  location: https://github.com/binah-framework/disco
 
 library
   exposed-modules:
       Auth
       AWS
-      Binah.Actions
-      Binah.Concurrent
-      Binah.Core
-      Binah.Crypto
-      Binah.Filters
-      Binah.Frankie
-      Binah.Helpers
-      Binah.Infrastructure
-      Binah.Insert
-      Binah.JSON
-      Binah.Random
-      Binah.SMTP
-      Binah.Templates
-      Binah.Time
-      Binah.Updates
       Controllers
       Controllers.Invitation
       Controllers.Message
@@ -58,14 +43,15 @@ library
       Paths_server
   hs-source-dirs:
       src
+  ghc-options: -fplugin=LiquidHaskell
   build-depends:
       MonadRandom
     , aeson
     , amazonka
     , amazonka-core
     , amazonka-s3
-    , base >=4.7 && <5
     , base64-bytestring
+    , binah
     , bytestring
     , cmdargs
     , cryptonite
@@ -75,6 +61,8 @@ library
     , filepath
     , frankie
     , lens
+    , liquid-base
+    , liquidhaskell >=0.8.10
     , memory
     , mime-mail
     , mime-types
@@ -114,8 +102,8 @@ executable disco
     , amazonka
     , amazonka-core
     , amazonka-s3
-    , base >=4.7 && <5
     , base64-bytestring
+    , binah
     , bytestring
     , cmdargs
     , cryptonite
@@ -125,6 +113,8 @@ executable disco
     , filepath
     , frankie
     , lens
+    , liquid-base
+    , liquidhaskell >=0.8.10
     , memory
     , mime-mail
     , mime-types
@@ -166,8 +156,8 @@ test-suite server-test
     , amazonka
     , amazonka-core
     , amazonka-s3
-    , base >=4.7 && <5
     , base64-bytestring
+    , binah
     , bytestring
     , cmdargs
     , cryptonite
@@ -177,6 +167,8 @@ test-suite server-test
     , filepath
     , frankie
     , lens
+    , liquid-base
+    , liquidhaskell >=0.8.10
     , memory
     , mime-mail
     , mime-types
