@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: ec996e4b1d813b346679903b603dd9c0d9dd87917224fa425e90abf76323f237
+-- hash: 2dce781c21f110de9155f5d24e1679f5082acc1f47a282e24110daeb70f8c6c6
 
 name:           server
 version:        0.1.0.0
@@ -56,15 +56,12 @@ library
     , cmdargs
     , cryptonite
     , directory
-    , either
-    , exceptions
     , filepath
     , frankie
     , lens
     , liquid-base
     , liquidhaskell >=0.8.10
     , memory
-    , mime-mail
     , mime-types
     , monad-control
     , monad-logger
@@ -78,15 +75,11 @@ library
     , random-shuffle
     , resource-pool
     , scrypt
-    , smtp-mail
     , text
     , time
     , transformers
     , transformers-base
     , unordered-containers
-    , wai
-    , wai-extra
-    , warp
   default-language: Haskell2010
 
 executable disco
@@ -108,15 +101,12 @@ executable disco
     , cmdargs
     , cryptonite
     , directory
-    , either
-    , exceptions
     , filepath
     , frankie
     , lens
     , liquid-base
     , liquidhaskell >=0.8.10
     , memory
-    , mime-mail
     , mime-types
     , monad-control
     , monad-logger
@@ -131,15 +121,11 @@ executable disco
     , resource-pool
     , scrypt
     , server
-    , smtp-mail
     , text
     , time
     , transformers
     , transformers-base
     , unordered-containers
-    , wai
-    , wai-extra
-    , warp
   default-language: Haskell2010
 
 test-suite server-test
@@ -162,15 +148,12 @@ test-suite server-test
     , cmdargs
     , cryptonite
     , directory
-    , either
-    , exceptions
     , filepath
     , frankie
     , lens
     , liquid-base
     , liquidhaskell >=0.8.10
     , memory
-    , mime-mail
     , mime-types
     , monad-control
     , monad-logger
@@ -185,13 +168,9 @@ test-suite server-test
     , resource-pool
     , scrypt
     , server
-    , smtp-mail
     , text
     , time
     , transformers
     , transformers-base
     , unordered-containers
-    , wai
-    , wai-extra
-    , warp
   default-language: Haskell2010

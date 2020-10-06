@@ -24,7 +24,6 @@ dependencies:
   # - base >= 4.7 && < 5
   - base64-bytestring
   - bytestring
-  - either
   - frankie
   - binah
   - mtl
@@ -35,9 +34,6 @@ dependencies:
   - text
   - transformers
   - unordered-containers
-  - wai
-  - wai-extra
-  - warp
   - monad-time
   - resource-pool
   - lens
@@ -48,18 +44,15 @@ dependencies:
   - filepath
   - directory
   - cmdargs
-  - amazonka
   - time
+  - amazonka
   - amazonka-s3
   - amazonka-core
   - scrypt
   - network
-  - mime-mail
   - cryptonite
   - MonadRandom
   - random-shuffle
-  - smtp-mail
-  - exceptions
   - memory
   - liquid-base
   - liquidhaskell >= 0.8.10
