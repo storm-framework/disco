@@ -155,12 +155,10 @@ joinRandom = do
       respondJSON status200 roomId
   respondError status409 (Just "All rooms are full")
 
-{-@ tryJoinRoom
-  :: u:{v: UserId | v == entityKey (currentUser 0)}
-  -> Entity Room
-  -> TaggedT< {\_ -> True}
-            , {\v -> entityKey v == u || userVisibility (entityVal (getJust u)) == "public"}
-            > _ _ _ @-}
+{-@ tryJoinRoom :: u:{v: UserId | v == entityKey (currentUser 0)} -> Entity Room -> 
+      TaggedT<{\_ -> True}, 
+              {\v -> entityKey v == u || userVisibility (entityVal (getJust u)) == "public"}> _ _ _ 
+  @-}
 tryJoinRoom :: UserId -> Entity Room -> Controller Bool
 tryJoinRoom viewerId room = do
   roomId     <- project roomId' room
