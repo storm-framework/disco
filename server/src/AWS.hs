@@ -10,7 +10,7 @@ import           Data.ByteString                ( ByteString )
 import           Data.Time.Clock                ( UTCTime )
 
 import           Binah.Infrastructure
-import           Binah.Core
+-- import           Binah.Core
 
 presignURL
   :: (MonadTIO m, AWSRequest a) => Auth -> Region -> UTCTime -> Seconds -> a -> m ByteString

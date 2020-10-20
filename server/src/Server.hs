@@ -97,29 +97,30 @@ runServer ServerOpts {..} = runNoLoggingT $ do
             port optsPort
             initWithT $ initFromPool cfg pool
         dispatch $ do
-            post "/api/signin"  signIn
-            post "/api/signup"  signUp
-            post "/api/signout" signOut
-            put "/api/invitation" invitationPut
-            get "/api/invitation/:id" invitationGet
-            get "/api/invitation"     invitationList
-            get "/api/user"           userList
-            get "/api/user/:id"       userGet
-            post "/api/user/me" userUpdateMe
-            get "/api/room" roomGet
+            post "/api/signin"             signIn
+            post "/api/signup"             signUp
+            post "/api/signout"            signOut
+            put  "/api/invitation"         invitationPut
+            get  "/api/invitation/:id"     invitationGet
+            get  "/api/invitation"         invitationList
+            get  "/api/user"               userList
+            get  "/api/user/:id"           userGet
+            post "/api/user/me"            userUpdateMe
+            get  "/api/room"               roomGet
             post "/api/room"               roomBatchUpdate
             post "/api/room/current/leave" leaveRoom
             post "/api/room/:id/update"    roomUpdate
             post "/api/room/:id/topic"     updateTopic
             post "/api/room/:id/join"      joinRoom
             post "/api/room/joinRandom"    joinRandom
-            get "/api/signurl" presignS3URL
-            post "/api/message/send"     sendMessage
-            post "/api/message/read/:id" readMessage
-            get "/api/message/receive" recvMessage
-
-            post "/api/beacon" beacon
-            post "/api/sync"   sync
+            get  "/api/signurl"            presignS3URL
+            post "/api/message/send"       sendMessage
+            post "/api/message/read/:id"   readMessage
+            get  "/api/message/receive"    recvMessage
+            post "/api/beacon"             beacon
+            post "/api/sync"               sync
+            put  "/api/photo/:id"          photoPut
+            get  "/api/photo/:id"          photoGet
 
             case optsStatic of
                 Just path -> fallback (sendFromDirectory path "index.html")
@@ -148,9 +149,9 @@ readSecretKey = do
 
 readAWSConfig :: IO AWSConfig
 readAWSConfig = do
-    accessKey <- fromMaybe "" <$> lookupEnv "DISCO_AWS_ACCESS_KEY"
-    secretKey <- fromMaybe "" <$> lookupEnv "DISCO_AWS_SECRET_KEY"
-    region    <- readMaybe . fromMaybe "" <$> lookupEnv "DISCO_AWS_REGION"
+    accessKey <- fromMaybe ""                  <$> lookupEnv "DISCO_AWS_ACCESS_KEY"
+    secretKey <- fromMaybe ""                  <$> lookupEnv "DISCO_AWS_SECRET_KEY"
+    region    <- readMaybe . fromMaybe ""      <$> lookupEnv "DISCO_AWS_REGION"
     bucket    <- fromMaybe "distant-socialing" <$> lookupEnv "DISCO_AWS_BUCKET"
     env       <- AWS.newEnv $ AWS.FromKeys (AWS.AccessKey $ T.encodeUtf8 $ T.pack accessKey)
                                            (AWS.SecretKey $ T.encodeUtf8 $ T.pack secretKey)
@@ -162,9 +163,9 @@ readAWSConfig = do
 readSMTPConfig :: IO SMTPConfig
 readSMTPConfig = do
     host <- fromMaybe "localhost" <$> lookupEnv "DISCO_SMTP_HOST"
-    port <- fromMaybe "425" <$> lookupEnv "DISCO_SMTP_PORT"
-    user <- fromMaybe "" <$> lookupEnv "DISCO_SMTP_USER"
-    pass <- fromMaybe "" <$> lookupEnv "DISCO_SMTP_PASS"
+    port <- fromMaybe "425"       <$> lookupEnv "DISCO_SMTP_PORT"
+    user <- fromMaybe ""          <$> lookupEnv "DISCO_SMTP_USER"
+    pass <- fromMaybe ""          <$> lookupEnv "DISCO_SMTP_PASS"
     return $ SMTPConfig host (read port :: PortNumber) user pass
 
 {-@ ignore initDB @-}

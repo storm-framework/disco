@@ -13,14 +13,15 @@ import qualified Crypto.Hash                   as Crypto
 import qualified Crypto.MAC.HMAC               as Crypto
 import qualified Data.ByteArray                as BA
 import           Frankie.Auth
+import qualified Frankie.Log                   as Log
 import qualified Data.Text                     as T
 import qualified Data.Text.Encoding            as T
 import qualified Data.ByteString               as BS
 import qualified Data.ByteString.Char8         as Char8
 import qualified Data.ByteString.Base64.URL    as B64Url
 import qualified Data.ByteString.Lazy          as L
-import           Data.Maybe
-import qualified Data.Time.Format              as Time
+import Data.Maybe ( listToMaybe )
+-- import qualified Data.Time.Format              as Time
 import           Data.Time.Clock                ( UTCTime
                                                 , secondsToDiffTime
                                                 )
@@ -38,14 +39,14 @@ import           Binah.Insert
 import           Binah.Filters
 import           Binah.Helpers
 import           Binah.Infrastructure
-import           Binah.Templates
+-- import           Binah.Templates
 import           Binah.Frankie
 import           Binah.Crypto
 import           Binah.JSON
 
 import           Controllers
 import           Controllers.User               ( extractUserData
-                                                , UserData
+                                                -- , UserData
                                                 )
 import           Model
 import           JSON
@@ -193,13 +194,13 @@ instance FromJSON SignUpReq where
 
 data UserCreate = UserCreate
   { emailAddress :: T.Text
-  , password :: T.Text
-  , photoURL :: Maybe T.Text
-  , displayName :: T.Text
-  , institution :: T.Text
-  , pronouns :: T.Text
-  , website :: T.Text
-  , bio :: T.Text
+  , password     :: T.Text
+  , photoURL     :: Maybe T.Text
+  , displayName  :: T.Text
+  , institution  :: T.Text
+  , pronouns     :: T.Text
+  , website      :: T.Text
+  , bio          :: T.Text
   }
   deriving Generic
 
@@ -222,6 +223,18 @@ setSessionCookie token = setCookie
 -- | presignS3URL
 --------------------------------------------------------------------------------
 
+{-@ ignore photoPut @-}
+photoPut :: T.Text -> Controller ()
+photoPut id = do
+  logT Log.INFO ("photoPut: id " ++ show id)
+  respondJSON status200 $ T.decodeUtf8 "jolly good, what!"
+
+{-@ ignore photoGet @-}
+photoGet :: T.Text -> Controller ()
+photoGet id = do
+  logT Log.INFO ("photoGet: id " ++ show id)
+  respondJSON status200 $ T.decodeUtf8 "yikes, nothing to see here!"
+
 {-@ ignore presignS3URL @-}
 {-@ presignS3URL :: TaggedT <{\_ -> False}, {\_ -> True}> _ _ () @-}
 presignS3URL :: Controller ()
@@ -234,12 +247,16 @@ presignS3URL = do
                                   (invitationId' ==. id &&: invitationCode' ==. code)
       project invitationEmailAddress' invitation
     _ -> requireAuthUser >>= project userEmailAddress'
-  t              <- liftTIO currentTime
-  AWSConfig {..} <- configAWS `fmap` getConfigT
-  let objectKey = textBase64 emailAddress
-  let request   = putObject awsBucket (ObjectKey objectKey) ""
-  signedUrl <- presignURL awsAuth awsRegion t 900 request
-  respondJSON status200 $ T.decodeUtf8 signedUrl
+  let signedUrl = makePhotoURL emailAddress
+  -- t              <- liftTIO currentTime
+  -- AWSConfig {..} <- configAWS `fmap` getConfigT
+  -- let objectKey = textBase64 emailAddress
+  -- let request   = putObject awsBucket (ObjectKey objectKey) ""
+  -- signedUrl <- T.decodeUtf8 <$> presignURL awsAuth awsRegion t 900 request
+  respondJSON status200 signedUrl
+
+makePhotoURL :: T.Text -> T.Text
+makePhotoURL email = "http://localhost:3000/api/photo/" <> textBase64 email
 
 textBase64 :: T.Text -> T.Text
 textBase64 = T.decodeUtf8 . B64Url.encode . T.encodeUtf8

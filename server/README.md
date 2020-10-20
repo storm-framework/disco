@@ -1,8 +1,22 @@
 # server
 
+## TODO 
+
+- [*] compile 
+- [*] run
+- [*] add rjhala@eng.ucsd.edu as admin
+- [ ] UPDATE /signurl route handler
+- [ ] WRITE  PUT /photo/:id handler
+- [ ] WRITE  GET /photo/:id handler
+
+
 ## Dependencies
 
-You need to have stack in your `$PATH` for the following to work. If you want to edit `Model.binah` you'll also need [binah-codegen](https://github.com/nilehmann/binah-codegen) see below for further instructinos.
+You need to have stack in your `$PATH` for the following to work. 
+
+If you want to edit `Model.binah` you'll also need [binah-codegen](https://github.com/nilehmann/binah-codegen) 
+
+See below for further instructions. 
 
 ## Build the code
 
@@ -29,8 +43,9 @@ $ rm db.sqlite
 
 ## AWS Credentials
 
-We are using S3 to upload photos. If you want to upload photos you need to setup the following environment
-variables to match and account and bucket in S3.
+We are using S3 to upload photos. 
+
+To upload photos you need to setup the following environment variables to match and account and bucket in S3.
 
 ```
 DISCO_AWS_ACCESS_KEY
@@ -63,4 +78,10 @@ This will add an organizer without profile info. You can edit the profile in the
 
 ## Note on editing `Model.binah`
 
-If you edit `Model.binah` you'll first need to generate the corresponding `Model.hs`. The command `make build` is a wrapper over `stack build` that auto generate `Model.hs` from `Model.binah` when necessary. For this to work you need to have `binah-codegen` in your `$PATH`. See https://github.com/nilehmann/binah-codegen for instructions. If you don't modify `Model.binah` things should work just fine because `Model.hs` is under version control. Alternatively you could also run `make model` to generate `Model.hs`.
+If you edit `Model.binah` you'll first need to generate the corresponding `Model.hs`. 
+The command `make build` is a wrapper over `stack build` that auto generate `Model.hs` 
+from `Model.binah` when necessary. For this to work you need to have `binah-codegen` 
+in your `$PATH`. See https://github.com/nilehmann/binah-codegen for instructions. 
+If you don't modify `Model.binah` things should work just fine because `Model.hs` 
+is under version control. Alternatively you could also run `make model` to generate 
+`Model.hs`.
