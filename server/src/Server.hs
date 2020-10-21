@@ -119,7 +119,7 @@ runServer ServerOpts {..} = runNoLoggingT $ do
             get  "/api/message/receive"    recvMessage
             post "/api/beacon"             beacon
             post "/api/sync"               sync
-            put  "/api/photo/:id"          photoPut
+            post "/api/photo/:id"          photoPost
             get  "/api/photo/:id"          photoGet
 
             case optsStatic of

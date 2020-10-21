@@ -123,9 +123,15 @@ class ApiService {
 
   async uploadFile(file: File, code?: string): Promise<string> {
     const presigned = await this.presignURL(code);
-    await axios.put(presigned, file, {
-      headers: { "Content-Type": file.type }
+    // await axios.put(presigned, file, {
+    //   headers: { "Content-Type": file.type }
+    // });
+    const formData = new FormData();
+    formData.append("image", file);
+    axios.post(presigned, formData, {
+      headers: { "Content-Type": "multipart/form-data" }
     });
+
     const u = new URL(presigned);
     return `${u.protocol}//${u.host}${u.pathname}`;
   }

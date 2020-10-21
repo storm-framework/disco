@@ -5,10 +5,16 @@
 - [*] compile 
 - [*] run
 - [*] add rjhala@eng.ucsd.edu as admin
-- [ ] UPDATE /signurl route handler
+- [*] UPDATE /signurl route handler
 - [ ] WRITE  PUT /photo/:id handler
 - [ ] WRITE  GET /photo/:id handler
 
+1. Use `Binah.JSON.decodeFiles` to (PUT)
+    - get the files + types
+    - stash in the db as BS
+
+2. Use `Binah.JSON.respondBlob` to
+    - send the blob back to the user (GET)
 
 ## Dependencies
 

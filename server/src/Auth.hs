@@ -53,7 +53,6 @@ import           JSON
 import           AWS
 import           Network.AWS.S3
 
-
 {-@ ignore addOrganizer @-}
 addOrganizer :: UserCreate -> Task UserId
 addOrganizer UserCreate {..} = do
@@ -223,17 +222,51 @@ setSessionCookie token = setCookie
 -- | presignS3URL
 --------------------------------------------------------------------------------
 
-{-@ ignore photoPut @-}
-photoPut :: T.Text -> Controller ()
-photoPut id = do
-  logT Log.INFO ("photoPut: id " ++ show id)
-  respondJSON status200 $ T.decodeUtf8 "jolly good, what!"
+{-@ ignore photoPost @-}
+photoPost :: T.Text -> Controller ()
+photoPost id = do
+  image   <- photoImage
+  photoMb <- selectFirst (photoHash' ==. id)
+  case photoMb of
+    Just _  -> updatePhoto id image
+    Nothing -> insertPhoto id image 
+  respondJSON status200 $ "saved photo for: " <> id
+
+photoImage :: Controller (FileInfo L.ByteString)
+photoImage = do 
+  (_, files) <- decodeFiles
+  case files of
+    ("image", f) : _ -> return f
+    _                -> respondError status401 (Just "Invalid photo POST")
+
+updatePhoto :: T.Text -> FileInfo L.ByteString -> Controller ()
+updatePhoto id image = do 
+  logT Log.INFO ("updatePhoto: id " ++ show id ++ " " ++ show (fileName image))
+  updateWhere (photoHash' ==. id)
+    ((photoFileName'    `assign` (fileName        image)) `combine` 
+     (photoFileType'    `assign` (fileContentType image)) `combine` 
+     (photoFileContent' `assign` L.toStrict (fileContent image))
+    )
+
+insertPhoto :: T.Text -> FileInfo L.ByteString -> Controller () 
+insertPhoto id image = do 
+  let name  = fileName image
+  let typ   = fileContentType image
+  let blob  = L.toStrict (fileContent image)
+  let photo = mkPhoto id name typ blob 
+  key      <- insert photo
+  logT Log.INFO ("insertPhoto: id " ++ show (id, fileName image, key))
 
 {-@ ignore photoGet @-}
 photoGet :: T.Text -> Controller ()
 photoGet id = do
   logT Log.INFO ("photoGet: id " ++ show id)
-  respondJSON status200 $ T.decodeUtf8 "yikes, nothing to see here!"
+  photo <- selectFirstOr (errorResponse status401 Nothing) (photoHash' ==. id)
+  typ   <- project photoFileType'    photo 
+  blob  <- project photoFileContent' photo
+  name  <- project photoFileName'    photo
+  logT Log.INFO ("photoGet-respond: " ++ show (id, name))
+  respondFile status200 typ (L.fromStrict blob) 
 
 {-@ ignore presignS3URL @-}
 {-@ presignS3URL :: TaggedT <{\_ -> False}, {\_ -> True}> _ _ () @-}

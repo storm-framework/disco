@@ -92,6 +92,12 @@ MarkRead
   user      UserId
   upto      MessageId
 
+Photo
+  hash          Text
+  fileName      ByteString
+  fileType      ByteString
+  fileContent   ByteString
+
 policy CanReadMessage = \message viewer ->
   fromJust (messageReceiver message) == entityKey viewer || not (isJust (messageReceiver message))
 
