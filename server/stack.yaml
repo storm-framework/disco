@@ -9,9 +9,9 @@ packages:
 - ../../binah
 
 extra-deps:
-- lens-4.19.2
+# - lens-4.19.2
 - smtp-mail-0.3.0.0
-- amazonka-1.6.1
+# - amazonka-1.6.1
 - unliftio-core-0.1.2.0
 
 - github: PLSysSec/frankie

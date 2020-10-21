@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 66a2bc7da6807f1cf92f6187462278966a2f2668c96b3ec69873603ed2b65312
+-- hash: 3d44f3186340e3299be6aab1fec4fd2bafa639b670ca86e362defec049a76ed4
 
 name:           server
 version:        0.1.0.0
@@ -28,7 +28,6 @@ source-repository head
 library
   exposed-modules:
       Auth
-      AWS
       Controllers
       Controllers.Invitation
       Controllers.Message
@@ -46,9 +45,6 @@ library
   build-depends:
       MonadRandom
     , aeson
-    , amazonka
-    , amazonka-core
-    , amazonka-s3
     , base64-bytestring
     , binah
     , bytestring
@@ -57,7 +53,6 @@ library
     , directory
     , filepath
     , frankie
-    , lens
     , liquid-base
     , liquidhaskell >=0.8.10
     , memory
@@ -91,9 +86,6 @@ executable disco
   build-depends:
       MonadRandom
     , aeson
-    , amazonka
-    , amazonka-core
-    , amazonka-s3
     , base64-bytestring
     , binah
     , bytestring
@@ -102,7 +94,6 @@ executable disco
     , directory
     , filepath
     , frankie
-    , lens
     , liquid-base
     , liquidhaskell >=0.8.10
     , memory
@@ -138,9 +129,6 @@ test-suite server-test
   build-depends:
       MonadRandom
     , aeson
-    , amazonka
-    , amazonka-core
-    , amazonka-s3
     , base64-bytestring
     , binah
     , bytestring
@@ -149,7 +137,6 @@ test-suite server-test
     , directory
     , filepath
     , frankie
-    , lens
     , liquid-base
     , liquidhaskell >=0.8.10
     , memory

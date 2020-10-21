@@ -36,7 +36,6 @@ dependencies:
   - unordered-containers
   - monad-time
   - resource-pool
-  - lens
   - transformers-base
   - monad-control
   - monad-logger
@@ -45,9 +44,6 @@ dependencies:
   - directory
   - cmdargs
   - time
-  - amazonka
-  - amazonka-s3
-  - amazonka-core
   - scrypt
   - network
   - cryptonite

@@ -32,7 +32,7 @@ import           GHC.Generics
 import           Text.Read                      ( readMaybe )
 import           Frankie.Cookie
 
-import           Binah.Core
+import Binah.Core ( Entity )
 import           Binah.Actions
 import           Binah.Updates
 import           Binah.Insert
@@ -50,8 +50,6 @@ import           Controllers.User               ( extractUserData
                                                 )
 import           Model
 import           JSON
-import           AWS
-import           Network.AWS.S3
 
 {-@ ignore addOrganizer @-}
 addOrganizer :: UserCreate -> Task UserId
@@ -241,7 +239,7 @@ photoImage = do
 
 updatePhoto :: T.Text -> FileInfo L.ByteString -> Controller ()
 updatePhoto id image = do 
-  logT Log.INFO ("updatePhoto: id " ++ show id ++ " " ++ show (fileName image))
+  -- logT Log.INFO ("updatePhoto: id " ++ show id ++ " " ++ show (fileName image))
   updateWhere (photoHash' ==. id)
     ((photoFileName'    `assign` (fileName        image)) `combine` 
      (photoFileType'    `assign` (fileContentType image)) `combine` 
@@ -255,17 +253,18 @@ insertPhoto id image = do
   let blob  = L.toStrict (fileContent image)
   let photo = mkPhoto id name typ blob 
   key      <- insert photo
-  logT Log.INFO ("insertPhoto: id " ++ show (id, fileName image, key))
+  return ()
+  -- logT Log.INFO ("insertPhoto: id " ++ show (id, fileName image, key))
 
 {-@ ignore photoGet @-}
 photoGet :: T.Text -> Controller ()
 photoGet id = do
-  logT Log.INFO ("photoGet: id " ++ show id)
+  -- logT Log.INFO ("photoGet: id " ++ show id)
   photo <- selectFirstOr (errorResponse status401 Nothing) (photoHash' ==. id)
   typ   <- project photoFileType'    photo 
   blob  <- project photoFileContent' photo
   name  <- project photoFileName'    photo
-  logT Log.INFO ("photoGet-respond: " ++ show (id, name))
+  -- logT Log.INFO ("photoGet-respond: " ++ show (id, name))
   respondFile status200 typ (L.fromStrict blob) 
 
 {-@ ignore presignS3URL @-}
@@ -281,11 +280,6 @@ presignS3URL = do
       project invitationEmailAddress' invitation
     _ -> requireAuthUser >>= project userEmailAddress'
   let signedUrl = makePhotoURL emailAddress
-  -- t              <- liftTIO currentTime
-  -- AWSConfig {..} <- configAWS `fmap` getConfigT
-  -- let objectKey = textBase64 emailAddress
-  -- let request   = putObject awsBucket (ObjectKey objectKey) ""
-  -- signedUrl <- T.decodeUtf8 <$> presignURL awsAuth awsRegion t 900 request
   respondJSON status200 signedUrl
 
 makePhotoURL :: T.Text -> T.Text
