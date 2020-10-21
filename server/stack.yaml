@@ -6,19 +6,16 @@ allow-newer: true
 
 packages:
 - .
-- ../../binah
 
 extra-deps:
-# - lens-4.19.2
 - smtp-mail-0.3.0.0
-# - amazonka-1.6.1
 - unliftio-core-0.1.2.0
 
 - github: PLSysSec/frankie
   commit: b9ee2c0f7667025d0d0ac3a43ded43d1d1d63c28
 
-# - github: binah-framework/binah
-#   commit: 07961784e471af2787e996c578cb5716bdf35ba0
+- github: binah-framework/binah
+  commit: 8d5d6815973c54489a3c679257fcf9e7881bbd0a
 
 # LH stuff
 - text-format-0.3.2

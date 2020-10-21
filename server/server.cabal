@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 3d44f3186340e3299be6aab1fec4fd2bafa639b670ca86e362defec049a76ed4
+-- hash: e1faa17789d85b33b2f27f5749f396bf86b0299388c5e69c6b173d71103c4696
 
 name:           server
 version:        0.1.0.0
@@ -42,6 +42,7 @@ library
       Paths_server
   hs-source-dirs:
       src
+  ghc-options: -fplugin=LiquidHaskell
   build-depends:
       MonadRandom
     , aeson

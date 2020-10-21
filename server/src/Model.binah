@@ -98,6 +98,8 @@ Photo
   fileType      ByteString
   fileContent   ByteString
 
+  UniquePhotoHash hash
+
 policy CanReadMessage = \message viewer ->
   fromJust (messageReceiver message) == entityKey viewer || not (isJust (messageReceiver message))
 

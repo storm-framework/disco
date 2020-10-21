@@ -39,7 +39,6 @@ import qualified Data.Text.Encoding            as T
 import qualified Data.Pool                     as Pool
 import           Control.Monad.Base             ( MonadBase(..) )
 import           Control.Monad.Trans.Control    ( MonadBaseControl(..)
-                                                -- , MonadTransControl(..)
                                                 )
 import           Control.Monad.Trans.Class      ( lift )
 import           Control.Monad.Logger           ( runNoLoggingT )

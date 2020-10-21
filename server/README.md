@@ -49,6 +49,8 @@ $ rm db.sqlite
 
 ## AWS Credentials
 
+**deprecated: photos are now stored locally in the server**
+
 We are using S3 to upload photos. 
 
 To upload photos you need to setup the following environment variables to match and account and bucket in S3.
