@@ -3,8 +3,8 @@
     <b-form-row>
       <b-col>
         <b-form-file
-          placeholder="Choose a file or drop it here"
-          drop-placeholder="Drop file here..."
+          placeholder="Choose a file (< 1Mb) or drop it here"
+          drop-placeholder="Drop file (< 1Mb) here..."
           accept="image/*"
           @input="onFileChange"
           :disabled="disabled"

@@ -15,7 +15,7 @@ extra-deps:
   commit: b9ee2c0f7667025d0d0ac3a43ded43d1d1d63c28
 
 - github: binah-framework/binah
-  commit: 8d5d6815973c54489a3c679257fcf9e7881bbd0a
+  commit: 2d35c9ce87eecae53957efb026829a9e68e41b78
 
 # LH stuff
 - text-format-0.3.2
