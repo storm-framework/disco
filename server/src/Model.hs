@@ -18,11 +18,13 @@ module Model
   , mkRoom
   , mkMessage
   , mkMarkRead
+  , mkPhoto
   , Invitation
   , User
   , Room
   , Message
   , MarkRead
+  , Photo
   , invitationId'
   , invitationCode'
   , invitationEmailAddress'
@@ -60,11 +62,17 @@ module Model
   , markReadId'
   , markReadUser'
   , markReadUpto'
+  , photoId'
+  , photoHash'
+  , photoFileName'
+  , photoFileType'
+  , photoFileContent'
   , InvitationId
   , UserId
   , RoomId
   , MessageId
   , MarkReadId
+  , PhotoId
   )
 where
 
@@ -141,6 +149,13 @@ Message
 MarkRead
   user UserId
   upto MessageId
+  
+
+Photo
+  hash Text
+  fileName ByteString
+  fileType ByteString
+  fileContent ByteString
   
 |]
 
@@ -804,3 +819,92 @@ markReadUser' = EntityFieldWrapper MarkReadUser
   @-}
 markReadUpto' :: EntityFieldWrapper (Entity User) MarkRead MessageId
 markReadUpto' = EntityFieldWrapper MarkReadUpto
+
+-- * Photo
+{-@ mkPhoto ::
+        x_0: Text
+     -> x_1: ByteString
+     -> x_2: ByteString
+     -> x_3: ByteString
+     -> BinahRecord <{\row -> photoHash (entityVal row) == x_0 && photoFileName (entityVal row) == x_1 && photoFileType (entityVal row) == x_2 && photoFileContent (entityVal row) == x_3}, 
+                     {\_ _ -> True}, 
+                     {\x_0 x_1 -> False}> 
+                     (Entity User) Photo
+  @-}
+mkPhoto :: Text -> ByteString -> ByteString -> ByteString -> BinahRecord (Entity User) Photo
+mkPhoto x_0 x_1 x_2 x_3 = BinahRecord (Photo x_0 x_1 x_2 x_3)
+
+{-@ invariant {v: Entity Photo | v == getJust (entityKey v)} @-}
+
+
+
+{-@ assume photoId' :: 
+      EntityFieldWrapper <{\row viewer -> True}, 
+                          {\row field  -> field == entityKey row}, 
+                          {\field row  -> field == entityKey row}, 
+                          {\_ -> False}, 
+                          {\_ _ _ -> True}> 
+                          (Entity User) Photo PhotoId
+  @-}
+photoId' :: EntityFieldWrapper (Entity User) Photo PhotoId
+photoId' = EntityFieldWrapper PhotoId
+
+{-@ measure photoHash :: Photo -> Text @-}
+
+{-@ measure photoHashCap :: Entity Photo -> Bool @-}
+
+{-@ assume photoHash' :: 
+      EntityFieldWrapper <{\_ _ -> True}, 
+                          {\row field -> field == photoHash (entityVal row)}, 
+                          {\field row -> field == photoHash (entityVal row)}, 
+                          {\old -> photoHashCap old}, 
+                          {\old _ _ -> photoHashCap old}> 
+                          (Entity User) Photo Text
+  @-}
+photoHash' :: EntityFieldWrapper (Entity User) Photo Text
+photoHash' = EntityFieldWrapper PhotoHash
+
+{-@ measure photoFileName :: Photo -> ByteString @-}
+
+{-@ measure photoFileNameCap :: Entity Photo -> Bool @-}
+
+{-@ assume photoFileName' :: 
+      EntityFieldWrapper <{\_ _ -> True}, 
+                          {\row field -> field == photoFileName (entityVal row)}, 
+                          {\field row -> field == photoFileName (entityVal row)}, 
+                          {\old -> photoFileNameCap old}, 
+                          {\old _ _ -> photoFileNameCap old}> 
+                          (Entity User) Photo ByteString
+  @-}
+photoFileName' :: EntityFieldWrapper (Entity User) Photo ByteString
+photoFileName' = EntityFieldWrapper PhotoFileName
+
+{-@ measure photoFileType :: Photo -> ByteString @-}
+
+{-@ measure photoFileTypeCap :: Entity Photo -> Bool @-}
+
+{-@ assume photoFileType' :: 
+      EntityFieldWrapper <{\_ _ -> True}, 
+                          {\row field -> field == photoFileType (entityVal row)}, 
+                          {\field row -> field == photoFileType (entityVal row)}, 
+                          {\old -> photoFileTypeCap old}, 
+                          {\old _ _ -> photoFileTypeCap old}> 
+                          (Entity User) Photo ByteString
+  @-}
+photoFileType' :: EntityFieldWrapper (Entity User) Photo ByteString
+photoFileType' = EntityFieldWrapper PhotoFileType
+
+{-@ measure photoFileContent :: Photo -> ByteString @-}
+
+{-@ measure photoFileContentCap :: Entity Photo -> Bool @-}
+
+{-@ assume photoFileContent' :: 
+      EntityFieldWrapper <{\_ _ -> True}, 
+                          {\row field -> field == photoFileContent (entityVal row)}, 
+                          {\field row -> field == photoFileContent (entityVal row)}, 
+                          {\old -> photoFileContentCap old}, 
+                          {\old _ _ -> photoFileContentCap old}> 
+                          (Entity User) Photo ByteString
+  @-}
+photoFileContent' :: EntityFieldWrapper (Entity User) Photo ByteString
+photoFileContent' = EntityFieldWrapper PhotoFileContent

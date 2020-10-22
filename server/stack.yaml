@@ -8,16 +8,14 @@ packages:
 - .
 
 extra-deps:
-- lens-4.19.2
 - smtp-mail-0.3.0.0
-- amazonka-1.6.1
 - unliftio-core-0.1.2.0
 
 - github: PLSysSec/frankie
   commit: b9ee2c0f7667025d0d0ac3a43ded43d1d1d63c28
 
 - github: binah-framework/binah
-  commit: 07961784e471af2787e996c578cb5716bdf35ba0
+  commit: 01bd917c3ae0fe771d6866e19eb57a1c3709c1fb
 
 # LH stuff
 - text-format-0.3.2

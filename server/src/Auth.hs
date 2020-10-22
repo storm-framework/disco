@@ -13,14 +13,15 @@ import qualified Crypto.Hash                   as Crypto
 import qualified Crypto.MAC.HMAC               as Crypto
 import qualified Data.ByteArray                as BA
 import           Frankie.Auth
+import qualified Frankie.Log                   as Log
 import qualified Data.Text                     as T
 import qualified Data.Text.Encoding            as T
 import qualified Data.ByteString               as BS
 import qualified Data.ByteString.Char8         as Char8
 import qualified Data.ByteString.Base64.URL    as B64Url
 import qualified Data.ByteString.Lazy          as L
-import           Data.Maybe
-import qualified Data.Time.Format              as Time
+import Data.Maybe ( listToMaybe )
+-- import qualified Data.Time.Format              as Time
 import           Data.Time.Clock                ( UTCTime
                                                 , secondsToDiffTime
                                                 )
@@ -31,27 +32,24 @@ import           GHC.Generics
 import           Text.Read                      ( readMaybe )
 import           Frankie.Cookie
 
-import           Binah.Core
+import Binah.Core ( Entity )
 import           Binah.Actions
 import           Binah.Updates
 import           Binah.Insert
 import           Binah.Filters
 import           Binah.Helpers
 import           Binah.Infrastructure
-import           Binah.Templates
+-- import           Binah.Templates
 import           Binah.Frankie
 import           Binah.Crypto
 import           Binah.JSON
 
 import           Controllers
 import           Controllers.User               ( extractUserData
-                                                , UserData
+                                                -- , UserData
                                                 )
 import           Model
 import           JSON
-import           AWS
-import           Network.AWS.S3
-
 
 {-@ ignore addOrganizer @-}
 addOrganizer :: UserCreate -> Task UserId
@@ -193,13 +191,13 @@ instance FromJSON SignUpReq where
 
 data UserCreate = UserCreate
   { emailAddress :: T.Text
-  , password :: T.Text
-  , photoURL :: Maybe T.Text
-  , displayName :: T.Text
-  , institution :: T.Text
-  , pronouns :: T.Text
-  , website :: T.Text
-  , bio :: T.Text
+  , password     :: T.Text
+  , photoURL     :: Maybe T.Text
+  , displayName  :: T.Text
+  , institution  :: T.Text
+  , pronouns     :: T.Text
+  , website      :: T.Text
+  , bio          :: T.Text
   }
   deriving Generic
 
@@ -222,6 +220,53 @@ setSessionCookie token = setCookie
 -- | presignS3URL
 --------------------------------------------------------------------------------
 
+{-@ ignore photoPost @-}
+photoPost :: T.Text -> Controller ()
+photoPost id = do
+  image   <- photoImage
+  photoMb <- selectFirst (photoHash' ==. id)
+  case photoMb of
+    Just _  -> updatePhoto id image
+    Nothing -> insertPhoto id image 
+  respondJSON status200 $ "saved photo for: " <> id
+
+photoImage :: Controller (FileInfo L.ByteString)
+photoImage = do 
+  (_, files) <- decodeFiles
+  case files of
+    ("image", f) : _ -> return f
+    _                -> respondError status401 (Just "Invalid photo POST")
+
+updatePhoto :: T.Text -> FileInfo L.ByteString -> Controller ()
+updatePhoto id image = do 
+  -- logT Log.INFO ("updatePhoto: id " ++ show id ++ " " ++ show (fileName image))
+  updateWhere (photoHash' ==. id)
+    ((photoFileName'    `assign` (fileName        image)) `combine` 
+     (photoFileType'    `assign` (fileContentType image)) `combine` 
+     (photoFileContent' `assign` L.toStrict (fileContent image))
+    )
+
+insertPhoto :: T.Text -> FileInfo L.ByteString -> Controller () 
+insertPhoto id image = do 
+  let name  = fileName image
+  let typ   = fileContentType image
+  let blob  = L.toStrict (fileContent image)
+  let photo = mkPhoto id name typ blob 
+  key      <- insert photo
+  return ()
+  -- logT Log.INFO ("insertPhoto: id " ++ show (id, fileName image, key))
+
+{-@ ignore photoGet @-}
+photoGet :: T.Text -> Controller ()
+photoGet id = do
+  -- logT Log.INFO ("photoGet: id " ++ show id)
+  photo <- selectFirstOr (errorResponse status401 Nothing) (photoHash' ==. id)
+  typ   <- project photoFileType'    photo 
+  blob  <- project photoFileContent' photo
+  name  <- project photoFileName'    photo
+  -- logT Log.INFO ("photoGet-respond: " ++ show (id, name))
+  respondFile status200 typ (L.fromStrict blob) 
+
 {-@ ignore presignS3URL @-}
 {-@ presignS3URL :: TaggedT <{\_ -> False}, {\_ -> True}> _ _ () @-}
 presignS3URL :: Controller ()
@@ -234,12 +279,11 @@ presignS3URL = do
                                   (invitationId' ==. id &&: invitationCode' ==. code)
       project invitationEmailAddress' invitation
     _ -> requireAuthUser >>= project userEmailAddress'
-  t              <- liftTIO currentTime
-  AWSConfig {..} <- configAWS `fmap` getConfigT
-  let objectKey = textBase64 emailAddress
-  let request   = putObject awsBucket (ObjectKey objectKey) ""
-  signedUrl <- presignURL awsAuth awsRegion t 900 request
-  respondJSON status200 $ T.decodeUtf8 signedUrl
+  let signedUrl = makePhotoURL emailAddress
+  respondJSON status200 signedUrl
+
+makePhotoURL :: T.Text -> T.Text
+makePhotoURL email = "http://localhost:3000/api/photo/" <> textBase64 email
 
 textBase64 :: T.Text -> T.Text
 textBase64 = T.decodeUtf8 . B64Url.encode . T.encodeUtf8

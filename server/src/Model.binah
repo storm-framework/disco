@@ -4,14 +4,14 @@ import Data.Time.Clock (UTCTime)
 import Data.Text       (Text)
 
 Invitation
-  code Text
+  code         Text
   emailAddress Text
-  firstName Text
-  lastName Text
-  institution Text
-  accepted Bool
-  emailStatus String
-  emailError String Maybe
+  firstName    Text
+  lastName     Text
+  institution  Text
+  accepted     Bool
+  emailStatus  String
+  emailError   String Maybe
 
   UniqueInvitationEmailAddress emailAddress
 
@@ -30,19 +30,19 @@ Invitation
   }
 
 User
-  emailAddress Text
-  password ByteString
-  photoURL Text Maybe
-  displayName Text
-  institution Text
-  pronouns Text
-  website Text
-  bio Text
-  level String
-  visibility String
-  room RoomId Maybe
-  active Bool
-  lastSync UTCTime
+  emailAddress  Text
+  password      ByteString
+  photoURL      Text Maybe
+  displayName   Text
+  institution   Text
+  pronouns      Text
+  website       Text
+  bio           Text
+  level         String
+  visibility    String
+  room          RoomId Maybe
+  active        Bool
+  lastSync      UTCTime
 
   UniqueUserEmailAddress emailAddress
 
@@ -69,9 +69,9 @@ User
          {\old _ viewer -> IsSelf old viewer }
 
 Room
-  color Text
-  name Text
-  topic Text
+  color    Text
+  name     Text
+  topic    Text
   capacity Int
   zoomLink Text
 
@@ -91,6 +91,14 @@ Message
 MarkRead
   user      UserId
   upto      MessageId
+
+Photo
+  hash          Text
+  fileName      ByteString
+  fileType      ByteString
+  fileContent   ByteString
+
+  UniquePhotoHash hash
 
 policy CanReadMessage = \message viewer ->
   fromJust (messageReceiver message) == entityKey viewer || not (isJust (messageReceiver message))

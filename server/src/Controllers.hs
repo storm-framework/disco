@@ -6,7 +6,7 @@
 
 module Controllers where
 
-import           Data.Aeson
+-- import           Data.Aeson
 import           Data.ByteString                ( ByteString )
 import           Control.Monad.Reader           ( MonadReader(..)
                                                 , ReaderT(..)
@@ -23,12 +23,10 @@ import           Binah.Actions
 import           Binah.Frankie
 import           Binah.Core
 import           Binah.Infrastructure
-import           Binah.Filters
+-- import           Binah.Filters
 import           Binah.Templates
 import           Binah.Concurrent
 import           Binah.JSON
-import qualified Network.AWS                   as AWS
-import qualified Network.AWS.S3                as S3
 import           Network.Socket                 ( PortNumber )
 
 import           Model
@@ -36,7 +34,6 @@ import           Model
 data Config = Config
   { configAuthMethod :: !(AuthMethod (Entity User) Controller)
   , configTemplateCache :: !(MVar.MVar Mustache.TemplateCache)
-  , configAWS :: AWSConfig
   , configSMTP :: SMTPConfig
   , configSecretKey :: ByteString
   }
@@ -46,12 +43,6 @@ data SMTPConfig = SMTPConfig
   , smtpPort :: PortNumber
   , smtpUser :: String
   , smtpPass :: String
-  }
-
-data AWSConfig = AWSConfig
-  { awsAuth :: AWS.Auth
-  , awsRegion:: AWS.Region
-  , awsBucket :: S3.BucketName
   }
 
 type Controller = TaggedT (Entity User) (ReaderT SqlBackend (ConfigT Config (ControllerT TIO)))

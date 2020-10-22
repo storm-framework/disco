@@ -31,22 +31,18 @@ import qualified Data.ByteString.Lazy          as LBS
 import qualified Data.ByteString               as BS
 import           Network.Mime
 import           Frankie.Config
-import           Frankie.Auth
-import           Data.Maybe
+-- import           Frankie.Auth
+import           Data.Maybe ( fromMaybe )
 import qualified Data.Text                     as T
 import qualified Data.Text.Encoding            as T
 
 import qualified Data.Pool                     as Pool
 import           Control.Monad.Base             ( MonadBase(..) )
 import           Control.Monad.Trans.Control    ( MonadBaseControl(..)
-                                                , MonadTransControl(..)
                                                 )
 import           Control.Monad.Trans.Class      ( lift )
 import           Control.Monad.Logger           ( runNoLoggingT )
 import qualified Control.Concurrent.MVar       as MVar
-import           Control.Lens.Operators         ( (^.) )
-import qualified Text.Mustache.Types           as Mustache
-import           Text.Read                      ( readMaybe )
 import           Data.Typeable
 import           Data.Data                      ( Data )
 
@@ -61,7 +57,6 @@ import           Binah.JSON
 import           Binah.SMTP             -- TODO: DUMMY RECURSIVE IMPORTS for LH
 import           Binah.Updates          -- TODO: DUMMY RECURSIVE IMPORTS for LH 
 
-
 import           Controllers
 import           Controllers.Invitation
 import           Controllers.User
@@ -70,9 +65,6 @@ import           Controllers.Message
 import           Controllers.Sync
 import           Model
 import           Auth
-
-import qualified Network.AWS                   as AWS
-import qualified Network.AWS.S3                as S3
 import           Network.Socket                 ( PortNumber )
 
 data Stage = Prod | Dev deriving (Data, Typeable, Show)
@@ -97,29 +89,30 @@ runServer ServerOpts {..} = runNoLoggingT $ do
             port optsPort
             initWithT $ initFromPool cfg pool
         dispatch $ do
-            post "/api/signin"  signIn
-            post "/api/signup"  signUp
-            post "/api/signout" signOut
-            put "/api/invitation" invitationPut
-            get "/api/invitation/:id" invitationGet
-            get "/api/invitation"     invitationList
-            get "/api/user"           userList
-            get "/api/user/:id"       userGet
-            post "/api/user/me" userUpdateMe
-            get "/api/room" roomGet
+            post "/api/signin"             signIn
+            post "/api/signup"             signUp
+            post "/api/signout"            signOut
+            put  "/api/invitation"         invitationPut
+            get  "/api/invitation/:id"     invitationGet
+            get  "/api/invitation"         invitationList
+            get  "/api/user"               userList
+            get  "/api/user/:id"           userGet
+            post "/api/user/me"            userUpdateMe
+            get  "/api/room"               roomGet
             post "/api/room"               roomBatchUpdate
             post "/api/room/current/leave" leaveRoom
             post "/api/room/:id/update"    roomUpdate
             post "/api/room/:id/topic"     updateTopic
             post "/api/room/:id/join"      joinRoom
             post "/api/room/joinRandom"    joinRandom
-            get "/api/signurl" presignS3URL
-            post "/api/message/send"     sendMessage
-            post "/api/message/read/:id" readMessage
-            get "/api/message/receive" recvMessage
-
-            post "/api/beacon" beacon
-            post "/api/sync"   sync
+            get  "/api/signurl"            presignS3URL
+            post "/api/message/send"       sendMessage
+            post "/api/message/read/:id"   readMessage
+            get  "/api/message/receive"    recvMessage
+            post "/api/beacon"             beacon
+            post "/api/sync"               sync
+            post "/api/photo/:id"          photoPost
+            get  "/api/photo/:id"          photoGet
 
             case optsStatic of
                 Just path -> fallback (sendFromDirectory path "index.html")
@@ -137,34 +130,19 @@ runTask' dbpath task = runSqlite dbpath $ do
 
 readConfig :: IO Config
 readConfig =
-    Config authMethod <$> MVar.newMVar mempty <*> readAWSConfig <*> readSMTPConfig <*> readSecretKey
-
+    Config authMethod <$> MVar.newMVar mempty <*> readSMTPConfig <*> readSecretKey
 
 readSecretKey :: IO BS.ByteString
 readSecretKey = do
     secret <- fromMaybe "sb8NHmF@_-nsf*ymt!wJ3.KXmTDPsNoy" <$> lookupEnv "DISCO_SECRET_KEY"
     return $ T.encodeUtf8 . T.pack $ secret
 
-
-readAWSConfig :: IO AWSConfig
-readAWSConfig = do
-    accessKey <- fromMaybe "" <$> lookupEnv "DISCO_AWS_ACCESS_KEY"
-    secretKey <- fromMaybe "" <$> lookupEnv "DISCO_AWS_SECRET_KEY"
-    region    <- readMaybe . fromMaybe "" <$> lookupEnv "DISCO_AWS_REGION"
-    bucket    <- fromMaybe "distant-socialing" <$> lookupEnv "DISCO_AWS_BUCKET"
-    env       <- AWS.newEnv $ AWS.FromKeys (AWS.AccessKey $ T.encodeUtf8 $ T.pack accessKey)
-                                           (AWS.SecretKey $ T.encodeUtf8 $ T.pack secretKey)
-    return $ AWSConfig { awsAuth   = env ^. AWS.envAuth
-                       , awsRegion = fromMaybe AWS.NorthCalifornia region
-                       , awsBucket = S3.BucketName (T.pack bucket)
-                       }
-
 readSMTPConfig :: IO SMTPConfig
 readSMTPConfig = do
     host <- fromMaybe "localhost" <$> lookupEnv "DISCO_SMTP_HOST"
-    port <- fromMaybe "425" <$> lookupEnv "DISCO_SMTP_PORT"
-    user <- fromMaybe "" <$> lookupEnv "DISCO_SMTP_USER"
-    pass <- fromMaybe "" <$> lookupEnv "DISCO_SMTP_PASS"
+    port <- fromMaybe "425"       <$> lookupEnv "DISCO_SMTP_PORT"
+    user <- fromMaybe ""          <$> lookupEnv "DISCO_SMTP_USER"
+    pass <- fromMaybe ""          <$> lookupEnv "DISCO_SMTP_PASS"
     return $ SMTPConfig host (read port :: PortNumber) user pass
 
 {-@ ignore initDB @-}

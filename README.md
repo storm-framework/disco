@@ -1,11 +1,13 @@
 # Distant Socialing
 
-The app is divided in a [client](https://github.com/nilehmann/binah-apps/tree/master/covid/client) written with [vue.js](https://vuejs.org/) and a [server](https://github.com/nilehmann/binah-apps/tree/master/covid/server) written with Binah.
+The app is split into a 
+
+* [client](/client) written with [vue.js](https://vuejs.org/) and 
+* [server](/server) written with [binah](https://github.com/binah-framework/binah) a Haskell framework
 
 ## Flags
 
 - [x] Twiddle `allowDirectMessages` in the client if you want direct messages between participants.
-
 
 ## Development
 
@@ -14,12 +16,17 @@ The app is divided in a [client](https://github.com/nilehmann/binah-apps/tree/ma
 Clone the repo including submodules
 
 ```bash
-$ git clone --recursive https://github.com/nilehmann/binah-apps/
+$ git clone https://github.com/nilehmann/binah-apps/disco.git
 ```
 
 ### Run the code
 
-For local development you need to run both the [client](https://github.com/nilehmann/binah-apps/tree/master/covid/client#readme) and [server](https://github.com/nilehmann/binah-apps/tree/master/covid/server#readme). Se each README for further instruction.
+For local development you need to run both the 
+
+* [client](https://github.com/nilehmann/binah-apps/tree/master/covid/client#readme) and 
+* [server](https://github.com/nilehmann/binah-apps/tree/master/covid/server#readme). 
+
+See each README for further instruction.
 
 ## Production
 
