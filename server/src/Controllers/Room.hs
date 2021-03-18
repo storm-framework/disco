@@ -12,17 +12,17 @@ import           Data.Maybe
 import           GHC.Generics
 import           System.Random.Shuffle          ( shuffleM )
 
-import           Binah.Core
-import           Binah.Actions
-import           Binah.Updates
-import           Binah.Insert
-import           Binah.Filters
-import           Binah.Helpers
-import           Binah.Infrastructure
-import           Binah.Templates
-import           Binah.Frankie
-import           Binah.Random
-import           Binah.JSON
+import           Storm.Core
+import           Storm.Actions
+import           Storm.Updates
+import           Storm.Insert
+import           Storm.Filters
+import           Storm.Helpers
+import           Storm.Infrastructure
+import           Storm.Templates
+import           Storm.Frankie
+import           Storm.Random
+import           Storm.JSON
 
 import           Controllers
 import           Model
@@ -155,9 +155,9 @@ joinRandom = do
       respondJSON status200 roomId
   respondError status409 (Just "All rooms are full")
 
-{-@ tryJoinRoom :: u:{v: UserId | v == entityKey (currentUser 0)} -> Entity Room -> 
-      TaggedT<{\_ -> True}, 
-              {\v -> entityKey v == u || userVisibility (entityVal (getJust u)) == "public"}> _ _ _ 
+{-@ tryJoinRoom :: u:{v: UserId | v == entityKey (currentUser 0)} -> Entity Room ->
+      TaggedT<{\_ -> True},
+              {\v -> entityKey v == u || userVisibility (entityVal (getJust u)) == "public"}> _ _ _
   @-}
 tryJoinRoom :: UserId -> Entity Room -> Controller Bool
 tryJoinRoom viewerId room = do

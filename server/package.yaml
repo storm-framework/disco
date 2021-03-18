@@ -1,6 +1,6 @@
 name: server
 version: 0.1.0.0
-github: "binah-framework/disco"
+github: "storm-framework/disco"
 license: BSD3
 author: "Nico Lehmann"
 maintainer: "nlehmann@eng.ucsd.edu"
@@ -25,7 +25,7 @@ dependencies:
   - base64-bytestring
   - bytestring
   - frankie
-  - binah
+  - storm
   - mtl
   - mustache
   - persistent

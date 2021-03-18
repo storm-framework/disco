@@ -78,7 +78,7 @@ import           Database.Persist.TH            ( share
                                                 )
 import qualified Database.Persist              as Persist
 
-import           Binah.Core
+import           Storm.Core
 
 import Data.ByteString (ByteString)
 import Data.Int        (Int64)
@@ -178,13 +178,13 @@ MarkRead
      -> x_5: Bool
      -> x_6: String
      -> x_7: Maybe String
-     -> BinahRecord <{\row -> invitationCode (entityVal row) == x_0 && invitationEmailAddress (entityVal row) == x_1 && invitationFirstName (entityVal row) == x_2 && invitationLastName (entityVal row) == x_3 && invitationInstitution (entityVal row) == x_4 && invitationAccepted (entityVal row) == x_5 && invitationEmailStatus (entityVal row) == x_6 && invitationEmailError (entityVal row) == x_7}, 
+     -> StormRecord <{\row -> invitationCode (entityVal row) == x_0 && invitationEmailAddress (entityVal row) == x_1 && invitationFirstName (entityVal row) == x_2 && invitationLastName (entityVal row) == x_3 && invitationInstitution (entityVal row) == x_4 && invitationAccepted (entityVal row) == x_5 && invitationEmailStatus (entityVal row) == x_6 && invitationEmailError (entityVal row) == x_7}, 
                      {\invitation viewer -> not (invitationAccepted (entityVal invitation)) && IsOrganizer viewer && invitationEmailStatus (entityVal invitation) == "not_sent"}, 
                      {\x_0 x_1 -> False}> 
                      (Entity User) Invitation
   @-}
-mkInvitation :: Text -> Text -> Text -> Text -> Text -> Bool -> String -> Maybe String -> BinahRecord (Entity User) Invitation
-mkInvitation x_0 x_1 x_2 x_3 x_4 x_5 x_6 x_7 = BinahRecord (Invitation x_0 x_1 x_2 x_3 x_4 x_5 x_6 x_7)
+mkInvitation :: Text -> Text -> Text -> Text -> Text -> Bool -> String -> Maybe String -> StormRecord (Entity User) Invitation
+mkInvitation x_0 x_1 x_2 x_3 x_4 x_5 x_6 x_7 = StormRecord (Invitation x_0 x_1 x_2 x_3 x_4 x_5 x_6 x_7)
 
 {-@ invariant {v: Entity Invitation | v == getJust (entityKey v)} @-}
 
@@ -336,13 +336,13 @@ invitationEmailError' = EntityFieldWrapper InvitationEmailError
      -> x_10: Maybe RoomId
      -> x_11: Bool
      -> x_12: UTCTime
-     -> BinahRecord <{\row -> userEmailAddress (entityVal row) == x_0 && userPassword (entityVal row) == x_1 && userPhotoURL (entityVal row) == x_2 && userDisplayName (entityVal row) == x_3 && userInstitution (entityVal row) == x_4 && userPronouns (entityVal row) == x_5 && userWebsite (entityVal row) == x_6 && userBio (entityVal row) == x_7 && userLevel (entityVal row) == x_8 && userVisibility (entityVal row) == x_9 && userRoom (entityVal row) == x_10 && userActive (entityVal row) == x_11 && userLastSync (entityVal row) == x_12}, 
+     -> StormRecord <{\row -> userEmailAddress (entityVal row) == x_0 && userPassword (entityVal row) == x_1 && userPhotoURL (entityVal row) == x_2 && userDisplayName (entityVal row) == x_3 && userInstitution (entityVal row) == x_4 && userPronouns (entityVal row) == x_5 && userWebsite (entityVal row) == x_6 && userBio (entityVal row) == x_7 && userLevel (entityVal row) == x_8 && userVisibility (entityVal row) == x_9 && userRoom (entityVal row) == x_10 && userActive (entityVal row) == x_11 && userLastSync (entityVal row) == x_12}, 
                      {\new viewer -> IsOrganizer viewer || userLevel (entityVal new) == "attendee"}, 
                      {\x_0 x_1 -> (userVisibility (entityVal x_0) == "public" || IsSelf x_0 x_1) || (x_0 == x_1)}> 
                      (Entity User) User
   @-}
-mkUser :: Text -> ByteString -> Maybe Text -> Text -> Text -> Text -> Text -> Text -> String -> String -> Maybe RoomId -> Bool -> UTCTime -> BinahRecord (Entity User) User
-mkUser x_0 x_1 x_2 x_3 x_4 x_5 x_6 x_7 x_8 x_9 x_10 x_11 x_12 = BinahRecord (User x_0 x_1 x_2 x_3 x_4 x_5 x_6 x_7 x_8 x_9 x_10 x_11 x_12)
+mkUser :: Text -> ByteString -> Maybe Text -> Text -> Text -> Text -> Text -> Text -> String -> String -> Maybe RoomId -> Bool -> UTCTime -> StormRecord (Entity User) User
+mkUser x_0 x_1 x_2 x_3 x_4 x_5 x_6 x_7 x_8 x_9 x_10 x_11 x_12 = StormRecord (User x_0 x_1 x_2 x_3 x_4 x_5 x_6 x_7 x_8 x_9 x_10 x_11 x_12)
 
 {-@ invariant {v: Entity User | v == getJust (entityKey v)} @-}
 
@@ -561,13 +561,13 @@ userLastSync' = EntityFieldWrapper UserLastSync
      -> x_2: Text
      -> x_3: Int
      -> x_4: Text
-     -> BinahRecord <{\row -> roomColor (entityVal row) == x_0 && roomName (entityVal row) == x_1 && roomTopic (entityVal row) == x_2 && roomCapacity (entityVal row) == x_3 && roomZoomLink (entityVal row) == x_4}, 
+     -> StormRecord <{\row -> roomColor (entityVal row) == x_0 && roomName (entityVal row) == x_1 && roomTopic (entityVal row) == x_2 && roomCapacity (entityVal row) == x_3 && roomZoomLink (entityVal row) == x_4}, 
                      {\_ viewer -> IsOrganizer viewer}, 
                      {\x_0 x_1 -> False}> 
                      (Entity User) Room
   @-}
-mkRoom :: Text -> Text -> Text -> Int -> Text -> BinahRecord (Entity User) Room
-mkRoom x_0 x_1 x_2 x_3 x_4 = BinahRecord (Room x_0 x_1 x_2 x_3 x_4)
+mkRoom :: Text -> Text -> Text -> Int -> Text -> StormRecord (Entity User) Room
+mkRoom x_0 x_1 x_2 x_3 x_4 = StormRecord (Room x_0 x_1 x_2 x_3 x_4)
 
 {-@ invariant {v: Entity Room | v == getJust (entityKey v)} @-}
 
@@ -665,13 +665,13 @@ roomZoomLink' = EntityFieldWrapper RoomZoomLink
      -> x_1: Maybe UserId
      -> x_2: Text
      -> x_3: Int64
-     -> BinahRecord <{\row -> messageSender (entityVal row) == x_0 && messageReceiver (entityVal row) == x_1 && messageMessage (entityVal row) == x_2 && messageTimestamp (entityVal row) == x_3}, 
+     -> StormRecord <{\row -> messageSender (entityVal row) == x_0 && messageReceiver (entityVal row) == x_1 && messageMessage (entityVal row) == x_2 && messageTimestamp (entityVal row) == x_3}, 
                      {\_ _ -> True}, 
                      {\x_0 x_1 -> (fromJust (messageReceiver (entityVal x_0)) == entityKey x_1 || not (isJust (messageReceiver (entityVal x_0))))}> 
                      (Entity User) Message
   @-}
-mkMessage :: UserId -> Maybe UserId -> Text -> Int64 -> BinahRecord (Entity User) Message
-mkMessage x_0 x_1 x_2 x_3 = BinahRecord (Message x_0 x_1 x_2 x_3)
+mkMessage :: UserId -> Maybe UserId -> Text -> Int64 -> StormRecord (Entity User) Message
+mkMessage x_0 x_1 x_2 x_3 = StormRecord (Message x_0 x_1 x_2 x_3)
 
 {-@ invariant {v: Entity Message | v == getJust (entityKey v)} @-}
 
@@ -752,13 +752,13 @@ messageTimestamp' = EntityFieldWrapper MessageTimestamp
 {-@ mkMarkRead ::
         x_0: UserId
      -> x_1: MessageId
-     -> BinahRecord <{\row -> markReadUser (entityVal row) == x_0 && markReadUpto (entityVal row) == x_1}, 
+     -> StormRecord <{\row -> markReadUser (entityVal row) == x_0 && markReadUpto (entityVal row) == x_1}, 
                      {\_ _ -> True}, 
                      {\x_0 x_1 -> False}> 
                      (Entity User) MarkRead
   @-}
-mkMarkRead :: UserId -> MessageId -> BinahRecord (Entity User) MarkRead
-mkMarkRead x_0 x_1 = BinahRecord (MarkRead x_0 x_1)
+mkMarkRead :: UserId -> MessageId -> StormRecord (Entity User) MarkRead
+mkMarkRead x_0 x_1 = StormRecord (MarkRead x_0 x_1)
 
 {-@ invariant {v: Entity MarkRead | v == getJust (entityKey v)} @-}
 

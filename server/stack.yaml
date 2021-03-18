@@ -16,8 +16,8 @@ extra-deps:
 - github: PLSysSec/frankie
   commit: b9ee2c0f7667025d0d0ac3a43ded43d1d1d63c28
 
-- github: binah-framework/binah
-  commit: 07961784e471af2787e996c578cb5716bdf35ba0
+- github: storm-framework/binah
+  commit: 54d5847e6594f6c8cd45326adca71f52a52b262d
 
 # LH stuff
 - text-format-0.3.2

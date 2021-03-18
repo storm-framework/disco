@@ -9,8 +9,8 @@ import qualified Network.AWS.Presign           as Presign
 import           Data.ByteString                ( ByteString )
 import           Data.Time.Clock                ( UTCTime )
 
-import           Binah.Infrastructure
-import           Binah.Core
+import           Storm.Infrastructure
+import           Storm.Core
 
 presignURL
   :: (MonadTIO m, AWSRequest a) => Auth -> Region -> UTCTime -> Seconds -> a -> m ByteString

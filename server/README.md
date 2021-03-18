@@ -2,7 +2,7 @@
 
 ## Dependencies
 
-You need to have stack in your `$PATH` for the following to work. If you want to edit `Model.binah` you'll also need [binah-codegen](https://github.com/nilehmann/binah-codegen) see below for further instructinos.
+You need to have stack in your `$PATH` for the following to work. If you want to edit `Model.storm` you'll also need [storm-codegen](https://github.com/nilehmann/storm-codegen) see below for further instructinos.
 
 ## Build the code
 
@@ -61,6 +61,6 @@ $ stack run -- add-organizer --email="email@domain.com" --password "password"
 
 This will add an organizer without profile info. You can edit the profile in the app later.
 
-## Note on editing `Model.binah`
+## Note on editing `Model.storm`
 
-If you edit `Model.binah` you'll first need to generate the corresponding `Model.hs`. The command `make build` is a wrapper over `stack build` that auto generate `Model.hs` from `Model.binah` when necessary. For this to work you need to have `binah-codegen` in your `$PATH`. See https://github.com/nilehmann/binah-codegen for instructions. If you don't modify `Model.binah` things should work just fine because `Model.hs` is under version control. Alternatively you could also run `make model` to generate `Model.hs`.
+If you edit `Model.storm` you'll first need to generate the corresponding `Model.hs`. The command `make build` is a wrapper over `stack build` that auto generate `Model.hs` from `Model.storm` when necessary. For this to work you need to have `storm-codegen` in your `$PATH`. See https://github.com/nilehmann/storm-codegen for instructions. If you don't modify `Model.storm` things should work just fine because `Model.hs` is under version control. Alternatively you could also run `make model` to generate `Model.hs`.
