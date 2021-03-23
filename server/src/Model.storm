@@ -1,0 +1,96 @@
+import Data.ByteString (ByteString)
+import Data.Int        (Int64)
+import Data.Time.Clock (UTCTime)
+import Data.Text       (Text)
+
+Invitation
+  code Text
+  emailAddress Text
+  firstName Text
+  lastName Text
+  institution Text
+  accepted Bool
+  emailStatus String
+  emailError String Maybe
+
+  UniqueInvitationEmailAddress emailAddress
+
+  insert {\invitation viewer ->
+    not (invitationAccepted invitation)
+    && IsOrganizer viewer
+    && invitationEmailStatus invitation == "not_sent"
+  }
+
+  update [ accepted ] {\old new _ ->
+    not (invitationAccepted old) && invitationAccepted new
+  }
+
+  update [ emailStatus ] {\_ new viewer ->
+      (invitationEmailStatus new == "sent" || invitationEmailStatus new == "error")
+  }
+
+User
+  emailAddress Text
+  password ByteString
+  photoURL Text Maybe
+  displayName Text
+  institution Text
+  pronouns Text
+  website Text
+  bio Text
+  level String
+  visibility String
+  room RoomId Maybe
+  active Bool
+  lastSync UTCTime
+
+  UniqueUserEmailAddress emailAddress
+
+  insert {\new viewer -> IsOrganizer viewer || userLevel new == "attendee"}
+
+  read [ password ] @IsSelf
+  read [ room ] {\user viewer ->
+    userVisibility user == "public" || IsSelf user viewer
+  }
+
+  update [ password, level, emailAddress ] {\_ _ _ -> False}
+
+  update [ photoURL, displayName, institution, pronouns, website
+         , bio, visibility, room, active, lastSync ]
+         {\old _ viewer -> IsSelf old viewer }
+
+Room
+  color Text
+  name Text
+  topic Text
+  capacity Int
+  zoomLink Text
+
+  insert {\_ viewer -> IsOrganizer viewer}
+
+  update [ topic ] {\old _ viewer -> IsInRoom viewer old}
+  update [ name, capacity, zoomLink, topic ] {\_ _ viewer -> IsOrganizer viewer}
+
+Message
+  sender    UserId
+  receiver  UserId Maybe
+  message   Text
+  timestamp Int64
+
+  read [ message ] @CanReadMessage
+
+MarkRead
+  user      UserId
+  upto      MessageId
+
+policy CanReadMessage = \message viewer ->
+  fromJust (messageReceiver message) == entityKey viewer || not (isJust (messageReceiver message))
+
+policy IsInRoom = \viewer room ->
+  fromJust (userRoom viewer) == entityKey room
+
+policy IsSelf = \user viewer ->
+  user == viewer
+
+policy IsOrganizer = \user ->
+  userLevel user == "organizer"
