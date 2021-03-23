@@ -860,10 +860,10 @@
     bessel "^1.0.2"
     jstat "^1.9.2"
 
-"@handsontable/vue@^4.1.1":
-  version "4.1.1"
-  resolved "https://registry.yarnpkg.com/@handsontable/vue/-/vue-4.1.1.tgz#5ff7710e5d9d642c3fc776c9800374c1e6dc4ce5"
-  integrity sha512-gpsMxmfM2KzpvXQBuHY1WNwHpDtqn+6iApIBrHrUpwY8uyYjh91wFRjzR4tY3kRf8uYJJjc0xTzePRvJzEoQaw==
+"@handsontable/vue@^6.0.0":
+  version "6.0.0"
+  resolved "https://registry.yarnpkg.com/@handsontable/vue/-/vue-6.0.0.tgz#8ea9a80d5f2f5507e61ab7c1e43276ef126da976"
+  integrity sha512-uuHUey0yoCdNdY0FPE1bDBO3+N0LvafLh0BhPosPguvg5UKRe3A6Yh0pD4CLJOb6ErsWaYvHX4zDZLQilH0JUg==
 
 "@hapi/address@2.x.x":
   version "2.1.4"
@@ -3231,6 +3231,11 @@ domhandler@^2.3.0:
   dependencies:
     domelementtype "1"
 
+dompurify@^2.1.1:
+  version "2.2.7"
+  resolved "https://registry.yarnpkg.com/dompurify/-/dompurify-2.2.7.tgz#a5f055a2a471638680e779bd08fc334962d11fd8"
+  integrity sha512-jdtDffdGNY+C76jvodNTu9jt5yYj59vuTUyx+wXdzcSwAGTYZDAQkQ7Iwx9zcGrA4ixC1syU4H3RZROqRxokxg==
+
 domutils@1.5.1:
   version "1.5.1"
   resolved "https://registry.yarnpkg.com/domutils/-/domutils-1.5.1.tgz#dcd8488a26f563d61079e48c9f7b7e32373682cf"
@@ -4231,14 +4236,15 @@ handle-thing@^2.0.0:
   resolved "https://registry.yarnpkg.com/handle-thing/-/handle-thing-2.0.1.tgz#857f79ce359580c340d43081cc648970d0bb234e"
   integrity sha512-9Qn4yBxelxoh2Ow62nP+Ka/kMnOXRi8BXnRaUwezLNhqelnN49xKz4F/dPP8OYLxLxq6JDtZb2i9XznUQbNPTg==
 
-handsontable@^7.4.2:
-  version "7.4.2"
-  resolved "https://registry.yarnpkg.com/handsontable/-/handsontable-7.4.2.tgz#11097b17c36e5dffd9f54febdd904c3006c4f28e"
-  integrity sha512-xJ81nZfXWHmS+K8/Eshj776MQSe8003iue1hHumgb0bnJmG/WLOxRpN+Vurdl/WPwI3+fQOqb9nTzmM5n/LI2g==
+handsontable@^8.3.2:
+  version "8.3.2"
+  resolved "https://registry.yarnpkg.com/handsontable/-/handsontable-8.3.2.tgz#7c7d304a2c745b6003603ac1c33a1e4318d3bd46"
+  integrity sha512-U5ffFxPhWisYmZOWkDFV7PSNZTxu3td52ABJRZAbE3lx1m6zjIqHDHCHEKyRTdTkxPeXA1DkGsJPW66St1z6UQ==
   dependencies:
     "@types/pikaday" "1.7.4"
     core-js "^3.0.0"
-    hot-formula-parser "^3.0.1"
+    dompurify "^2.1.1"
+    hot-formula-parser "^4.0.0"
     moment "2.24.0"
     numbro "2.1.2"
     pikaday "1.8.0"
@@ -4377,10 +4383,10 @@ hosted-git-info@^2.1.4:
   resolved "https://registry.yarnpkg.com/hosted-git-info/-/hosted-git-info-2.8.8.tgz#7539bd4bc1e0e0a895815a2e0262420b12858488"
   integrity sha512-f/wzC2QaWBs7t9IYqB4T3sR1xviIViXJRJTWBlx2Gf3g0Xi5vI7Yy4koXQ1c9OYDGHN9sBy1DQ2AB8fqZBWhUg==
 
-hot-formula-parser@^3.0.1:
-  version "3.0.2"
-  resolved "https://registry.yarnpkg.com/hot-formula-parser/-/hot-formula-parser-3.0.2.tgz#d71f03a4ef43ba3074bde383a0e36202b5b64116"
-  integrity sha512-W/Dj/UbIyuViMIQOQD6tUEVySl7jd6ei+gfWslTiRqa4yRhkyHnIz8N4oLnqgDRhhVAQIcFF5NfNz49k4X8IxQ==
+hot-formula-parser@^4.0.0:
+  version "4.0.0"
+  resolved "https://registry.yarnpkg.com/hot-formula-parser/-/hot-formula-parser-4.0.0.tgz#b406bdc7ed30d855b7bcbe01d9dc2ee954c28e56"
+  integrity sha512-diG1UvuQ3HxtfezVUIpvndk/bVkqZJ9Rfv10MdVF7pJEj8P2Jd4iCZSMJCN3lDhnLegaVlfSYSA6+szYNFQUKg==
   dependencies:
     "@handsontable/formulajs" "^2.0.2"
     tiny-emitter "^2.1.0"
