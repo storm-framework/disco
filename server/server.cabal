@@ -1,10 +1,8 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.34.2.
+-- This file has been generated from package.yaml by hpack version 0.34.4.
 --
 -- see: https://github.com/sol/hpack
---
--- hash: 2dce781c21f110de9155f5d24e1679f5082acc1f47a282e24110daeb70f8c6c6
 
 name:           server
 version:        0.1.0.0
@@ -51,7 +49,6 @@ library
     , amazonka-core
     , amazonka-s3
     , base64-bytestring
-    , storm
     , bytestring
     , cmdargs
     , cryptonite
@@ -75,6 +72,7 @@ library
     , random-shuffle
     , resource-pool
     , scrypt
+    , storm
     , text
     , time
     , transformers
@@ -96,7 +94,6 @@ executable disco
     , amazonka-core
     , amazonka-s3
     , base64-bytestring
-    , storm
     , bytestring
     , cmdargs
     , cryptonite
@@ -121,6 +118,7 @@ executable disco
     , resource-pool
     , scrypt
     , server
+    , storm
     , text
     , time
     , transformers
@@ -143,7 +141,6 @@ test-suite server-test
     , amazonka-core
     , amazonka-s3
     , base64-bytestring
-    , storm
     , bytestring
     , cmdargs
     , cryptonite
@@ -168,6 +165,7 @@ test-suite server-test
     , resource-pool
     , scrypt
     , server
+    , storm
     , text
     , time
     , transformers
