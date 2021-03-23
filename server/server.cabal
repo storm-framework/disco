@@ -1,16 +1,14 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.33.0.
+-- This file has been generated from package.yaml by hpack version 0.34.4.
 --
 -- see: https://github.com/sol/hpack
---
--- hash: 2dce781c21f110de9155f5d24e1679f5082acc1f47a282e24110daeb70f8c6c6
 
 name:           server
 version:        0.1.0.0
 description:    Please see the README on GitHub at <https://github.com/nilehmann/server#readme>
-homepage:       https://github.com/binah-framework/disco#readme
-bug-reports:    https://github.com/binah-framework/disco/issues
+homepage:       https://github.com/storm-framework/disco#readme
+bug-reports:    https://github.com/storm-framework/disco/issues
 author:         Nico Lehmann
 maintainer:     nlehmann@eng.ucsd.edu
 copyright:      2020 Nico Lehmann
@@ -23,7 +21,7 @@ extra-source-files:
 
 source-repository head
   type: git
-  location: https://github.com/binah-framework/disco
+  location: https://github.com/storm-framework/disco
 
 library
   exposed-modules:
@@ -51,7 +49,6 @@ library
     , amazonka-core
     , amazonka-s3
     , base64-bytestring
-    , binah
     , bytestring
     , cmdargs
     , cryptonite
@@ -75,6 +72,7 @@ library
     , random-shuffle
     , resource-pool
     , scrypt
+    , storm
     , text
     , time
     , transformers
@@ -96,7 +94,6 @@ executable disco
     , amazonka-core
     , amazonka-s3
     , base64-bytestring
-    , binah
     , bytestring
     , cmdargs
     , cryptonite
@@ -121,53 +118,7 @@ executable disco
     , resource-pool
     , scrypt
     , server
-    , text
-    , time
-    , transformers
-    , transformers-base
-    , unordered-containers
-  default-language: Haskell2010
-
-test-suite server-test
-  type: exitcode-stdio-1.0
-  main-is: Spec.hs
-  other-modules:
-      Paths_server
-  hs-source-dirs:
-      test
-  ghc-options: -threaded -rtsopts -with-rtsopts=-N
-  build-depends:
-      MonadRandom
-    , aeson
-    , amazonka
-    , amazonka-core
-    , amazonka-s3
-    , base64-bytestring
-    , binah
-    , bytestring
-    , cmdargs
-    , cryptonite
-    , directory
-    , filepath
-    , frankie
-    , lens
-    , liquid-base
-    , liquidhaskell >=0.8.10
-    , memory
-    , mime-types
-    , monad-control
-    , monad-logger
-    , monad-time
-    , mtl
-    , mustache
-    , network
-    , persistent
-    , persistent-sqlite
-    , persistent-template
-    , random-shuffle
-    , resource-pool
-    , scrypt
-    , server
+    , storm
     , text
     , time
     , transformers

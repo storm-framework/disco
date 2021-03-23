@@ -55,17 +55,8 @@ User
 
   update [ password, level, emailAddress ] {\_ _ _ -> False}
 
-  update [ photoURL
-         , displayName
-         , institution
-         , pronouns
-         , website
-         , bio
-         , visibility
-         , room
-         , active
-         , lastSync
-         ]
+  update [ photoURL, displayName, institution, pronouns, website
+         , bio, visibility, room, active, lastSync ]
          {\old _ viewer -> IsSelf old viewer }
 
 Room

@@ -19,14 +19,14 @@ import qualified Text.Mustache.Types           as Mustache
 import           Frankie.Auth
 import           Frankie.Config
 
-import           Binah.Actions
-import           Binah.Frankie
-import           Binah.Core
-import           Binah.Infrastructure
-import           Binah.Filters
-import           Binah.Templates
-import           Binah.Concurrent
-import           Binah.JSON
+import           Storm.Actions
+import           Storm.Frankie
+import           Storm.Core
+import           Storm.Infrastructure
+import           Storm.Filters
+import           Storm.Templates
+import           Storm.Concurrent
+import           Storm.JSON
 import qualified Network.AWS                   as AWS
 import qualified Network.AWS.S3                as S3
 import           Network.Socket                 ( PortNumber )

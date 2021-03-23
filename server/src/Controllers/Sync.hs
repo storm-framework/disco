@@ -8,17 +8,17 @@ import           Data.Maybe
 import           GHC.Generics
 import           Control.Monad.Time             ( MonadTime(..) )
 
-import           Binah.Core
-import           Binah.Actions
-import           Binah.Updates
-import           Binah.Insert
-import           Binah.Filters
-import           Binah.Helpers
-import           Binah.Infrastructure
-import           Binah.Templates
-import           Binah.Frankie
-import           Binah.Time
-import           Binah.JSON
+import           Storm.Core
+import           Storm.Actions
+import           Storm.Updates
+import           Storm.Insert
+import           Storm.Filters
+import           Storm.Helpers
+import           Storm.Infrastructure
+import           Storm.Templates
+import           Storm.Frankie
+import           Storm.Time
+import           Storm.JSON
 
 import           Controllers
 import           Controllers.User
