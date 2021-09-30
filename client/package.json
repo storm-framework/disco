@@ -15,7 +15,7 @@
     "axios": "^0.19.2",
     "bootstrap-vue": "^2.1.0",
     "core-js": "^3.6.4",
-    "handsontable": "^8.3.2",
+    "handsontable": "^10.0.0",
     "lodash": "^4.17.15",
     "script-ext-html-webpack-plugin": "^2.1.4",
     "vue": "^2.6.11",
